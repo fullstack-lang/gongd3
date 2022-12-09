@@ -112,8 +112,10 @@ func ParseAstFile(pathToFile string) error {
 var __gong__map_Indentifiers_gongstructName = make(map[string]string)
 
 // insertion point for identifiers maps
-var __gong__map_Country = make(map[string]*Country)
-var __gong__map_Hello = make(map[string]*Hello)
+var __gong__map_Bar = make(map[string]*Bar)
+var __gong__map_Key = make(map[string]*Key)
+var __gong__map_Serie = make(map[string]*Serie)
+var __gong__map_Value = make(map[string]*Value)
 
 // UnmarshallGoStaging unmarshall a go assign statement
 func UnmarshallGongstructStaging(assignStmt *ast.AssignStmt, astCoordinate_ string) (
@@ -218,14 +220,22 @@ func UnmarshallGongstructStaging(assignStmt *ast.AssignStmt, astCoordinate_ stri
 									// this is the place where an instance is created
 									switch gongstructName {
 									// insertion point for identifiers
-									case "Country":
-										instanceCountry := (&Country{Name: instanceName}).Stage()
-										instance = any(instanceCountry)
-										__gong__map_Country[identifier] = instanceCountry
-									case "Hello":
-										instanceHello := (&Hello{Name: instanceName}).Stage()
-										instance = any(instanceHello)
-										__gong__map_Hello[identifier] = instanceHello
+									case "Bar":
+										instanceBar := (&Bar{Name: instanceName}).Stage()
+										instance = any(instanceBar)
+										__gong__map_Bar[identifier] = instanceBar
+									case "Key":
+										instanceKey := (&Key{Name: instanceName}).Stage()
+										instance = any(instanceKey)
+										__gong__map_Key[identifier] = instanceKey
+									case "Serie":
+										instanceSerie := (&Serie{Name: instanceName}).Stage()
+										instance = any(instanceSerie)
+										__gong__map_Serie[identifier] = instanceSerie
+									case "Value":
+										instanceValue := (&Value{Name: instanceName}).Stage()
+										instance = any(instanceValue)
+										__gong__map_Value[identifier] = instanceValue
 									}
 									__gong__map_Indentifiers_gongstructName[identifier] = gongstructName
 									return
@@ -262,11 +272,19 @@ func UnmarshallGongstructStaging(assignStmt *ast.AssignStmt, astCoordinate_ stri
 						}
 						switch gongstructName {
 						// insertion point for basic lit assignments
-						case "Country":
+						case "Bar":
 							switch fieldName {
 							// insertion point for date assign code
 							}
-						case "Hello":
+						case "Key":
+							switch fieldName {
+							// insertion point for date assign code
+							}
+						case "Serie":
+							switch fieldName {
+							// insertion point for date assign code
+							}
+						case "Value":
 							switch fieldName {
 							// insertion point for date assign code
 							}
@@ -295,11 +313,31 @@ func UnmarshallGongstructStaging(assignStmt *ast.AssignStmt, astCoordinate_ stri
 					}
 					switch gongstructName {
 					// insertion point for slice of pointers assignments
-					case "Country":
+					case "Bar":
+						switch fieldName {
+						// insertion point for slice of pointers assign code
+						case "Set":
+							// remove first and last char
+							targetIdentifier := ident.Name
+							target := __gong__map_Serie[targetIdentifier]
+							__gong__map_Bar[identifier].Set =
+								append(__gong__map_Bar[identifier].Set, target)
+						}
+					case "Key":
 						switch fieldName {
 						// insertion point for slice of pointers assign code
 						}
-					case "Hello":
+					case "Serie":
+						switch fieldName {
+						// insertion point for slice of pointers assign code
+						case "Values":
+							// remove first and last char
+							targetIdentifier := ident.Name
+							target := __gong__map_Value[targetIdentifier]
+							__gong__map_Serie[identifier].Values =
+								append(__gong__map_Serie[identifier].Values, target)
+						}
+					case "Value":
 						switch fieldName {
 						// insertion point for slice of pointers assign code
 						}
@@ -334,21 +372,37 @@ func UnmarshallGongstructStaging(assignStmt *ast.AssignStmt, astCoordinate_ stri
 
 			switch gongstructName {
 			// insertion point for basic lit assignments
-			case "Country":
+			case "Bar":
 				switch fieldName {
 				// insertion point for field dependant code
 				case "Name":
 					// remove first and last char
 					fielValue := basicLit.Value[1 : len(basicLit.Value)-1]
-					__gong__map_Country[identifier].Name = fielValue
+					__gong__map_Bar[identifier].Name = fielValue
 				}
-			case "Hello":
+			case "Key":
 				switch fieldName {
 				// insertion point for field dependant code
 				case "Name":
 					// remove first and last char
 					fielValue := basicLit.Value[1 : len(basicLit.Value)-1]
-					__gong__map_Hello[identifier].Name = fielValue
+					__gong__map_Key[identifier].Name = fielValue
+				}
+			case "Serie":
+				switch fieldName {
+				// insertion point for field dependant code
+				case "Name":
+					// remove first and last char
+					fielValue := basicLit.Value[1 : len(basicLit.Value)-1]
+					__gong__map_Serie[identifier].Name = fielValue
+				}
+			case "Value":
+				switch fieldName {
+				// insertion point for field dependant code
+				case "Name":
+					// remove first and last char
+					fielValue := basicLit.Value[1 : len(basicLit.Value)-1]
+					__gong__map_Value[identifier].Name = fielValue
 				}
 			}
 		case *ast.Ident:
@@ -364,14 +418,28 @@ func UnmarshallGongstructStaging(assignStmt *ast.AssignStmt, astCoordinate_ stri
 			}
 			switch gongstructName {
 			// insertion point for bool & pointers assignments
-			case "Country":
+			case "Bar":
 				switch fieldName {
 				// insertion point for field dependant code
-				case "Hello":
+				case "X":
 					targetIdentifier := ident.Name
-					__gong__map_Country[identifier].Hello = __gong__map_Hello[targetIdentifier]
+					__gong__map_Bar[identifier].X = __gong__map_Key[targetIdentifier]
+				case "Y":
+					targetIdentifier := ident.Name
+					__gong__map_Bar[identifier].Y = __gong__map_Key[targetIdentifier]
 				}
-			case "Hello":
+			case "Key":
+				switch fieldName {
+				// insertion point for field dependant code
+				}
+			case "Serie":
+				switch fieldName {
+				// insertion point for field dependant code
+				case "Key":
+					targetIdentifier := ident.Name
+					__gong__map_Serie[identifier].Key = __gong__map_Key[targetIdentifier]
+				}
+			case "Value":
 				switch fieldName {
 				// insertion point for field dependant code
 				}
@@ -403,11 +471,19 @@ func UnmarshallGongstructStaging(assignStmt *ast.AssignStmt, astCoordinate_ stri
 				_ = enumValue
 				switch gongstructName {
 				// insertion point for enums assignments
-				case "Country":
+				case "Bar":
 					switch fieldName {
 					// insertion point for enum assign code
 					}
-				case "Hello":
+				case "Key":
+					switch fieldName {
+					// insertion point for enum assign code
+					}
+				case "Serie":
+					switch fieldName {
+					// insertion point for enum assign code
+					}
+				case "Value":
 					switch fieldName {
 					// insertion point for enum assign code
 					}

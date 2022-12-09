@@ -11,10 +11,14 @@ import { CommitNbFromBackService } from '../commitnbfromback.service'
 import { GongstructSelectionService } from '../gongstruct-selection.service'
 
 // insertion point for per struct import code
-import { CountryService } from '../country.service'
-import { getCountryUniqueID } from '../front-repo.service'
-import { HelloService } from '../hello.service'
-import { getHelloUniqueID } from '../front-repo.service'
+import { BarService } from '../bar.service'
+import { getBarUniqueID } from '../front-repo.service'
+import { KeyService } from '../key.service'
+import { getKeyUniqueID } from '../front-repo.service'
+import { SerieService } from '../serie.service'
+import { getSerieUniqueID } from '../front-repo.service'
+import { ValueService } from '../value.service'
+import { getValueUniqueID } from '../front-repo.service'
 
 /**
  * Types of a GongNode / GongFlatNode
@@ -157,8 +161,10 @@ export class SidebarComponent implements OnInit {
     private gongstructSelectionService: GongstructSelectionService,
 
     // insertion point for per struct service declaration
-    private countryService: CountryService,
-    private helloService: HelloService,
+    private barService: BarService,
+    private keyService: KeyService,
+    private serieService: SerieService,
+    private valueService: ValueService,
   ) { }
 
   ngOnDestroy() {
@@ -187,7 +193,7 @@ export class SidebarComponent implements OnInit {
 
     // insertion point for per struct observable for refresh trigger
     // observable for changes in structs
-    this.countryService.CountryServiceChanged.subscribe(
+    this.barService.BarServiceChanged.subscribe(
       message => {
         if (message == "post" || message == "update" || message == "delete") {
           this.refresh()
@@ -195,7 +201,23 @@ export class SidebarComponent implements OnInit {
       }
     )
     // observable for changes in structs
-    this.helloService.HelloServiceChanged.subscribe(
+    this.keyService.KeyServiceChanged.subscribe(
+      message => {
+        if (message == "post" || message == "update" || message == "delete") {
+          this.refresh()
+        }
+      }
+    )
+    // observable for changes in structs
+    this.serieService.SerieServiceChanged.subscribe(
+      message => {
+        if (message == "post" || message == "update" || message == "delete") {
+          this.refresh()
+        }
+      }
+    )
+    // observable for changes in structs
+    this.valueService.ValueServiceChanged.subscribe(
       message => {
         if (message == "post" || message == "update" || message == "delete") {
           this.refresh()
@@ -227,22 +249,22 @@ export class SidebarComponent implements OnInit {
 
       // insertion point for per struct tree construction
       /**
-      * fill up the Country part of the mat tree
+      * fill up the Bar part of the mat tree
       */
-      let countryGongNodeStruct: GongNode = {
-        name: "Country",
+      let barGongNodeStruct: GongNode = {
+        name: "Bar",
         type: GongNodeType.STRUCT,
         id: 0,
         uniqueIdPerStack: 13 * nonInstanceNodeId,
-        structName: "Country",
+        structName: "Bar",
         associationField: "",
         associatedStructName: "",
         children: new Array<GongNode>()
       }
       nonInstanceNodeId = nonInstanceNodeId + 1
-      this.gongNodeTree.push(countryGongNodeStruct)
+      this.gongNodeTree.push(barGongNodeStruct)
 
-      this.frontRepo.Countrys_array.sort((t1, t2) => {
+      this.frontRepo.Bars_array.sort((t1, t2) => {
         if (t1.Name > t2.Name) {
           return 1;
         }
@@ -252,76 +274,143 @@ export class SidebarComponent implements OnInit {
         return 0;
       });
 
-      this.frontRepo.Countrys_array.forEach(
-        countryDB => {
-          let countryGongNodeInstance: GongNode = {
-            name: countryDB.Name,
+      this.frontRepo.Bars_array.forEach(
+        barDB => {
+          let barGongNodeInstance: GongNode = {
+            name: barDB.Name,
             type: GongNodeType.INSTANCE,
-            id: countryDB.ID,
-            uniqueIdPerStack: getCountryUniqueID(countryDB.ID),
-            structName: "Country",
+            id: barDB.ID,
+            uniqueIdPerStack: getBarUniqueID(barDB.ID),
+            structName: "Bar",
             associationField: "",
             associatedStructName: "",
             children: new Array<GongNode>()
           }
-          countryGongNodeStruct.children!.push(countryGongNodeInstance)
+          barGongNodeStruct.children!.push(barGongNodeInstance)
 
           // insertion point for per field code
           /**
-          * let append a node for the association Hello
+          * let append a node for the association X
           */
-          let HelloGongNodeAssociation: GongNode = {
-            name: "(Hello) Hello",
+          let XGongNodeAssociation: GongNode = {
+            name: "(Key) X",
             type: GongNodeType.ONE__ZERO_ONE_ASSOCIATION,
-            id: countryDB.ID,
+            id: barDB.ID,
             uniqueIdPerStack: 17 * nonInstanceNodeId,
-            structName: "Country",
-            associationField: "Hello",
-            associatedStructName: "Hello",
+            structName: "Bar",
+            associationField: "X",
+            associatedStructName: "Key",
             children: new Array<GongNode>()
           }
           nonInstanceNodeId = nonInstanceNodeId + 1
-          countryGongNodeInstance.children!.push(HelloGongNodeAssociation)
+          barGongNodeInstance.children!.push(XGongNodeAssociation)
 
           /**
-            * let append a node for the instance behind the asssociation Hello
+            * let append a node for the instance behind the asssociation X
             */
-          if (countryDB.Hello != undefined) {
-            let countryGongNodeInstance_Hello: GongNode = {
-              name: countryDB.Hello.Name,
+          if (barDB.X != undefined) {
+            let barGongNodeInstance_X: GongNode = {
+              name: barDB.X.Name,
               type: GongNodeType.INSTANCE,
-              id: countryDB.Hello.ID,
+              id: barDB.X.ID,
               uniqueIdPerStack: // godel numbering (thank you kurt)
-                3 * getCountryUniqueID(countryDB.ID)
-                + 5 * getHelloUniqueID(countryDB.Hello.ID),
-              structName: "Hello",
+                3 * getBarUniqueID(barDB.ID)
+                + 5 * getKeyUniqueID(barDB.X.ID),
+              structName: "Key",
               associationField: "",
               associatedStructName: "",
               children: new Array<GongNode>()
             }
-            HelloGongNodeAssociation.children.push(countryGongNodeInstance_Hello)
+            XGongNodeAssociation.children.push(barGongNodeInstance_X)
           }
+
+          /**
+          * let append a node for the association Y
+          */
+          let YGongNodeAssociation: GongNode = {
+            name: "(Key) Y",
+            type: GongNodeType.ONE__ZERO_ONE_ASSOCIATION,
+            id: barDB.ID,
+            uniqueIdPerStack: 17 * nonInstanceNodeId,
+            structName: "Bar",
+            associationField: "Y",
+            associatedStructName: "Key",
+            children: new Array<GongNode>()
+          }
+          nonInstanceNodeId = nonInstanceNodeId + 1
+          barGongNodeInstance.children!.push(YGongNodeAssociation)
+
+          /**
+            * let append a node for the instance behind the asssociation Y
+            */
+          if (barDB.Y != undefined) {
+            let barGongNodeInstance_Y: GongNode = {
+              name: barDB.Y.Name,
+              type: GongNodeType.INSTANCE,
+              id: barDB.Y.ID,
+              uniqueIdPerStack: // godel numbering (thank you kurt)
+                3 * getBarUniqueID(barDB.ID)
+                + 5 * getKeyUniqueID(barDB.Y.ID),
+              structName: "Key",
+              associationField: "",
+              associatedStructName: "",
+              children: new Array<GongNode>()
+            }
+            YGongNodeAssociation.children.push(barGongNodeInstance_Y)
+          }
+
+          /**
+          * let append a node for the slide of pointer Set
+          */
+          let SetGongNodeAssociation: GongNode = {
+            name: "(Serie) Set",
+            type: GongNodeType.ONE__ZERO_MANY_ASSOCIATION,
+            id: barDB.ID,
+            uniqueIdPerStack: 19 * nonInstanceNodeId,
+            structName: "Bar",
+            associationField: "Set",
+            associatedStructName: "Serie",
+            children: new Array<GongNode>()
+          }
+          nonInstanceNodeId = nonInstanceNodeId + 1
+          barGongNodeInstance.children.push(SetGongNodeAssociation)
+
+          barDB.Set?.forEach(serieDB => {
+            let serieNode: GongNode = {
+              name: serieDB.Name,
+              type: GongNodeType.INSTANCE,
+              id: serieDB.ID,
+              uniqueIdPerStack: // godel numbering (thank you kurt)
+                7 * getBarUniqueID(barDB.ID)
+                + 11 * getSerieUniqueID(serieDB.ID),
+              structName: "Serie",
+              associationField: "",
+              associatedStructName: "",
+              children: new Array<GongNode>()
+            }
+            SetGongNodeAssociation.children.push(serieNode)
+          })
 
         }
       )
 
       /**
-      * fill up the Hello part of the mat tree
+      * fill up the Key part of the mat tree
       */
-      let helloGongNodeStruct: GongNode = {
-        name: "Hello",
+      let keyGongNodeStruct: GongNode = {
+        name: "Key",
         type: GongNodeType.STRUCT,
         id: 0,
         uniqueIdPerStack: 13 * nonInstanceNodeId,
-        structName: "Hello",
+        structName: "Key",
         associationField: "",
         associatedStructName: "",
         children: new Array<GongNode>()
       }
       nonInstanceNodeId = nonInstanceNodeId + 1
-      this.gongNodeTree.push(helloGongNodeStruct)
+      this.gongNodeTree.push(keyGongNodeStruct)
 
-      this.frontRepo.Hellos_array.sort((t1, t2) => {
+      this.frontRepo.Keys_array.sort((t1, t2) => {
         if (t1.Name > t2.Name) {
           return 1;
         }
@@ -331,19 +420,174 @@ export class SidebarComponent implements OnInit {
         return 0;
       });
 
-      this.frontRepo.Hellos_array.forEach(
-        helloDB => {
-          let helloGongNodeInstance: GongNode = {
-            name: helloDB.Name,
+      this.frontRepo.Keys_array.forEach(
+        keyDB => {
+          let keyGongNodeInstance: GongNode = {
+            name: keyDB.Name,
             type: GongNodeType.INSTANCE,
-            id: helloDB.ID,
-            uniqueIdPerStack: getHelloUniqueID(helloDB.ID),
-            structName: "Hello",
+            id: keyDB.ID,
+            uniqueIdPerStack: getKeyUniqueID(keyDB.ID),
+            structName: "Key",
             associationField: "",
             associatedStructName: "",
             children: new Array<GongNode>()
           }
-          helloGongNodeStruct.children!.push(helloGongNodeInstance)
+          keyGongNodeStruct.children!.push(keyGongNodeInstance)
+
+          // insertion point for per field code
+        }
+      )
+
+      /**
+      * fill up the Serie part of the mat tree
+      */
+      let serieGongNodeStruct: GongNode = {
+        name: "Serie",
+        type: GongNodeType.STRUCT,
+        id: 0,
+        uniqueIdPerStack: 13 * nonInstanceNodeId,
+        structName: "Serie",
+        associationField: "",
+        associatedStructName: "",
+        children: new Array<GongNode>()
+      }
+      nonInstanceNodeId = nonInstanceNodeId + 1
+      this.gongNodeTree.push(serieGongNodeStruct)
+
+      this.frontRepo.Series_array.sort((t1, t2) => {
+        if (t1.Name > t2.Name) {
+          return 1;
+        }
+        if (t1.Name < t2.Name) {
+          return -1;
+        }
+        return 0;
+      });
+
+      this.frontRepo.Series_array.forEach(
+        serieDB => {
+          let serieGongNodeInstance: GongNode = {
+            name: serieDB.Name,
+            type: GongNodeType.INSTANCE,
+            id: serieDB.ID,
+            uniqueIdPerStack: getSerieUniqueID(serieDB.ID),
+            structName: "Serie",
+            associationField: "",
+            associatedStructName: "",
+            children: new Array<GongNode>()
+          }
+          serieGongNodeStruct.children!.push(serieGongNodeInstance)
+
+          // insertion point for per field code
+          /**
+          * let append a node for the association Key
+          */
+          let KeyGongNodeAssociation: GongNode = {
+            name: "(Key) Key",
+            type: GongNodeType.ONE__ZERO_ONE_ASSOCIATION,
+            id: serieDB.ID,
+            uniqueIdPerStack: 17 * nonInstanceNodeId,
+            structName: "Serie",
+            associationField: "Key",
+            associatedStructName: "Key",
+            children: new Array<GongNode>()
+          }
+          nonInstanceNodeId = nonInstanceNodeId + 1
+          serieGongNodeInstance.children!.push(KeyGongNodeAssociation)
+
+          /**
+            * let append a node for the instance behind the asssociation Key
+            */
+          if (serieDB.Key != undefined) {
+            let serieGongNodeInstance_Key: GongNode = {
+              name: serieDB.Key.Name,
+              type: GongNodeType.INSTANCE,
+              id: serieDB.Key.ID,
+              uniqueIdPerStack: // godel numbering (thank you kurt)
+                3 * getSerieUniqueID(serieDB.ID)
+                + 5 * getKeyUniqueID(serieDB.Key.ID),
+              structName: "Key",
+              associationField: "",
+              associatedStructName: "",
+              children: new Array<GongNode>()
+            }
+            KeyGongNodeAssociation.children.push(serieGongNodeInstance_Key)
+          }
+
+          /**
+          * let append a node for the slide of pointer Values
+          */
+          let ValuesGongNodeAssociation: GongNode = {
+            name: "(Value) Values",
+            type: GongNodeType.ONE__ZERO_MANY_ASSOCIATION,
+            id: serieDB.ID,
+            uniqueIdPerStack: 19 * nonInstanceNodeId,
+            structName: "Serie",
+            associationField: "Values",
+            associatedStructName: "Value",
+            children: new Array<GongNode>()
+          }
+          nonInstanceNodeId = nonInstanceNodeId + 1
+          serieGongNodeInstance.children.push(ValuesGongNodeAssociation)
+
+          serieDB.Values?.forEach(valueDB => {
+            let valueNode: GongNode = {
+              name: valueDB.Name,
+              type: GongNodeType.INSTANCE,
+              id: valueDB.ID,
+              uniqueIdPerStack: // godel numbering (thank you kurt)
+                7 * getSerieUniqueID(serieDB.ID)
+                + 11 * getValueUniqueID(valueDB.ID),
+              structName: "Value",
+              associationField: "",
+              associatedStructName: "",
+              children: new Array<GongNode>()
+            }
+            ValuesGongNodeAssociation.children.push(valueNode)
+          })
+
+        }
+      )
+
+      /**
+      * fill up the Value part of the mat tree
+      */
+      let valueGongNodeStruct: GongNode = {
+        name: "Value",
+        type: GongNodeType.STRUCT,
+        id: 0,
+        uniqueIdPerStack: 13 * nonInstanceNodeId,
+        structName: "Value",
+        associationField: "",
+        associatedStructName: "",
+        children: new Array<GongNode>()
+      }
+      nonInstanceNodeId = nonInstanceNodeId + 1
+      this.gongNodeTree.push(valueGongNodeStruct)
+
+      this.frontRepo.Values_array.sort((t1, t2) => {
+        if (t1.Name > t2.Name) {
+          return 1;
+        }
+        if (t1.Name < t2.Name) {
+          return -1;
+        }
+        return 0;
+      });
+
+      this.frontRepo.Values_array.forEach(
+        valueDB => {
+          let valueGongNodeInstance: GongNode = {
+            name: valueDB.Name,
+            type: GongNodeType.INSTANCE,
+            id: valueDB.ID,
+            uniqueIdPerStack: getValueUniqueID(valueDB.ID),
+            structName: "Value",
+            associationField: "",
+            associatedStructName: "",
+            children: new Array<GongNode>()
+          }
+          valueGongNodeStruct.children!.push(valueGongNodeInstance)
 
           // insertion point for per field code
         }

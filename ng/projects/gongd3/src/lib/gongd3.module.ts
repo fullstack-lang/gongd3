@@ -39,29 +39,49 @@ import { SidebarComponent } from './sidebar/sidebar.component';
 import { GongstructSelectionService } from './gongstruct-selection.service'
 
 // insertion point for imports 
-import { CountrysTableComponent } from './countrys-table/countrys-table.component'
-import { CountrySortingComponent } from './country-sorting/country-sorting.component'
-import { CountryDetailComponent } from './country-detail/country-detail.component'
-import { CountryPresentationComponent } from './country-presentation/country-presentation.component'
+import { BarsTableComponent } from './bars-table/bars-table.component'
+import { BarSortingComponent } from './bar-sorting/bar-sorting.component'
+import { BarDetailComponent } from './bar-detail/bar-detail.component'
+import { BarPresentationComponent } from './bar-presentation/bar-presentation.component'
 
-import { HellosTableComponent } from './hellos-table/hellos-table.component'
-import { HelloSortingComponent } from './hello-sorting/hello-sorting.component'
-import { HelloDetailComponent } from './hello-detail/hello-detail.component'
-import { HelloPresentationComponent } from './hello-presentation/hello-presentation.component'
+import { KeysTableComponent } from './keys-table/keys-table.component'
+import { KeySortingComponent } from './key-sorting/key-sorting.component'
+import { KeyDetailComponent } from './key-detail/key-detail.component'
+import { KeyPresentationComponent } from './key-presentation/key-presentation.component'
+
+import { SeriesTableComponent } from './series-table/series-table.component'
+import { SerieSortingComponent } from './serie-sorting/serie-sorting.component'
+import { SerieDetailComponent } from './serie-detail/serie-detail.component'
+import { SeriePresentationComponent } from './serie-presentation/serie-presentation.component'
+
+import { ValuesTableComponent } from './values-table/values-table.component'
+import { ValueSortingComponent } from './value-sorting/value-sorting.component'
+import { ValueDetailComponent } from './value-detail/value-detail.component'
+import { ValuePresentationComponent } from './value-presentation/value-presentation.component'
 
 
 @NgModule({
 	declarations: [
 		// insertion point for declarations 
-		CountrysTableComponent,
-		CountrySortingComponent,
-		CountryDetailComponent,
-		CountryPresentationComponent,
+		BarsTableComponent,
+		BarSortingComponent,
+		BarDetailComponent,
+		BarPresentationComponent,
 
-		HellosTableComponent,
-		HelloSortingComponent,
-		HelloDetailComponent,
-		HelloPresentationComponent,
+		KeysTableComponent,
+		KeySortingComponent,
+		KeyDetailComponent,
+		KeyPresentationComponent,
+
+		SeriesTableComponent,
+		SerieSortingComponent,
+		SerieDetailComponent,
+		SeriePresentationComponent,
+
+		ValuesTableComponent,
+		ValueSortingComponent,
+		ValueDetailComponent,
+		ValuePresentationComponent,
 
 
 		SplitterComponent,
@@ -102,15 +122,25 @@ import { HelloPresentationComponent } from './hello-presentation/hello-presentat
 	],
 	exports: [
 		// insertion point for declarations 
-		CountrysTableComponent,
-		CountrySortingComponent,
-		CountryDetailComponent,
-		CountryPresentationComponent,
+		BarsTableComponent,
+		BarSortingComponent,
+		BarDetailComponent,
+		BarPresentationComponent,
 
-		HellosTableComponent,
-		HelloSortingComponent,
-		HelloDetailComponent,
-		HelloPresentationComponent,
+		KeysTableComponent,
+		KeySortingComponent,
+		KeyDetailComponent,
+		KeyPresentationComponent,
+
+		SeriesTableComponent,
+		SerieSortingComponent,
+		SerieDetailComponent,
+		SeriePresentationComponent,
+
+		ValuesTableComponent,
+		ValueSortingComponent,
+		ValueDetailComponent,
+		ValuePresentationComponent,
 
 
 		SplitterComponent,

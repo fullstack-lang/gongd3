@@ -32,21 +32,37 @@ type GongStructInterface interface {
 // StageStruct enables storage of staged instances
 // swagger:ignore
 type StageStruct struct { // insertion point for definition of arrays registering instances
-	Countrys           map[*Country]any
-	Countrys_mapString map[string]*Country
+	Bars           map[*Bar]any
+	Bars_mapString map[string]*Bar
 
-	OnAfterCountryCreateCallback OnAfterCreateInterface[Country]
-	OnAfterCountryUpdateCallback OnAfterUpdateInterface[Country]
-	OnAfterCountryDeleteCallback OnAfterDeleteInterface[Country]
-	OnAfterCountryReadCallback   OnAfterReadInterface[Country]
+	OnAfterBarCreateCallback OnAfterCreateInterface[Bar]
+	OnAfterBarUpdateCallback OnAfterUpdateInterface[Bar]
+	OnAfterBarDeleteCallback OnAfterDeleteInterface[Bar]
+	OnAfterBarReadCallback   OnAfterReadInterface[Bar]
 
-	Hellos           map[*Hello]any
-	Hellos_mapString map[string]*Hello
+	Keys           map[*Key]any
+	Keys_mapString map[string]*Key
 
-	OnAfterHelloCreateCallback OnAfterCreateInterface[Hello]
-	OnAfterHelloUpdateCallback OnAfterUpdateInterface[Hello]
-	OnAfterHelloDeleteCallback OnAfterDeleteInterface[Hello]
-	OnAfterHelloReadCallback   OnAfterReadInterface[Hello]
+	OnAfterKeyCreateCallback OnAfterCreateInterface[Key]
+	OnAfterKeyUpdateCallback OnAfterUpdateInterface[Key]
+	OnAfterKeyDeleteCallback OnAfterDeleteInterface[Key]
+	OnAfterKeyReadCallback   OnAfterReadInterface[Key]
+
+	Series           map[*Serie]any
+	Series_mapString map[string]*Serie
+
+	OnAfterSerieCreateCallback OnAfterCreateInterface[Serie]
+	OnAfterSerieUpdateCallback OnAfterUpdateInterface[Serie]
+	OnAfterSerieDeleteCallback OnAfterDeleteInterface[Serie]
+	OnAfterSerieReadCallback   OnAfterReadInterface[Serie]
+
+	Values           map[*Value]any
+	Values_mapString map[string]*Value
+
+	OnAfterValueCreateCallback OnAfterCreateInterface[Value]
+	OnAfterValueUpdateCallback OnAfterUpdateInterface[Value]
+	OnAfterValueDeleteCallback OnAfterDeleteInterface[Value]
+	OnAfterValueReadCallback   OnAfterReadInterface[Value]
 
 	AllModelsStructCreateCallback AllModelsStructCreateInterface
 
@@ -98,21 +114,31 @@ type BackRepoInterface interface {
 	BackupXL(stage *StageStruct, dirPath string)
 	RestoreXL(stage *StageStruct, dirPath string)
 	// insertion point for Commit and Checkout signatures
-	CommitCountry(country *Country)
-	CheckoutCountry(country *Country)
-	CommitHello(hello *Hello)
-	CheckoutHello(hello *Hello)
+	CommitBar(bar *Bar)
+	CheckoutBar(bar *Bar)
+	CommitKey(key *Key)
+	CheckoutKey(key *Key)
+	CommitSerie(serie *Serie)
+	CheckoutSerie(serie *Serie)
+	CommitValue(value *Value)
+	CheckoutValue(value *Value)
 	GetLastCommitFromBackNb() uint
 	GetLastPushFromFrontNb() uint
 }
 
 // swagger:ignore instructs the gong compiler (gongc) to avoid this particular struct
 var Stage StageStruct = StageStruct{ // insertion point for array initiatialisation
-	Countrys:           make(map[*Country]any),
-	Countrys_mapString: make(map[string]*Country),
+	Bars:           make(map[*Bar]any),
+	Bars_mapString: make(map[string]*Bar),
 
-	Hellos:           make(map[*Hello]any),
-	Hellos_mapString: make(map[string]*Hello),
+	Keys:           make(map[*Key]any),
+	Keys_mapString: make(map[string]*Key),
+
+	Series:           make(map[*Serie]any),
+	Series_mapString: make(map[string]*Serie),
+
+	Values:           make(map[*Value]any),
+	Values_mapString: make(map[string]*Value),
 
 	// end of insertion point
 	Map_GongStructName_InstancesNb: make(map[string]int),
@@ -124,8 +150,10 @@ func (stage *StageStruct) Commit() {
 	}
 
 	// insertion point for computing the map of number of instances per gongstruct
-	stage.Map_GongStructName_InstancesNb["Country"] = len(stage.Countrys)
-	stage.Map_GongStructName_InstancesNb["Hello"] = len(stage.Hellos)
+	stage.Map_GongStructName_InstancesNb["Bar"] = len(stage.Bars)
+	stage.Map_GongStructName_InstancesNb["Key"] = len(stage.Keys)
+	stage.Map_GongStructName_InstancesNb["Serie"] = len(stage.Series)
+	stage.Map_GongStructName_InstancesNb["Value"] = len(stage.Values)
 
 }
 
@@ -135,8 +163,10 @@ func (stage *StageStruct) Checkout() {
 	}
 
 	// insertion point for computing the map of number of instances per gongstruct
-	stage.Map_GongStructName_InstancesNb["Country"] = len(stage.Countrys)
-	stage.Map_GongStructName_InstancesNb["Hello"] = len(stage.Hellos)
+	stage.Map_GongStructName_InstancesNb["Bar"] = len(stage.Bars)
+	stage.Map_GongStructName_InstancesNb["Key"] = len(stage.Keys)
+	stage.Map_GongStructName_InstancesNb["Serie"] = len(stage.Series)
+	stage.Map_GongStructName_InstancesNb["Value"] = len(stage.Values)
 
 }
 
@@ -169,222 +199,428 @@ func (stage *StageStruct) RestoreXL(dirPath string) {
 }
 
 // insertion point for cumulative sub template with model space calls
-// Stage puts country to the model stage
-func (country *Country) Stage() *Country {
-	Stage.Countrys[country] = __member
-	Stage.Countrys_mapString[country.Name] = country
+// Stage puts bar to the model stage
+func (bar *Bar) Stage() *Bar {
+	Stage.Bars[bar] = __member
+	Stage.Bars_mapString[bar.Name] = bar
 
-	return country
+	return bar
 }
 
-// Unstage removes country off the model stage
-func (country *Country) Unstage() *Country {
-	delete(Stage.Countrys, country)
-	delete(Stage.Countrys_mapString, country.Name)
-	return country
+// Unstage removes bar off the model stage
+func (bar *Bar) Unstage() *Bar {
+	delete(Stage.Bars, bar)
+	delete(Stage.Bars_mapString, bar.Name)
+	return bar
 }
 
-// commit country to the back repo (if it is already staged)
-func (country *Country) Commit() *Country {
-	if _, ok := Stage.Countrys[country]; ok {
+// commit bar to the back repo (if it is already staged)
+func (bar *Bar) Commit() *Bar {
+	if _, ok := Stage.Bars[bar]; ok {
 		if Stage.BackRepo != nil {
-			Stage.BackRepo.CommitCountry(country)
+			Stage.BackRepo.CommitBar(bar)
 		}
 	}
-	return country
+	return bar
 }
 
-// Checkout country to the back repo (if it is already staged)
-func (country *Country) Checkout() *Country {
-	if _, ok := Stage.Countrys[country]; ok {
+// Checkout bar to the back repo (if it is already staged)
+func (bar *Bar) Checkout() *Bar {
+	if _, ok := Stage.Bars[bar]; ok {
 		if Stage.BackRepo != nil {
-			Stage.BackRepo.CheckoutCountry(country)
+			Stage.BackRepo.CheckoutBar(bar)
 		}
 	}
-	return country
+	return bar
 }
 
 //
 // Legacy, to be deleted
 //
 
-// StageCopy appends a copy of country to the model stage
-func (country *Country) StageCopy() *Country {
-	_country := new(Country)
-	*_country = *country
-	_country.Stage()
-	return _country
+// StageCopy appends a copy of bar to the model stage
+func (bar *Bar) StageCopy() *Bar {
+	_bar := new(Bar)
+	*_bar = *bar
+	_bar.Stage()
+	return _bar
 }
 
-// StageAndCommit appends country to the model stage and commit to the orm repo
-func (country *Country) StageAndCommit() *Country {
-	country.Stage()
+// StageAndCommit appends bar to the model stage and commit to the orm repo
+func (bar *Bar) StageAndCommit() *Bar {
+	bar.Stage()
 	if Stage.AllModelsStructCreateCallback != nil {
-		Stage.AllModelsStructCreateCallback.CreateORMCountry(country)
+		Stage.AllModelsStructCreateCallback.CreateORMBar(bar)
 	}
-	return country
+	return bar
 }
 
-// DeleteStageAndCommit appends country to the model stage and commit to the orm repo
-func (country *Country) DeleteStageAndCommit() *Country {
-	country.Unstage()
-	DeleteORMCountry(country)
-	return country
+// DeleteStageAndCommit appends bar to the model stage and commit to the orm repo
+func (bar *Bar) DeleteStageAndCommit() *Bar {
+	bar.Unstage()
+	DeleteORMBar(bar)
+	return bar
 }
 
-// StageCopyAndCommit appends a copy of country to the model stage and commit to the orm repo
-func (country *Country) StageCopyAndCommit() *Country {
-	_country := new(Country)
-	*_country = *country
-	_country.Stage()
+// StageCopyAndCommit appends a copy of bar to the model stage and commit to the orm repo
+func (bar *Bar) StageCopyAndCommit() *Bar {
+	_bar := new(Bar)
+	*_bar = *bar
+	_bar.Stage()
 	if Stage.AllModelsStructCreateCallback != nil {
-		Stage.AllModelsStructCreateCallback.CreateORMCountry(country)
+		Stage.AllModelsStructCreateCallback.CreateORMBar(bar)
 	}
-	return _country
+	return _bar
 }
 
-// CreateORMCountry enables dynamic staging of a Country instance
-func CreateORMCountry(country *Country) {
-	country.Stage()
+// CreateORMBar enables dynamic staging of a Bar instance
+func CreateORMBar(bar *Bar) {
+	bar.Stage()
 	if Stage.AllModelsStructCreateCallback != nil {
-		Stage.AllModelsStructCreateCallback.CreateORMCountry(country)
+		Stage.AllModelsStructCreateCallback.CreateORMBar(bar)
 	}
 }
 
-// DeleteORMCountry enables dynamic staging of a Country instance
-func DeleteORMCountry(country *Country) {
-	country.Unstage()
+// DeleteORMBar enables dynamic staging of a Bar instance
+func DeleteORMBar(bar *Bar) {
+	bar.Unstage()
 	if Stage.AllModelsStructDeleteCallback != nil {
-		Stage.AllModelsStructDeleteCallback.DeleteORMCountry(country)
+		Stage.AllModelsStructDeleteCallback.DeleteORMBar(bar)
 	}
 }
 
 // for satisfaction of GongStruct interface
-func (country *Country) GetName() (res string) {
-	return country.Name
+func (bar *Bar) GetName() (res string) {
+	return bar.Name
 }
 
-// Stage puts hello to the model stage
-func (hello *Hello) Stage() *Hello {
-	Stage.Hellos[hello] = __member
-	Stage.Hellos_mapString[hello.Name] = hello
+// Stage puts key to the model stage
+func (key *Key) Stage() *Key {
+	Stage.Keys[key] = __member
+	Stage.Keys_mapString[key.Name] = key
 
-	return hello
+	return key
 }
 
-// Unstage removes hello off the model stage
-func (hello *Hello) Unstage() *Hello {
-	delete(Stage.Hellos, hello)
-	delete(Stage.Hellos_mapString, hello.Name)
-	return hello
+// Unstage removes key off the model stage
+func (key *Key) Unstage() *Key {
+	delete(Stage.Keys, key)
+	delete(Stage.Keys_mapString, key.Name)
+	return key
 }
 
-// commit hello to the back repo (if it is already staged)
-func (hello *Hello) Commit() *Hello {
-	if _, ok := Stage.Hellos[hello]; ok {
+// commit key to the back repo (if it is already staged)
+func (key *Key) Commit() *Key {
+	if _, ok := Stage.Keys[key]; ok {
 		if Stage.BackRepo != nil {
-			Stage.BackRepo.CommitHello(hello)
+			Stage.BackRepo.CommitKey(key)
 		}
 	}
-	return hello
+	return key
 }
 
-// Checkout hello to the back repo (if it is already staged)
-func (hello *Hello) Checkout() *Hello {
-	if _, ok := Stage.Hellos[hello]; ok {
+// Checkout key to the back repo (if it is already staged)
+func (key *Key) Checkout() *Key {
+	if _, ok := Stage.Keys[key]; ok {
 		if Stage.BackRepo != nil {
-			Stage.BackRepo.CheckoutHello(hello)
+			Stage.BackRepo.CheckoutKey(key)
 		}
 	}
-	return hello
+	return key
 }
 
 //
 // Legacy, to be deleted
 //
 
-// StageCopy appends a copy of hello to the model stage
-func (hello *Hello) StageCopy() *Hello {
-	_hello := new(Hello)
-	*_hello = *hello
-	_hello.Stage()
-	return _hello
+// StageCopy appends a copy of key to the model stage
+func (key *Key) StageCopy() *Key {
+	_key := new(Key)
+	*_key = *key
+	_key.Stage()
+	return _key
 }
 
-// StageAndCommit appends hello to the model stage and commit to the orm repo
-func (hello *Hello) StageAndCommit() *Hello {
-	hello.Stage()
+// StageAndCommit appends key to the model stage and commit to the orm repo
+func (key *Key) StageAndCommit() *Key {
+	key.Stage()
 	if Stage.AllModelsStructCreateCallback != nil {
-		Stage.AllModelsStructCreateCallback.CreateORMHello(hello)
+		Stage.AllModelsStructCreateCallback.CreateORMKey(key)
 	}
-	return hello
+	return key
 }
 
-// DeleteStageAndCommit appends hello to the model stage and commit to the orm repo
-func (hello *Hello) DeleteStageAndCommit() *Hello {
-	hello.Unstage()
-	DeleteORMHello(hello)
-	return hello
+// DeleteStageAndCommit appends key to the model stage and commit to the orm repo
+func (key *Key) DeleteStageAndCommit() *Key {
+	key.Unstage()
+	DeleteORMKey(key)
+	return key
 }
 
-// StageCopyAndCommit appends a copy of hello to the model stage and commit to the orm repo
-func (hello *Hello) StageCopyAndCommit() *Hello {
-	_hello := new(Hello)
-	*_hello = *hello
-	_hello.Stage()
+// StageCopyAndCommit appends a copy of key to the model stage and commit to the orm repo
+func (key *Key) StageCopyAndCommit() *Key {
+	_key := new(Key)
+	*_key = *key
+	_key.Stage()
 	if Stage.AllModelsStructCreateCallback != nil {
-		Stage.AllModelsStructCreateCallback.CreateORMHello(hello)
+		Stage.AllModelsStructCreateCallback.CreateORMKey(key)
 	}
-	return _hello
+	return _key
 }
 
-// CreateORMHello enables dynamic staging of a Hello instance
-func CreateORMHello(hello *Hello) {
-	hello.Stage()
+// CreateORMKey enables dynamic staging of a Key instance
+func CreateORMKey(key *Key) {
+	key.Stage()
 	if Stage.AllModelsStructCreateCallback != nil {
-		Stage.AllModelsStructCreateCallback.CreateORMHello(hello)
+		Stage.AllModelsStructCreateCallback.CreateORMKey(key)
 	}
 }
 
-// DeleteORMHello enables dynamic staging of a Hello instance
-func DeleteORMHello(hello *Hello) {
-	hello.Unstage()
+// DeleteORMKey enables dynamic staging of a Key instance
+func DeleteORMKey(key *Key) {
+	key.Unstage()
 	if Stage.AllModelsStructDeleteCallback != nil {
-		Stage.AllModelsStructDeleteCallback.DeleteORMHello(hello)
+		Stage.AllModelsStructDeleteCallback.DeleteORMKey(key)
 	}
 }
 
 // for satisfaction of GongStruct interface
-func (hello *Hello) GetName() (res string) {
-	return hello.Name
+func (key *Key) GetName() (res string) {
+	return key.Name
+}
+
+// Stage puts serie to the model stage
+func (serie *Serie) Stage() *Serie {
+	Stage.Series[serie] = __member
+	Stage.Series_mapString[serie.Name] = serie
+
+	return serie
+}
+
+// Unstage removes serie off the model stage
+func (serie *Serie) Unstage() *Serie {
+	delete(Stage.Series, serie)
+	delete(Stage.Series_mapString, serie.Name)
+	return serie
+}
+
+// commit serie to the back repo (if it is already staged)
+func (serie *Serie) Commit() *Serie {
+	if _, ok := Stage.Series[serie]; ok {
+		if Stage.BackRepo != nil {
+			Stage.BackRepo.CommitSerie(serie)
+		}
+	}
+	return serie
+}
+
+// Checkout serie to the back repo (if it is already staged)
+func (serie *Serie) Checkout() *Serie {
+	if _, ok := Stage.Series[serie]; ok {
+		if Stage.BackRepo != nil {
+			Stage.BackRepo.CheckoutSerie(serie)
+		}
+	}
+	return serie
+}
+
+//
+// Legacy, to be deleted
+//
+
+// StageCopy appends a copy of serie to the model stage
+func (serie *Serie) StageCopy() *Serie {
+	_serie := new(Serie)
+	*_serie = *serie
+	_serie.Stage()
+	return _serie
+}
+
+// StageAndCommit appends serie to the model stage and commit to the orm repo
+func (serie *Serie) StageAndCommit() *Serie {
+	serie.Stage()
+	if Stage.AllModelsStructCreateCallback != nil {
+		Stage.AllModelsStructCreateCallback.CreateORMSerie(serie)
+	}
+	return serie
+}
+
+// DeleteStageAndCommit appends serie to the model stage and commit to the orm repo
+func (serie *Serie) DeleteStageAndCommit() *Serie {
+	serie.Unstage()
+	DeleteORMSerie(serie)
+	return serie
+}
+
+// StageCopyAndCommit appends a copy of serie to the model stage and commit to the orm repo
+func (serie *Serie) StageCopyAndCommit() *Serie {
+	_serie := new(Serie)
+	*_serie = *serie
+	_serie.Stage()
+	if Stage.AllModelsStructCreateCallback != nil {
+		Stage.AllModelsStructCreateCallback.CreateORMSerie(serie)
+	}
+	return _serie
+}
+
+// CreateORMSerie enables dynamic staging of a Serie instance
+func CreateORMSerie(serie *Serie) {
+	serie.Stage()
+	if Stage.AllModelsStructCreateCallback != nil {
+		Stage.AllModelsStructCreateCallback.CreateORMSerie(serie)
+	}
+}
+
+// DeleteORMSerie enables dynamic staging of a Serie instance
+func DeleteORMSerie(serie *Serie) {
+	serie.Unstage()
+	if Stage.AllModelsStructDeleteCallback != nil {
+		Stage.AllModelsStructDeleteCallback.DeleteORMSerie(serie)
+	}
+}
+
+// for satisfaction of GongStruct interface
+func (serie *Serie) GetName() (res string) {
+	return serie.Name
+}
+
+// Stage puts value to the model stage
+func (value *Value) Stage() *Value {
+	Stage.Values[value] = __member
+	Stage.Values_mapString[value.Name] = value
+
+	return value
+}
+
+// Unstage removes value off the model stage
+func (value *Value) Unstage() *Value {
+	delete(Stage.Values, value)
+	delete(Stage.Values_mapString, value.Name)
+	return value
+}
+
+// commit value to the back repo (if it is already staged)
+func (value *Value) Commit() *Value {
+	if _, ok := Stage.Values[value]; ok {
+		if Stage.BackRepo != nil {
+			Stage.BackRepo.CommitValue(value)
+		}
+	}
+	return value
+}
+
+// Checkout value to the back repo (if it is already staged)
+func (value *Value) Checkout() *Value {
+	if _, ok := Stage.Values[value]; ok {
+		if Stage.BackRepo != nil {
+			Stage.BackRepo.CheckoutValue(value)
+		}
+	}
+	return value
+}
+
+//
+// Legacy, to be deleted
+//
+
+// StageCopy appends a copy of value to the model stage
+func (value *Value) StageCopy() *Value {
+	_value := new(Value)
+	*_value = *value
+	_value.Stage()
+	return _value
+}
+
+// StageAndCommit appends value to the model stage and commit to the orm repo
+func (value *Value) StageAndCommit() *Value {
+	value.Stage()
+	if Stage.AllModelsStructCreateCallback != nil {
+		Stage.AllModelsStructCreateCallback.CreateORMValue(value)
+	}
+	return value
+}
+
+// DeleteStageAndCommit appends value to the model stage and commit to the orm repo
+func (value *Value) DeleteStageAndCommit() *Value {
+	value.Unstage()
+	DeleteORMValue(value)
+	return value
+}
+
+// StageCopyAndCommit appends a copy of value to the model stage and commit to the orm repo
+func (value *Value) StageCopyAndCommit() *Value {
+	_value := new(Value)
+	*_value = *value
+	_value.Stage()
+	if Stage.AllModelsStructCreateCallback != nil {
+		Stage.AllModelsStructCreateCallback.CreateORMValue(value)
+	}
+	return _value
+}
+
+// CreateORMValue enables dynamic staging of a Value instance
+func CreateORMValue(value *Value) {
+	value.Stage()
+	if Stage.AllModelsStructCreateCallback != nil {
+		Stage.AllModelsStructCreateCallback.CreateORMValue(value)
+	}
+}
+
+// DeleteORMValue enables dynamic staging of a Value instance
+func DeleteORMValue(value *Value) {
+	value.Unstage()
+	if Stage.AllModelsStructDeleteCallback != nil {
+		Stage.AllModelsStructDeleteCallback.DeleteORMValue(value)
+	}
+}
+
+// for satisfaction of GongStruct interface
+func (value *Value) GetName() (res string) {
+	return value.Name
 }
 
 // swagger:ignore
 type AllModelsStructCreateInterface interface { // insertion point for Callbacks on creation
-	CreateORMCountry(Country *Country)
-	CreateORMHello(Hello *Hello)
+	CreateORMBar(Bar *Bar)
+	CreateORMKey(Key *Key)
+	CreateORMSerie(Serie *Serie)
+	CreateORMValue(Value *Value)
 }
 
 type AllModelsStructDeleteInterface interface { // insertion point for Callbacks on deletion
-	DeleteORMCountry(Country *Country)
-	DeleteORMHello(Hello *Hello)
+	DeleteORMBar(Bar *Bar)
+	DeleteORMKey(Key *Key)
+	DeleteORMSerie(Serie *Serie)
+	DeleteORMValue(Value *Value)
 }
 
 func (stage *StageStruct) Reset() { // insertion point for array reset
-	stage.Countrys = make(map[*Country]any)
-	stage.Countrys_mapString = make(map[string]*Country)
+	stage.Bars = make(map[*Bar]any)
+	stage.Bars_mapString = make(map[string]*Bar)
 
-	stage.Hellos = make(map[*Hello]any)
-	stage.Hellos_mapString = make(map[string]*Hello)
+	stage.Keys = make(map[*Key]any)
+	stage.Keys_mapString = make(map[string]*Key)
+
+	stage.Series = make(map[*Serie]any)
+	stage.Series_mapString = make(map[string]*Serie)
+
+	stage.Values = make(map[*Value]any)
+	stage.Values_mapString = make(map[string]*Value)
 
 }
 
 func (stage *StageStruct) Nil() { // insertion point for array nil
-	stage.Countrys = nil
-	stage.Countrys_mapString = nil
+	stage.Bars = nil
+	stage.Bars_mapString = nil
 
-	stage.Hellos = nil
-	stage.Hellos_mapString = nil
+	stage.Keys = nil
+	stage.Keys_mapString = nil
+
+	stage.Series = nil
+	stage.Series_mapString = nil
+
+	stage.Values = nil
+	stage.Values_mapString = nil
 
 }
 
@@ -468,95 +704,211 @@ func (stage *StageStruct) Marshall(file *os.File, modelsPackageName, packageName
 	setValueField := ""
 
 	// insertion initialization of objects to stage
-	map_Country_Identifiers := make(map[*Country]string)
-	_ = map_Country_Identifiers
+	map_Bar_Identifiers := make(map[*Bar]string)
+	_ = map_Bar_Identifiers
 
-	countryOrdered := []*Country{}
-	for country := range stage.Countrys {
-		countryOrdered = append(countryOrdered, country)
+	barOrdered := []*Bar{}
+	for bar := range stage.Bars {
+		barOrdered = append(barOrdered, bar)
 	}
-	sort.Slice(countryOrdered[:], func(i, j int) bool {
-		return countryOrdered[i].Name < countryOrdered[j].Name
+	sort.Slice(barOrdered[:], func(i, j int) bool {
+		return barOrdered[i].Name < barOrdered[j].Name
 	})
-	identifiersDecl += "\n\n	// Declarations of staged instances of Country"
-	for idx, country := range countryOrdered {
+	identifiersDecl += "\n\n	// Declarations of staged instances of Bar"
+	for idx, bar := range barOrdered {
 
-		id = generatesIdentifier("Country", idx, country.Name)
-		map_Country_Identifiers[country] = id
+		id = generatesIdentifier("Bar", idx, bar.Name)
+		map_Bar_Identifiers[bar] = id
 
 		decl = IdentifiersDecls
 		decl = strings.ReplaceAll(decl, "{{Identifier}}", id)
-		decl = strings.ReplaceAll(decl, "{{GeneratedStructName}}", "Country")
-		decl = strings.ReplaceAll(decl, "{{GeneratedFieldNameValue}}", country.Name)
+		decl = strings.ReplaceAll(decl, "{{GeneratedStructName}}", "Bar")
+		decl = strings.ReplaceAll(decl, "{{GeneratedFieldNameValue}}", bar.Name)
 		identifiersDecl += decl
 
-		initializerStatements += "\n\n	// Country values setup"
+		initializerStatements += "\n\n	// Bar values setup"
 		// Initialisation of values
 		setValueField = StringInitStatement
 		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
 		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "Name")
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", string(country.Name))
+		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", string(bar.Name))
 		initializerStatements += setValueField
 
 	}
 
-	map_Hello_Identifiers := make(map[*Hello]string)
-	_ = map_Hello_Identifiers
+	map_Key_Identifiers := make(map[*Key]string)
+	_ = map_Key_Identifiers
 
-	helloOrdered := []*Hello{}
-	for hello := range stage.Hellos {
-		helloOrdered = append(helloOrdered, hello)
+	keyOrdered := []*Key{}
+	for key := range stage.Keys {
+		keyOrdered = append(keyOrdered, key)
 	}
-	sort.Slice(helloOrdered[:], func(i, j int) bool {
-		return helloOrdered[i].Name < helloOrdered[j].Name
+	sort.Slice(keyOrdered[:], func(i, j int) bool {
+		return keyOrdered[i].Name < keyOrdered[j].Name
 	})
-	identifiersDecl += "\n\n	// Declarations of staged instances of Hello"
-	for idx, hello := range helloOrdered {
+	identifiersDecl += "\n\n	// Declarations of staged instances of Key"
+	for idx, key := range keyOrdered {
 
-		id = generatesIdentifier("Hello", idx, hello.Name)
-		map_Hello_Identifiers[hello] = id
+		id = generatesIdentifier("Key", idx, key.Name)
+		map_Key_Identifiers[key] = id
 
 		decl = IdentifiersDecls
 		decl = strings.ReplaceAll(decl, "{{Identifier}}", id)
-		decl = strings.ReplaceAll(decl, "{{GeneratedStructName}}", "Hello")
-		decl = strings.ReplaceAll(decl, "{{GeneratedFieldNameValue}}", hello.Name)
+		decl = strings.ReplaceAll(decl, "{{GeneratedStructName}}", "Key")
+		decl = strings.ReplaceAll(decl, "{{GeneratedFieldNameValue}}", key.Name)
 		identifiersDecl += decl
 
-		initializerStatements += "\n\n	// Hello values setup"
+		initializerStatements += "\n\n	// Key values setup"
 		// Initialisation of values
 		setValueField = StringInitStatement
 		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
 		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "Name")
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", string(hello.Name))
+		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", string(key.Name))
+		initializerStatements += setValueField
+
+	}
+
+	map_Serie_Identifiers := make(map[*Serie]string)
+	_ = map_Serie_Identifiers
+
+	serieOrdered := []*Serie{}
+	for serie := range stage.Series {
+		serieOrdered = append(serieOrdered, serie)
+	}
+	sort.Slice(serieOrdered[:], func(i, j int) bool {
+		return serieOrdered[i].Name < serieOrdered[j].Name
+	})
+	identifiersDecl += "\n\n	// Declarations of staged instances of Serie"
+	for idx, serie := range serieOrdered {
+
+		id = generatesIdentifier("Serie", idx, serie.Name)
+		map_Serie_Identifiers[serie] = id
+
+		decl = IdentifiersDecls
+		decl = strings.ReplaceAll(decl, "{{Identifier}}", id)
+		decl = strings.ReplaceAll(decl, "{{GeneratedStructName}}", "Serie")
+		decl = strings.ReplaceAll(decl, "{{GeneratedFieldNameValue}}", serie.Name)
+		identifiersDecl += decl
+
+		initializerStatements += "\n\n	// Serie values setup"
+		// Initialisation of values
+		setValueField = StringInitStatement
+		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
+		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "Name")
+		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", string(serie.Name))
+		initializerStatements += setValueField
+
+	}
+
+	map_Value_Identifiers := make(map[*Value]string)
+	_ = map_Value_Identifiers
+
+	valueOrdered := []*Value{}
+	for value := range stage.Values {
+		valueOrdered = append(valueOrdered, value)
+	}
+	sort.Slice(valueOrdered[:], func(i, j int) bool {
+		return valueOrdered[i].Name < valueOrdered[j].Name
+	})
+	identifiersDecl += "\n\n	// Declarations of staged instances of Value"
+	for idx, value := range valueOrdered {
+
+		id = generatesIdentifier("Value", idx, value.Name)
+		map_Value_Identifiers[value] = id
+
+		decl = IdentifiersDecls
+		decl = strings.ReplaceAll(decl, "{{Identifier}}", id)
+		decl = strings.ReplaceAll(decl, "{{GeneratedStructName}}", "Value")
+		decl = strings.ReplaceAll(decl, "{{GeneratedFieldNameValue}}", value.Name)
+		identifiersDecl += decl
+
+		initializerStatements += "\n\n	// Value values setup"
+		// Initialisation of values
+		setValueField = StringInitStatement
+		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
+		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "Name")
+		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", string(value.Name))
 		initializerStatements += setValueField
 
 	}
 
 	// insertion initialization of objects to stage
-	for idx, country := range countryOrdered {
+	for idx, bar := range barOrdered {
 		var setPointerField string
 		_ = setPointerField
 
-		id = generatesIdentifier("Country", idx, country.Name)
-		map_Country_Identifiers[country] = id
+		id = generatesIdentifier("Bar", idx, bar.Name)
+		map_Bar_Identifiers[bar] = id
 
 		// Initialisation of values
-		if country.Hello != nil {
+		if bar.X != nil {
 			setPointerField = PointerFieldInitStatement
 			setPointerField = strings.ReplaceAll(setPointerField, "{{Identifier}}", id)
-			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldName}}", "Hello")
-			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldNameValue}}", map_Hello_Identifiers[country.Hello])
+			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldName}}", "X")
+			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldNameValue}}", map_Key_Identifiers[bar.X])
+			pointersInitializesStatements += setPointerField
+		}
+
+		if bar.Y != nil {
+			setPointerField = PointerFieldInitStatement
+			setPointerField = strings.ReplaceAll(setPointerField, "{{Identifier}}", id)
+			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldName}}", "Y")
+			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldNameValue}}", map_Key_Identifiers[bar.Y])
+			pointersInitializesStatements += setPointerField
+		}
+
+		for _, _serie := range bar.Set {
+			setPointerField = SliceOfPointersFieldInitStatement
+			setPointerField = strings.ReplaceAll(setPointerField, "{{Identifier}}", id)
+			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldName}}", "Set")
+			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldNameValue}}", map_Serie_Identifiers[_serie])
 			pointersInitializesStatements += setPointerField
 		}
 
 	}
 
-	for idx, hello := range helloOrdered {
+	for idx, key := range keyOrdered {
 		var setPointerField string
 		_ = setPointerField
 
-		id = generatesIdentifier("Hello", idx, hello.Name)
-		map_Hello_Identifiers[hello] = id
+		id = generatesIdentifier("Key", idx, key.Name)
+		map_Key_Identifiers[key] = id
+
+		// Initialisation of values
+	}
+
+	for idx, serie := range serieOrdered {
+		var setPointerField string
+		_ = setPointerField
+
+		id = generatesIdentifier("Serie", idx, serie.Name)
+		map_Serie_Identifiers[serie] = id
+
+		// Initialisation of values
+		if serie.Key != nil {
+			setPointerField = PointerFieldInitStatement
+			setPointerField = strings.ReplaceAll(setPointerField, "{{Identifier}}", id)
+			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldName}}", "Key")
+			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldNameValue}}", map_Key_Identifiers[serie.Key])
+			pointersInitializesStatements += setPointerField
+		}
+
+		for _, _value := range serie.Values {
+			setPointerField = SliceOfPointersFieldInitStatement
+			setPointerField = strings.ReplaceAll(setPointerField, "{{Identifier}}", id)
+			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldName}}", "Values")
+			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldNameValue}}", map_Value_Identifiers[_value])
+			pointersInitializesStatements += setPointerField
+		}
+
+	}
+
+	for idx, value := range valueOrdered {
+		var setPointerField string
+		_ = setPointerField
+
+		id = generatesIdentifier("Value", idx, value.Name)
+		map_Value_Identifiers[value] = id
 
 		// Initialisation of values
 	}
@@ -586,29 +938,97 @@ func generatesIdentifier(gongStructName string, idx int, instanceName string) (i
 
 // insertion point of functions that provide maps for reverse associations
 
-// generate function for reverse association maps of Country
-func (stageStruct *StageStruct) CreateReverseMap_Country_Hello() (res map[*Hello][]*Country) {
-	res = make(map[*Hello][]*Country)
+// generate function for reverse association maps of Bar
+func (stageStruct *StageStruct) CreateReverseMap_Bar_X() (res map[*Key][]*Bar) {
+	res = make(map[*Key][]*Bar)
 
-	for country := range stageStruct.Countrys {
-		if country.Hello != nil {
-			hello_ := country.Hello
-			var countrys []*Country
-			_, ok := res[hello_]
+	for bar := range stageStruct.Bars {
+		if bar.X != nil {
+			key_ := bar.X
+			var bars []*Bar
+			_, ok := res[key_]
 			if ok {
-				countrys = res[hello_]
+				bars = res[key_]
 			} else {
-				countrys = make([]*Country, 0)
+				bars = make([]*Bar, 0)
 			}
-			countrys = append(countrys, country)
-			res[hello_] = countrys
+			bars = append(bars, bar)
+			res[key_] = bars
+		}
+	}
+
+	return
+}
+func (stageStruct *StageStruct) CreateReverseMap_Bar_Y() (res map[*Key][]*Bar) {
+	res = make(map[*Key][]*Bar)
+
+	for bar := range stageStruct.Bars {
+		if bar.Y != nil {
+			key_ := bar.Y
+			var bars []*Bar
+			_, ok := res[key_]
+			if ok {
+				bars = res[key_]
+			} else {
+				bars = make([]*Bar, 0)
+			}
+			bars = append(bars, bar)
+			res[key_] = bars
+		}
+	}
+
+	return
+}
+func (stageStruct *StageStruct) CreateReverseMap_Bar_Set() (res map[*Serie]*Bar) {
+	res = make(map[*Serie]*Bar)
+
+	for bar := range stageStruct.Bars {
+		for _, serie_ := range bar.Set {
+			res[serie_] = bar
 		}
 	}
 
 	return
 }
 
-// generate function for reverse association maps of Hello
+
+// generate function for reverse association maps of Key
+
+// generate function for reverse association maps of Serie
+func (stageStruct *StageStruct) CreateReverseMap_Serie_Key() (res map[*Key][]*Serie) {
+	res = make(map[*Key][]*Serie)
+
+	for serie := range stageStruct.Series {
+		if serie.Key != nil {
+			key_ := serie.Key
+			var series []*Serie
+			_, ok := res[key_]
+			if ok {
+				series = res[key_]
+			} else {
+				series = make([]*Serie, 0)
+			}
+			series = append(series, serie)
+			res[key_] = series
+		}
+	}
+
+	return
+}
+func (stageStruct *StageStruct) CreateReverseMap_Serie_Values() (res map[*Value]*Serie) {
+	res = make(map[*Value]*Serie)
+
+	for serie := range stageStruct.Series {
+		for _, value_ := range serie.Values {
+			res[value_] = serie
+		}
+	}
+
+	return
+}
+
+
+// generate function for reverse association maps of Value
 
 // Gongstruct is the type parameter for generated generic function that allows
 // - access to staged instances
@@ -616,7 +1036,7 @@ func (stageStruct *StageStruct) CreateReverseMap_Country_Hello() (res map[*Hello
 // - full refactoring of Gongstruct identifiers / fields
 type Gongstruct interface {
 	// insertion point for generic types
-	Country | Hello
+	Bar | Key | Serie | Value
 }
 
 // Gongstruct is the type parameter for generated generic function that allows
@@ -625,23 +1045,27 @@ type Gongstruct interface {
 // - full refactoring of Gongstruct identifiers / fields
 type PointerToGongstruct interface {
 	// insertion point for generic types
-	*Country | *Hello
+	*Bar | *Key | *Serie | *Value
 	GetName() string
 }
 
 type GongstructSet interface {
 	map[any]any |
 		// insertion point for generic types
-		map[*Country]any |
-		map[*Hello]any |
+		map[*Bar]any |
+		map[*Key]any |
+		map[*Serie]any |
+		map[*Value]any |
 		map[*any]any // because go does not support an extra "|" at the end of type specifications
 }
 
 type GongstructMapString interface {
 	map[any]any |
 		// insertion point for generic types
-		map[string]*Country |
-		map[string]*Hello |
+		map[string]*Bar |
+		map[string]*Key |
+		map[string]*Serie |
+		map[string]*Value |
 		map[*any]any // because go does not support an extra "|" at the end of type specifications
 }
 
@@ -652,10 +1076,14 @@ func GongGetSet[Type GongstructSet]() *Type {
 
 	switch any(ret).(type) {
 	// insertion point for generic get functions
-	case map[*Country]any:
-		return any(&Stage.Countrys).(*Type)
-	case map[*Hello]any:
-		return any(&Stage.Hellos).(*Type)
+	case map[*Bar]any:
+		return any(&Stage.Bars).(*Type)
+	case map[*Key]any:
+		return any(&Stage.Keys).(*Type)
+	case map[*Serie]any:
+		return any(&Stage.Series).(*Type)
+	case map[*Value]any:
+		return any(&Stage.Values).(*Type)
 	default:
 		return nil
 	}
@@ -668,10 +1096,14 @@ func GongGetMap[Type GongstructMapString]() *Type {
 
 	switch any(ret).(type) {
 	// insertion point for generic get functions
-	case map[string]*Country:
-		return any(&Stage.Countrys_mapString).(*Type)
-	case map[string]*Hello:
-		return any(&Stage.Hellos_mapString).(*Type)
+	case map[string]*Bar:
+		return any(&Stage.Bars_mapString).(*Type)
+	case map[string]*Key:
+		return any(&Stage.Keys_mapString).(*Type)
+	case map[string]*Serie:
+		return any(&Stage.Series_mapString).(*Type)
+	case map[string]*Value:
+		return any(&Stage.Values_mapString).(*Type)
 	default:
 		return nil
 	}
@@ -684,10 +1116,14 @@ func GetGongstructInstancesSet[Type Gongstruct]() *map[*Type]any {
 
 	switch any(ret).(type) {
 	// insertion point for generic get functions
-	case Country:
-		return any(&Stage.Countrys).(*map[*Type]any)
-	case Hello:
-		return any(&Stage.Hellos).(*map[*Type]any)
+	case Bar:
+		return any(&Stage.Bars).(*map[*Type]any)
+	case Key:
+		return any(&Stage.Keys).(*map[*Type]any)
+	case Serie:
+		return any(&Stage.Series).(*map[*Type]any)
+	case Value:
+		return any(&Stage.Values).(*map[*Type]any)
 	default:
 		return nil
 	}
@@ -700,10 +1136,14 @@ func GetGongstructInstancesMap[Type Gongstruct]() *map[string]*Type {
 
 	switch any(ret).(type) {
 	// insertion point for generic get functions
-	case Country:
-		return any(&Stage.Countrys_mapString).(*map[string]*Type)
-	case Hello:
-		return any(&Stage.Hellos_mapString).(*map[string]*Type)
+	case Bar:
+		return any(&Stage.Bars_mapString).(*map[string]*Type)
+	case Key:
+		return any(&Stage.Keys_mapString).(*map[string]*Type)
+	case Serie:
+		return any(&Stage.Series_mapString).(*map[string]*Type)
+	case Value:
+		return any(&Stage.Values_mapString).(*map[string]*Type)
 	default:
 		return nil
 	}
@@ -718,14 +1158,30 @@ func GetAssociationName[Type Gongstruct]() *Type {
 
 	switch any(ret).(type) {
 	// insertion point for instance with special fields
-	case Country:
-		return any(&Country{
+	case Bar:
+		return any(&Bar{
 			// Initialisation of associations
-			// field is initialized with an instance of Hello with the name of the field
-			Hello: &Hello{Name: "Hello"},
+			// field is initialized with an instance of Key with the name of the field
+			X: &Key{Name: "X"},
+			// field is initialized with an instance of Key with the name of the field
+			Y: &Key{Name: "Y"},
+			// field is initialized with an instance of Serie with the name of the field
+			Set: []*Serie{{Name: "Set"}},
 		}).(*Type)
-	case Hello:
-		return any(&Hello{
+	case Key:
+		return any(&Key{
+			// Initialisation of associations
+		}).(*Type)
+	case Serie:
+		return any(&Serie{
+			// Initialisation of associations
+			// field is initialized with an instance of Key with the name of the field
+			Key: &Key{Name: "Key"},
+			// field is initialized with an instance of Value with the name of the field
+			Values: []*Value{{Name: "Values"}},
+		}).(*Type)
+	case Value:
+		return any(&Value{
 			// Initialisation of associations
 		}).(*Type)
 	default:
@@ -745,30 +1201,74 @@ func GetPointerReverseMap[Start, End Gongstruct](fieldname string) map[*End][]*S
 
 	switch any(ret).(type) {
 	// insertion point of functions that provide maps for reverse associations
-	// reverse maps of direct associations of Country
-	case Country:
+	// reverse maps of direct associations of Bar
+	case Bar:
 		switch fieldname {
 		// insertion point for per direct association field
-		case "Hello":
-			res := make(map[*Hello][]*Country)
-			for country := range Stage.Countrys {
-				if country.Hello != nil {
-					hello_ := country.Hello
-					var countrys []*Country
-					_, ok := res[hello_]
+		case "X":
+			res := make(map[*Key][]*Bar)
+			for bar := range Stage.Bars {
+				if bar.X != nil {
+					key_ := bar.X
+					var bars []*Bar
+					_, ok := res[key_]
 					if ok {
-						countrys = res[hello_]
+						bars = res[key_]
 					} else {
-						countrys = make([]*Country, 0)
+						bars = make([]*Bar, 0)
 					}
-					countrys = append(countrys, country)
-					res[hello_] = countrys
+					bars = append(bars, bar)
+					res[key_] = bars
+				}
+			}
+			return any(res).(map[*End][]*Start)
+		case "Y":
+			res := make(map[*Key][]*Bar)
+			for bar := range Stage.Bars {
+				if bar.Y != nil {
+					key_ := bar.Y
+					var bars []*Bar
+					_, ok := res[key_]
+					if ok {
+						bars = res[key_]
+					} else {
+						bars = make([]*Bar, 0)
+					}
+					bars = append(bars, bar)
+					res[key_] = bars
 				}
 			}
 			return any(res).(map[*End][]*Start)
 		}
-	// reverse maps of direct associations of Hello
-	case Hello:
+	// reverse maps of direct associations of Key
+	case Key:
+		switch fieldname {
+		// insertion point for per direct association field
+		}
+	// reverse maps of direct associations of Serie
+	case Serie:
+		switch fieldname {
+		// insertion point for per direct association field
+		case "Key":
+			res := make(map[*Key][]*Serie)
+			for serie := range Stage.Series {
+				if serie.Key != nil {
+					key_ := serie.Key
+					var series []*Serie
+					_, ok := res[key_]
+					if ok {
+						series = res[key_]
+					} else {
+						series = make([]*Serie, 0)
+					}
+					series = append(series, serie)
+					res[key_] = series
+				}
+			}
+			return any(res).(map[*End][]*Start)
+		}
+	// reverse maps of direct associations of Value
+	case Value:
 		switch fieldname {
 		// insertion point for per direct association field
 		}
@@ -787,13 +1287,39 @@ func GetSliceOfPointersReverseMap[Start, End Gongstruct](fieldname string) map[*
 
 	switch any(ret).(type) {
 	// insertion point of functions that provide maps for reverse associations
-	// reverse maps of direct associations of Country
-	case Country:
+	// reverse maps of direct associations of Bar
+	case Bar:
+		switch fieldname {
+		// insertion point for per direct association field
+		case "Set":
+			res := make(map[*Serie]*Bar)
+			for bar := range Stage.Bars {
+				for _, serie_ := range bar.Set {
+					res[serie_] = bar
+				}
+			}
+			return any(res).(map[*End]*Start)
+		}
+	// reverse maps of direct associations of Key
+	case Key:
 		switch fieldname {
 		// insertion point for per direct association field
 		}
-	// reverse maps of direct associations of Hello
-	case Hello:
+	// reverse maps of direct associations of Serie
+	case Serie:
+		switch fieldname {
+		// insertion point for per direct association field
+		case "Values":
+			res := make(map[*Value]*Serie)
+			for serie := range Stage.Series {
+				for _, value_ := range serie.Values {
+					res[value_] = serie
+				}
+			}
+			return any(res).(map[*End]*Start)
+		}
+	// reverse maps of direct associations of Value
+	case Value:
 		switch fieldname {
 		// insertion point for per direct association field
 		}
@@ -809,10 +1335,14 @@ func GetGongstructName[Type Gongstruct]() (res string) {
 
 	switch any(ret).(type) {
 	// insertion point for generic get gongstruct name
-	case Country:
-		res = "Country"
-	case Hello:
-		res = "Hello"
+	case Bar:
+		res = "Bar"
+	case Key:
+		res = "Key"
+	case Serie:
+		res = "Serie"
+	case Value:
+		res = "Value"
 	}
 	return res
 }
@@ -824,9 +1354,13 @@ func GetFields[Type Gongstruct]() (res []string) {
 
 	switch any(ret).(type) {
 	// insertion point for generic get gongstruct name
-	case Country:
-		res = []string{"Name", "Hello"}
-	case Hello:
+	case Bar:
+		res = []string{"Name", "X", "Y", "Set"}
+	case Key:
+		res = []string{"Name"}
+	case Serie:
+		res = []string{"Name", "Key", "Values"}
+	case Value:
 		res = []string{"Name"}
 	}
 	return
@@ -837,21 +1371,55 @@ func GetFieldStringValue[Type Gongstruct](instance Type, fieldName string) (res 
 
 	switch any(ret).(type) {
 	// insertion point for generic get gongstruct field value
-	case Country:
+	case Bar:
 		switch fieldName {
 		// string value of fields
 		case "Name":
-			res = any(instance).(Country).Name
-		case "Hello":
-			if any(instance).(Country).Hello != nil {
-				res = any(instance).(Country).Hello.Name
+			res = any(instance).(Bar).Name
+		case "X":
+			if any(instance).(Bar).X != nil {
+				res = any(instance).(Bar).X.Name
+			}
+		case "Y":
+			if any(instance).(Bar).Y != nil {
+				res = any(instance).(Bar).Y.Name
+			}
+		case "Set":
+			for idx, __instance__ := range any(instance).(Bar).Set {
+				if idx > 0 {
+					res += "\n"
+				}
+				res += __instance__.Name
 			}
 		}
-	case Hello:
+	case Key:
 		switch fieldName {
 		// string value of fields
 		case "Name":
-			res = any(instance).(Hello).Name
+			res = any(instance).(Key).Name
+		}
+	case Serie:
+		switch fieldName {
+		// string value of fields
+		case "Name":
+			res = any(instance).(Serie).Name
+		case "Key":
+			if any(instance).(Serie).Key != nil {
+				res = any(instance).(Serie).Key.Name
+			}
+		case "Values":
+			for idx, __instance__ := range any(instance).(Serie).Values {
+				if idx > 0 {
+					res += "\n"
+				}
+				res += __instance__.Name
+			}
+		}
+	case Value:
+		switch fieldName {
+		// string value of fields
+		case "Name":
+			res = any(instance).(Value).Name
 		}
 	}
 	return

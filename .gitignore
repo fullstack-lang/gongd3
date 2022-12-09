@@ -1,3 +1,4 @@
 go/cmd/gongd3/gongd3
 go/cmd/gongd3/test.db
 go/cmd/gongd3/gongd3.exe
+go/cmd/gongd3/__debug_bin.exe

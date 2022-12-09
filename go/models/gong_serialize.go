@@ -13,8 +13,10 @@ func SerializeStage(filename string) {
 	f := excelize.NewFile()
 	{
 		// insertion point
-		SerializeExcelize[Country](f)
-		SerializeExcelize[Hello](f)
+		SerializeExcelize[Bar](f)
+		SerializeExcelize[Key](f)
+		SerializeExcelize[Serie](f)
+		SerializeExcelize[Value](f)
 	}
 
 	var tab ExcelizeTabulator

@@ -5,13 +5,21 @@ func AfterCreateFromFront[Type Gongstruct](stage *StageStruct, instance *Type) {
 
 	switch target := any(instance).(type) {
 	// insertion point
-	case *Country:
-		if stage.OnAfterCountryCreateCallback != nil {
-			stage.OnAfterCountryCreateCallback.OnAfterCreate(stage, target)
+	case *Bar:
+		if stage.OnAfterBarCreateCallback != nil {
+			stage.OnAfterBarCreateCallback.OnAfterCreate(stage, target)
 		}
-	case *Hello:
-		if stage.OnAfterHelloCreateCallback != nil {
-			stage.OnAfterHelloCreateCallback.OnAfterCreate(stage, target)
+	case *Key:
+		if stage.OnAfterKeyCreateCallback != nil {
+			stage.OnAfterKeyCreateCallback.OnAfterCreate(stage, target)
+		}
+	case *Serie:
+		if stage.OnAfterSerieCreateCallback != nil {
+			stage.OnAfterSerieCreateCallback.OnAfterCreate(stage, target)
+		}
+	case *Value:
+		if stage.OnAfterValueCreateCallback != nil {
+			stage.OnAfterValueCreateCallback.OnAfterCreate(stage, target)
 		}
 	}
 }
@@ -21,15 +29,25 @@ func AfterUpdateFromFront[Type Gongstruct](stage *StageStruct, old, new *Type) {
 
 	switch oldTarget := any(old).(type) {
 	// insertion point
-	case *Country:
-		newTarget := any(new).(*Country)
-		if stage.OnAfterCountryUpdateCallback != nil {
-			stage.OnAfterCountryUpdateCallback.OnAfterUpdate(stage, oldTarget, newTarget)
+	case *Bar:
+		newTarget := any(new).(*Bar)
+		if stage.OnAfterBarUpdateCallback != nil {
+			stage.OnAfterBarUpdateCallback.OnAfterUpdate(stage, oldTarget, newTarget)
 		}
-	case *Hello:
-		newTarget := any(new).(*Hello)
-		if stage.OnAfterHelloUpdateCallback != nil {
-			stage.OnAfterHelloUpdateCallback.OnAfterUpdate(stage, oldTarget, newTarget)
+	case *Key:
+		newTarget := any(new).(*Key)
+		if stage.OnAfterKeyUpdateCallback != nil {
+			stage.OnAfterKeyUpdateCallback.OnAfterUpdate(stage, oldTarget, newTarget)
+		}
+	case *Serie:
+		newTarget := any(new).(*Serie)
+		if stage.OnAfterSerieUpdateCallback != nil {
+			stage.OnAfterSerieUpdateCallback.OnAfterUpdate(stage, oldTarget, newTarget)
+		}
+	case *Value:
+		newTarget := any(new).(*Value)
+		if stage.OnAfterValueUpdateCallback != nil {
+			stage.OnAfterValueUpdateCallback.OnAfterUpdate(stage, oldTarget, newTarget)
 		}
 	}
 }
@@ -39,15 +57,25 @@ func AfterDeleteFromFront[Type Gongstruct](stage *StageStruct, staged, front *Ty
 
 	switch front := any(front).(type) {
 	// insertion point
-	case *Country:
-		if stage.OnAfterCountryDeleteCallback != nil {
-			staged := any(staged).(*Country)
-			stage.OnAfterCountryDeleteCallback.OnAfterDelete(stage, staged, front)
+	case *Bar:
+		if stage.OnAfterBarDeleteCallback != nil {
+			staged := any(staged).(*Bar)
+			stage.OnAfterBarDeleteCallback.OnAfterDelete(stage, staged, front)
 		}
-	case *Hello:
-		if stage.OnAfterHelloDeleteCallback != nil {
-			staged := any(staged).(*Hello)
-			stage.OnAfterHelloDeleteCallback.OnAfterDelete(stage, staged, front)
+	case *Key:
+		if stage.OnAfterKeyDeleteCallback != nil {
+			staged := any(staged).(*Key)
+			stage.OnAfterKeyDeleteCallback.OnAfterDelete(stage, staged, front)
+		}
+	case *Serie:
+		if stage.OnAfterSerieDeleteCallback != nil {
+			staged := any(staged).(*Serie)
+			stage.OnAfterSerieDeleteCallback.OnAfterDelete(stage, staged, front)
+		}
+	case *Value:
+		if stage.OnAfterValueDeleteCallback != nil {
+			staged := any(staged).(*Value)
+			stage.OnAfterValueDeleteCallback.OnAfterDelete(stage, staged, front)
 		}
 	}
 }
@@ -57,13 +85,21 @@ func AfterReadFromFront[Type Gongstruct](stage *StageStruct, instance *Type) {
 
 	switch target := any(instance).(type) {
 	// insertion point
-	case *Country:
-		if stage.OnAfterCountryReadCallback != nil {
-			stage.OnAfterCountryReadCallback.OnAfterRead(stage, target)
+	case *Bar:
+		if stage.OnAfterBarReadCallback != nil {
+			stage.OnAfterBarReadCallback.OnAfterRead(stage, target)
 		}
-	case *Hello:
-		if stage.OnAfterHelloReadCallback != nil {
-			stage.OnAfterHelloReadCallback.OnAfterRead(stage, target)
+	case *Key:
+		if stage.OnAfterKeyReadCallback != nil {
+			stage.OnAfterKeyReadCallback.OnAfterRead(stage, target)
+		}
+	case *Serie:
+		if stage.OnAfterSerieReadCallback != nil {
+			stage.OnAfterSerieReadCallback.OnAfterRead(stage, target)
+		}
+	case *Value:
+		if stage.OnAfterValueReadCallback != nil {
+			stage.OnAfterValueReadCallback.OnAfterRead(stage, target)
 		}
 	}
 }
@@ -74,11 +110,17 @@ func SetCallbackAfterUpdateFromFront[Type Gongstruct](stage *StageStruct, callba
 	var instance Type
 	switch any(instance).(type) {
 		// insertion point
-	case *Country:
-		stage.OnAfterCountryUpdateCallback = any(callback).(OnAfterUpdateInterface[Country])
+	case *Bar:
+		stage.OnAfterBarUpdateCallback = any(callback).(OnAfterUpdateInterface[Bar])
 	
-	case *Hello:
-		stage.OnAfterHelloUpdateCallback = any(callback).(OnAfterUpdateInterface[Hello])
+	case *Key:
+		stage.OnAfterKeyUpdateCallback = any(callback).(OnAfterUpdateInterface[Key])
+	
+	case *Serie:
+		stage.OnAfterSerieUpdateCallback = any(callback).(OnAfterUpdateInterface[Serie])
+	
+	case *Value:
+		stage.OnAfterValueUpdateCallback = any(callback).(OnAfterUpdateInterface[Value])
 	
 	}
 }
@@ -87,11 +129,17 @@ func SetCallbackAfterCreateFromFront[Type Gongstruct](stage *StageStruct, callba
 	var instance Type
 	switch any(instance).(type) {
 		// insertion point
-	case *Country:
-		stage.OnAfterCountryCreateCallback = any(callback).(OnAfterCreateInterface[Country])
+	case *Bar:
+		stage.OnAfterBarCreateCallback = any(callback).(OnAfterCreateInterface[Bar])
 	
-	case *Hello:
-		stage.OnAfterHelloCreateCallback = any(callback).(OnAfterCreateInterface[Hello])
+	case *Key:
+		stage.OnAfterKeyCreateCallback = any(callback).(OnAfterCreateInterface[Key])
+	
+	case *Serie:
+		stage.OnAfterSerieCreateCallback = any(callback).(OnAfterCreateInterface[Serie])
+	
+	case *Value:
+		stage.OnAfterValueCreateCallback = any(callback).(OnAfterCreateInterface[Value])
 	
 	}
 }
@@ -100,11 +148,17 @@ func SetCallbackAfterDeleteFromFront[Type Gongstruct](stage *StageStruct, callba
 	var instance Type
 	switch any(instance).(type) {
 		// insertion point
-	case *Country:
-		stage.OnAfterCountryDeleteCallback = any(callback).(OnAfterDeleteInterface[Country])
+	case *Bar:
+		stage.OnAfterBarDeleteCallback = any(callback).(OnAfterDeleteInterface[Bar])
 	
-	case *Hello:
-		stage.OnAfterHelloDeleteCallback = any(callback).(OnAfterDeleteInterface[Hello])
+	case *Key:
+		stage.OnAfterKeyDeleteCallback = any(callback).(OnAfterDeleteInterface[Key])
+	
+	case *Serie:
+		stage.OnAfterSerieDeleteCallback = any(callback).(OnAfterDeleteInterface[Serie])
+	
+	case *Value:
+		stage.OnAfterValueDeleteCallback = any(callback).(OnAfterDeleteInterface[Value])
 	
 	}
 }
@@ -113,11 +167,17 @@ func SetCallbackAfterReadFromFront[Type Gongstruct](stage *StageStruct, callback
 	var instance Type
 	switch any(instance).(type) {
 		// insertion point
-	case *Country:
-		stage.OnAfterCountryReadCallback = any(callback).(OnAfterReadInterface[Country])
+	case *Bar:
+		stage.OnAfterBarReadCallback = any(callback).(OnAfterReadInterface[Bar])
 	
-	case *Hello:
-		stage.OnAfterHelloReadCallback = any(callback).(OnAfterReadInterface[Hello])
+	case *Key:
+		stage.OnAfterKeyReadCallback = any(callback).(OnAfterReadInterface[Key])
+	
+	case *Serie:
+		stage.OnAfterSerieReadCallback = any(callback).(OnAfterReadInterface[Serie])
+	
+	case *Value:
+		stage.OnAfterValueReadCallback = any(callback).(OnAfterReadInterface[Value])
 	
 	}
 }
