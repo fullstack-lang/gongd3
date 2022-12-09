@@ -49,7 +49,7 @@ export class BarComponent implements OnInit {
     this.checkGongd3CommitNbFromBackTimerSubscription.unsubscribe()
   }
   ngOnInit(): void {
-    
+
     // check loop for refresh from the back repo
     this.checkGongd3CommitNbFromBackTimerSubscription = this.checkGongd3CommitNbFromBackTimer.subscribe(
       currTime => {
@@ -58,18 +58,18 @@ export class BarComponent implements OnInit {
         this.gongd3CommitNbFromBackService.getCommitNbFromBack().subscribe(
           commitNbFromBack => {
 
-            const id = +this.route.snapshot.paramMap.get('id')!;
+            // const id = +this.route.snapshot.paramMap.get('id')!;
 
             // console.log("last commit nb " + this.lastCommitNbFromBack + " new: " + commitNbFromBack)
             // console.log("last diagram id " + this.lastDiagramId + " new: " + id)
             // console.log("last drawn diagram id " + this.idOfDrawnClassDiagram + " new: " + id)
 
             // condition for refresh
-            if (this.lastCommitNbFromBack < commitNbFromBack || this.lastDiagramId != id) {
+            if (this.lastCommitNbFromBack < commitNbFromBack) {
 
               console.log("gongd3: last commit nb " + this.lastCommitNbFromBack + " new: " + commitNbFromBack)
               this.lastCommitNbFromBack = commitNbFromBack
-              this.lastDiagramId = id
+              // this.lastDiagramId = id
               this.redraw()
             }
           }
@@ -87,17 +87,16 @@ export class BarComponent implements OnInit {
           if (bar.Name == "Stars per Framework") {
             console.log("Selected Bar name " + bar.Name)
             this.data = []
+            let indexSerie = 0
             for (let serie of bar.Set!) {
-              let indexSerie = 0
+              let indexValue = 0
               for (let value of serie.Values!) {
-                let indexValue = 0
                 var obj: any
-
-                if (indexSerie = 0) {
+                if (indexSerie == 0) {
                   obj = {}
                   obj[serie.Key!.Name] = value.Name
-                  this.data.concat(obj)
-                } else { 
+                  this.data.push(obj)
+                } else {
                   obj = this.data[indexValue]
                   obj[serie.Key!.Name] = value.Name
                 }

@@ -128,21 +128,21 @@ func stageInjection() {
 	__Bar__000000_Stars_per_Framework.Set = append(__Bar__000000_Stars_per_Framework.Set, __Serie__000001_Released)
 	__Bar__000000_Stars_per_Framework.Set = append(__Bar__000000_Stars_per_Framework.Set, __Serie__000000_Framework)
 	__Serie__000000_Framework.Key = __Key__000000_Framework
-	__Serie__000000_Framework.Values = append(__Serie__000000_Framework.Values, __Value__000012_Ember)
-	__Serie__000000_Framework.Values = append(__Serie__000000_Framework.Values, __Value__000013_React)
-	__Serie__000000_Framework.Values = append(__Serie__000000_Framework.Values, __Value__000011_Backbone)
 	__Serie__000000_Framework.Values = append(__Serie__000000_Framework.Values, __Value__000014_Vue)
+	__Serie__000000_Framework.Values = append(__Serie__000000_Framework.Values, __Value__000013_React)
 	__Serie__000000_Framework.Values = append(__Serie__000000_Framework.Values, __Value__000010_Angular)
+	__Serie__000000_Framework.Values = append(__Serie__000000_Framework.Values, __Value__000011_Backbone)
+	__Serie__000000_Framework.Values = append(__Serie__000000_Framework.Values, __Value__000012_Ember)
 	__Serie__000001_Released.Key = __Key__000001_Released
 	__Serie__000001_Released.Values = append(__Serie__000001_Released.Values, __Value__000005_2014)
-	__Serie__000001_Released.Values = append(__Serie__000001_Released.Values, __Value__000003_2011)
+	__Serie__000001_Released.Values = append(__Serie__000001_Released.Values, __Value__000004_2013)
 	__Serie__000001_Released.Values = append(__Serie__000001_Released.Values, __Value__000006_2016)
 	__Serie__000001_Released.Values = append(__Serie__000001_Released.Values, __Value__000002_2010)
-	__Serie__000001_Released.Values = append(__Serie__000001_Released.Values, __Value__000004_2013)
+	__Serie__000001_Released.Values = append(__Serie__000001_Released.Values, __Value__000003_2011)
 	__Serie__000002_Stars.Key = __Key__000002_Stars
+	__Serie__000002_Stars.Values = append(__Serie__000002_Stars.Values, __Value__000001_166443)
 	__Serie__000002_Stars.Values = append(__Serie__000002_Stars.Values, __Value__000000_150793)
 	__Serie__000002_Stars.Values = append(__Serie__000002_Stars.Values, __Value__000009_62342)
-	__Serie__000002_Stars.Values = append(__Serie__000002_Stars.Values, __Value__000001_166443)
 	__Serie__000002_Stars.Values = append(__Serie__000002_Stars.Values, __Value__000008_27647)
 	__Serie__000002_Stars.Values = append(__Serie__000002_Stars.Values, __Value__000007_21471)
 }
