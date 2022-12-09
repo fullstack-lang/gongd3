@@ -30,6 +30,7 @@
     "angular-split": "14.1",
     "backbone": "^1.4.1",
     "codelyzer": "^6.0.2",
+    "d3": "^7.7.0",
     "install": "^0.13.0",
     "jointjs": "^3.6.4",
     "jquery": "^3.6.1",
@@ -43,6 +44,7 @@
     "@angular-devkit/build-angular": "^14.2.5",
     "@angular/cli": "~14.2.5",
     "@angular/compiler-cli": "^14.2.0",
+    "@types/d3": "^7.4.0",
     "ng-packagr": "^14.2.0",
     "typescript": "~4.7.2"
   }
