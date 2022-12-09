@@ -2,17 +2,15 @@
 	"version": "2.0.0",
 	"tasks": [
 	  {
-		"label": "02 - run gongd3",
+		"label": "02 - run gongd3 -unmarshallFromCode=stage.go -marshallOnCommit=stage",
 		"type": "shell",
 		"options": {
 		  "cwd": "${workspaceFolder}/go/cmd/gongd3"
 		},
-		"command": "go",
+		"command": "./gongd3",
 		"args": [
-		  "run",
-		  ".",
 		  "-diagrams",
-		  "--unmarshall=stage",
+		  "-unmarshallFromCode=stage.go",
 		  "-marshallOnCommit=stage"
 		],
 		"group": "build"

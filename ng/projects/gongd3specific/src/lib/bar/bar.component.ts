@@ -1,5 +1,15 @@
 import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import * as d3 from 'd3';
+import { Observable, Subscription, timer } from 'rxjs';
+
+import * as gongd3 from 'gongd3'
+import { keyBy } from 'lodash';
+import { index } from 'd3';
+
+interface LooseObject {
+  [key: string]: any
+}
 
 @Component({
   selector: 'lib-bar',
@@ -7,6 +17,14 @@ import * as d3 from 'd3';
   styleUrls: ['./bar.component.css']
 })
 export class BarComponent implements OnInit {
+
+  checkGongd3CommitNbFromBackTimer: Observable<number> = timer(500, 500);
+  checkGongd3CommitNbFromBackTimerSubscription: Subscription = new Subscription
+
+  lastCommitNbFromBack = -1
+  lastDiagramId = 0
+  currTime: number = 0
+
   private data = [
     { "Framework": "Vue", "Stars": "166443", "Released": "2014" },
     { "Framework": "React", "Stars": "150793", "Released": "2013" },
@@ -19,12 +37,83 @@ export class BarComponent implements OnInit {
   private width = 750 - (this.margin * 2);
   private height = 400 - (this.margin * 2);
 
-  constructor() { }
+  constructor(
+    private route: ActivatedRoute,
+    private router: Router,
+    private gongd3CommitNbFromBackService: gongd3.CommitNbFromBackService,
+    private gongd3FrontRepoService: gongd3.FrontRepoService,
+  ) { }
 
-  ngOnInit(): void {
-    this.createSvg();
-    this.drawBars(this.data);
+  ngOnDestroy() {
+    // console.log("on destroy")
+    this.checkGongd3CommitNbFromBackTimerSubscription.unsubscribe()
   }
+  ngOnInit(): void {
+    
+    // check loop for refresh from the back repo
+    this.checkGongd3CommitNbFromBackTimerSubscription = this.checkGongd3CommitNbFromBackTimer.subscribe(
+      currTime => {
+        this.currTime = currTime
+
+        this.gongd3CommitNbFromBackService.getCommitNbFromBack().subscribe(
+          commitNbFromBack => {
+
+            const id = +this.route.snapshot.paramMap.get('id')!;
+
+            // console.log("last commit nb " + this.lastCommitNbFromBack + " new: " + commitNbFromBack)
+            // console.log("last diagram id " + this.lastDiagramId + " new: " + id)
+            // console.log("last drawn diagram id " + this.idOfDrawnClassDiagram + " new: " + id)
+
+            // condition for refresh
+            if (this.lastCommitNbFromBack < commitNbFromBack || this.lastDiagramId != id) {
+
+              console.log("gongd3: last commit nb " + this.lastCommitNbFromBack + " new: " + commitNbFromBack)
+              this.lastCommitNbFromBack = commitNbFromBack
+              this.lastDiagramId = id
+              this.redraw()
+            }
+          }
+        )
+      }
+    )
+  }
+
+
+  private redraw(): void {
+    this.gongd3FrontRepoService.pull().subscribe(
+      frontRepo => {
+        for (let bar of frontRepo.Bars_array) {
+          console.log("Bar name " + bar.Name)
+          if (bar.Name == "Stars per Framework") {
+            console.log("Selected Bar name " + bar.Name)
+            this.data = []
+            for (let serie of bar.Set!) {
+              let indexSerie = 0
+              for (let value of serie.Values!) {
+                let indexValue = 0
+                var obj: any
+
+                if (indexSerie = 0) {
+                  obj = {}
+                  obj[serie.Key!.Name] = value.Name
+                  this.data.concat(obj)
+                } else { 
+                  obj = this.data[indexValue]
+                  obj[serie.Key!.Name] = value.Name
+                }
+                indexValue++
+              }
+              indexSerie = indexSerie + 1
+            }
+
+            this.createSvg();
+            this.drawBars(this.data);
+          }
+        }
+      }
+    )
+  }
+
 
   private createSvg(): void {
     this.svg = d3.select("figure#bar")
