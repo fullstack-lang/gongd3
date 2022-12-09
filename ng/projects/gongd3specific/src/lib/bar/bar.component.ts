@@ -34,6 +34,9 @@ export class BarComponent implements OnInit {
     { "Framework": "Backbone", "Stars": "27647", "Released": "2010" },
     { "Framework": "Ember", "Stars": "21471", "Released": "2011" },
   ];
+  private x_serieName: string = ""
+  private y_serieName: string = ""
+
   private svg: any;
   private margin = 50;
   private width = 750 - (this.margin * 2);
@@ -88,6 +91,9 @@ export class BarComponent implements OnInit {
           console.log("Bar name " + bar.Name)
           if (bar.Name == this.name) {
             console.log("Selected Bar name " + bar.Name)
+            this.x_serieName = bar.X!.Name
+            this.y_serieName = bar.Y!.Name
+
             this.data = []
             let indexSerie = 0
             for (let serie of bar.Set!) {
@@ -167,8 +173,8 @@ export class BarComponent implements OnInit {
       .data(data)
       .enter()
       .append("rect")
-      .attr("x", (d: any) => x(d.Framework))
-      .attr("y", (d: any) => y(d.Stars))
+      .attr("x", (d: any) => x(d[this.x_serieName]))
+      .attr("y", (d: any) => y(d[this.y_serieName]))
       .attr("width", x.bandwidth())
       .attr("height", (d: any) => this.height - y(d.Stars))
       .attr("fill", "#d04a35");
