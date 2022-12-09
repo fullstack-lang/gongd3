@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import * as d3 from 'd3';
 import { Observable, Subscription, timer } from 'rxjs';
@@ -17,6 +17,8 @@ interface LooseObject {
   styleUrls: ['./bar.component.css']
 })
 export class BarComponent implements OnInit {
+
+  @Input() name: string = ""
 
   checkGongd3CommitNbFromBackTimer: Observable<number> = timer(500, 500);
   checkGongd3CommitNbFromBackTimerSubscription: Subscription = new Subscription
@@ -84,7 +86,7 @@ export class BarComponent implements OnInit {
       frontRepo => {
         for (let bar of frontRepo.Bars_array) {
           console.log("Bar name " + bar.Name)
-          if (bar.Name == "Stars per Framework") {
+          if (bar.Name == this.name) {
             console.log("Selected Bar name " + bar.Name)
             this.data = []
             let indexSerie = 0
@@ -104,6 +106,7 @@ export class BarComponent implements OnInit {
 
               for (let value of serie.Values!) {
                 var obj: any
+                // when parsing the first serie, creates the object
                 if (indexSerie == 0) {
                   obj = {}
                   obj[serie.Key!.Name] = value.Name
