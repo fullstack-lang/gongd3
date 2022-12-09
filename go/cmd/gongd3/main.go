@@ -81,7 +81,7 @@ func main() {
 	r.Use(cors.Default())
 
 	// setup stack
-	fullstack.Init(r, "./test.db")
+	fullstack.Init(r)
 
 	// generate injection code from the stage
 	if *marshallOnStartup != "" {
@@ -171,7 +171,7 @@ func main() {
 		} else {
 			diagramPackage, _ = gongdoc_models.Load(filepath.Join("../../diagrams"), modelPackage, true)
 		}
-		
+
 		diagramPackage.GongModelPath = "gongd3/go/models"
 	}
 
