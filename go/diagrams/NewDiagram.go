@@ -36,6 +36,15 @@ var NewDiagram uml.Classdiagram = uml.Classdiagram{
 					TargetMultiplicity: "0..1",
 					SourceMultiplicity: "*",
 				},
+				{
+					Field: models.Bar{}.Y,
+					Middlevertice: &uml.Vertice{
+						X: 250.000000,
+						Y: 329.000000,
+					},
+					TargetMultiplicity: "0..1",
+					SourceMultiplicity: "*",
+				},
 			},
 			Fields: []*uml.Field{
 				{

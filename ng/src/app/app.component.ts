@@ -13,11 +13,11 @@ export class AppComponent implements OnInit {
 
   view = 'D3 view'
   d3 = 'D3 view'
-  default = 'Default view'
+  data = 'Data view'
   diagrams = 'Diagrams view'
   meta = 'Meta view'
 
-  views: string[] = [this.d3, this.default, this.diagrams, this.meta];
+  views: string[] = [this.d3, this.data, this.diagrams, this.meta];
 
   // variable that enables pooling of selected gongstruct
   obsTimer: Observable<number> = timer(1000, 1000)
