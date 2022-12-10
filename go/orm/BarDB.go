@@ -68,6 +68,15 @@ type BarDB struct {
 
 	// Declation for basic field barDB.Name
 	Name_Data sql.NullString
+
+	// Declation for basic field barDB.Width
+	Width_Data sql.NullFloat64
+
+	// Declation for basic field barDB.Heigth
+	Heigth_Data sql.NullFloat64
+
+	// Declation for basic field barDB.Margin
+	Margin_Data sql.NullFloat64
 	// encoding of pointers
 	BarPointersEnconding
 }
@@ -90,6 +99,12 @@ type BarWOP struct {
 	// insertion for WOP basic fields
 
 	Name string `xlsx:"1"`
+
+	Width float64 `xlsx:"2"`
+
+	Heigth float64 `xlsx:"3"`
+
+	Margin float64 `xlsx:"4"`
 	// insertion for WOP pointer fields
 }
 
@@ -97,6 +112,9 @@ var Bar_Fields = []string{
 	// insertion for WOP basic fields
 	"ID",
 	"Name",
+	"Width",
+	"Heigth",
+	"Margin",
 }
 
 type BackRepoBarStruct struct {
@@ -453,6 +471,15 @@ func (barDB *BarDB) CopyBasicFieldsFromBar(bar *models.Bar) {
 
 	barDB.Name_Data.String = bar.Name
 	barDB.Name_Data.Valid = true
+
+	barDB.Width_Data.Float64 = bar.Width
+	barDB.Width_Data.Valid = true
+
+	barDB.Heigth_Data.Float64 = bar.Heigth
+	barDB.Heigth_Data.Valid = true
+
+	barDB.Margin_Data.Float64 = bar.Margin
+	barDB.Margin_Data.Valid = true
 }
 
 // CopyBasicFieldsFromBarWOP
@@ -461,12 +488,24 @@ func (barDB *BarDB) CopyBasicFieldsFromBarWOP(bar *BarWOP) {
 
 	barDB.Name_Data.String = bar.Name
 	barDB.Name_Data.Valid = true
+
+	barDB.Width_Data.Float64 = bar.Width
+	barDB.Width_Data.Valid = true
+
+	barDB.Heigth_Data.Float64 = bar.Heigth
+	barDB.Heigth_Data.Valid = true
+
+	barDB.Margin_Data.Float64 = bar.Margin
+	barDB.Margin_Data.Valid = true
 }
 
 // CopyBasicFieldsToBar
 func (barDB *BarDB) CopyBasicFieldsToBar(bar *models.Bar) {
 	// insertion point for checkout of basic fields (back repo to stage)
 	bar.Name = barDB.Name_Data.String
+	bar.Width = barDB.Width_Data.Float64
+	bar.Heigth = barDB.Heigth_Data.Float64
+	bar.Margin = barDB.Margin_Data.Float64
 }
 
 // CopyBasicFieldsToBarWOP
@@ -474,6 +513,9 @@ func (barDB *BarDB) CopyBasicFieldsToBarWOP(bar *BarWOP) {
 	bar.ID = int(barDB.ID)
 	// insertion point for checkout of basic fields (back repo to stage)
 	bar.Name = barDB.Name_Data.String
+	bar.Width = barDB.Width_Data.Float64
+	bar.Heigth = barDB.Heigth_Data.Float64
+	bar.Margin = barDB.Margin_Data.Float64
 }
 
 // Backup generates a json file from a slice of all BarDB instances in the backrepo

@@ -54,6 +54,24 @@
             </button>
         </mat-grid-tile>
     </mat-grid-list>
+    <!-- -->
+    <mat-form-field class="detail-full-width">
+        <mat-label>Width</mat-label>
+        <input type="number" [ngModelOptions]="{standalone: true}" matInput [(ngModel)]="bar.Width" [ngModelOptions]="{standalone: true}">
+    </mat-form-field>
+
+    <!-- -->
+    <mat-form-field class="detail-full-width">
+        <mat-label>Heigth</mat-label>
+        <input type="number" [ngModelOptions]="{standalone: true}" matInput [(ngModel)]="bar.Heigth" [ngModelOptions]="{standalone: true}">
+    </mat-form-field>
+
+    <!-- -->
+    <mat-form-field class="detail-full-width">
+        <mat-label>Margin</mat-label>
+        <input type="number" [ngModelOptions]="{standalone: true}" matInput [(ngModel)]="bar.Margin" [ngModelOptions]="{standalone: true}">
+    </mat-form-field>
+
     <div class="details__save">
         <button mat-raised-button color="primary" (click)="save()">
             Save bar

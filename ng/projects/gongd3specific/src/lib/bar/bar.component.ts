@@ -56,13 +56,6 @@ export class BarComponent implements OnInit {
 
         this.gongd3CommitNbFromBackService.getCommitNbFromBack().subscribe(
           commitNbFromBack => {
-
-            // const id = +this.route.snapshot.paramMap.get('id')!;
-
-            // console.log("last commit nb " + this.lastCommitNbFromBack + " new: " + commitNbFromBack)
-            // console.log("last diagram id " + this.lastDiagramId + " new: " + id)
-            // console.log("last drawn diagram id " + this.idOfDrawnClassDiagram + " new: " + id)
-
             // condition for refresh
             if (this.lastCommitNbFromBack < commitNbFromBack) {
 
@@ -85,6 +78,12 @@ export class BarComponent implements OnInit {
           console.log("Bar name " + bar.Name)
           if (bar.Name == this.name) {
             console.log("Selected Bar name " + bar.Name)
+
+            // set up setting
+            this.width = bar.Width
+            this.height = bar.Heigth
+            this.margin = bar.Margin
+
             this.x_serieName = bar.X!.Name
             this.y_serieName = bar.Y!.Name
 
@@ -173,5 +172,4 @@ export class BarComponent implements OnInit {
       .attr("height", (d: any) => this.height - y(d[this.y_serieName]))
       .attr("fill", "#d04a35");
   }
-
 }

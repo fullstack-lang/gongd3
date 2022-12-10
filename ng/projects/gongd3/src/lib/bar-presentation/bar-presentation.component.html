@@ -20,6 +20,18 @@
         <td class="mat-cell">Y</td>
         <td class="mat-cell">{{bar.Y ? bar.Y.Name : ""}}</td>
     </tr>
+    <tr class="mat-row">
+        <td class="mat-cell">Width</td>
+        <td class="mat-cell">{{bar.Width}}</td>
+    </tr>
+    <tr class="mat-row">
+        <td class="mat-cell">Heigth</td>
+        <td class="mat-cell">{{bar.Heigth}}</td>
+    </tr>
+    <tr class="mat-row">
+        <td class="mat-cell">Margin</td>
+        <td class="mat-cell">{{bar.Margin}}</td>
+    </tr>
 </table>
 <!-- hack to force loading of mat table style an error is generated but it is a know angular issue https://github.com/angular/components/issues/10941 -->
 <table mat-table [dataSource]="dataSource" class="mat-elevation-z8">

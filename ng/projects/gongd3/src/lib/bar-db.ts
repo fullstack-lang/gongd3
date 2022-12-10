@@ -12,6 +12,9 @@ export class BarDB {
 
 	// insertion point for basic fields declarations
 	Name: string = ""
+	Width: number = 0
+	Heigth: number = 0
+	Margin: number = 0
 
 	// insertion point for other declarations
 	X?: KeyDB

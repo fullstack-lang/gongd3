@@ -77,6 +77,15 @@ export class BarsTableComponent implements OnInit {
         case 'Y':
           return (barDB.Y ? barDB.Y.Name : '');
 
+        case 'Width':
+          return barDB.Width;
+
+        case 'Heigth':
+          return barDB.Heigth;
+
+        case 'Margin':
+          return barDB.Margin;
+
         default:
           console.assert(false, "Unknown field")
           return "";
@@ -98,6 +107,9 @@ export class BarsTableComponent implements OnInit {
       if (barDB.Y) {
         mergedContent += barDB.Y.Name.toLowerCase()
       }
+      mergedContent += barDB.Width.toString()
+      mergedContent += barDB.Heigth.toString()
+      mergedContent += barDB.Margin.toString()
 
       let isSelected = mergedContent.includes(filter.toLowerCase())
       return isSelected
@@ -151,12 +163,18 @@ export class BarsTableComponent implements OnInit {
         "Name",
         "X",
         "Y",
+        "Width",
+        "Heigth",
+        "Margin",
       ]
     } else {
       this.displayedColumns = ['select', 'ID', // insertion point for columns to display
         "Name",
         "X",
         "Y",
+        "Width",
+        "Heigth",
+        "Margin",
       ]
       this.selection = new SelectionModel<BarDB>(allowMultiSelect, this.initialSelection);
     }

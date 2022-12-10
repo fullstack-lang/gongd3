@@ -734,6 +734,24 @@ func (stage *StageStruct) Marshall(file *os.File, modelsPackageName, packageName
 		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", string(bar.Name))
 		initializerStatements += setValueField
 
+		setValueField = NumberInitStatement
+		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
+		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "Width")
+		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", fmt.Sprintf("%f", bar.Width))
+		initializerStatements += setValueField
+
+		setValueField = NumberInitStatement
+		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
+		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "Heigth")
+		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", fmt.Sprintf("%f", bar.Heigth))
+		initializerStatements += setValueField
+
+		setValueField = NumberInitStatement
+		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
+		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "Margin")
+		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", fmt.Sprintf("%f", bar.Margin))
+		initializerStatements += setValueField
+
 	}
 
 	map_Key_Identifiers := make(map[*Key]string)
@@ -1355,7 +1373,7 @@ func GetFields[Type Gongstruct]() (res []string) {
 	switch any(ret).(type) {
 	// insertion point for generic get gongstruct name
 	case Bar:
-		res = []string{"Name", "X", "Y", "Set"}
+		res = []string{"Name", "X", "Y", "Set", "Width", "Heigth", "Margin"}
 	case Key:
 		res = []string{"Name"}
 	case Serie:
@@ -1391,6 +1409,12 @@ func GetFieldStringValue[Type Gongstruct](instance Type, fieldName string) (res 
 				}
 				res += __instance__.Name
 			}
+		case "Width":
+			res = fmt.Sprintf("%f", any(instance).(Bar).Width)
+		case "Heigth":
+			res = fmt.Sprintf("%f", any(instance).(Bar).Heigth)
+		case "Margin":
+			res = fmt.Sprintf("%f", any(instance).(Bar).Margin)
 		}
 	case Key:
 		switch fieldName {
