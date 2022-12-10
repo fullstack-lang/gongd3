@@ -14,8 +14,8 @@ import { SelectionModel } from '@angular/cdk/collections';
 const allowMultiSelect = true;
 
 import { Router, RouterState } from '@angular/router';
-import { SerieDB } from '../serie-db'
-import { SerieService } from '../serie.service'
+import { ScatterDB } from '../scatter-db'
+import { ScatterService } from '../scatter.service'
 
 // insertion point for additional imports
 
@@ -29,24 +29,24 @@ enum TableComponentMode {
 
 // generated table component
 @Component({
-  selector: 'app-seriestable',
-  templateUrl: './series-table.component.html',
-  styleUrls: ['./series-table.component.css'],
+  selector: 'app-scatterstable',
+  templateUrl: './scatters-table.component.html',
+  styleUrls: ['./scatters-table.component.css'],
 })
-export class SeriesTableComponent implements OnInit {
+export class ScattersTableComponent implements OnInit {
 
   // mode at invocation
   mode: TableComponentMode = TableComponentMode.DISPLAY_MODE
 
-  // used if the component is called as a selection component of Serie instances
-  selection: SelectionModel<SerieDB> = new (SelectionModel)
-  initialSelection = new Array<SerieDB>()
+  // used if the component is called as a selection component of Scatter instances
+  selection: SelectionModel<ScatterDB> = new (SelectionModel)
+  initialSelection = new Array<ScatterDB>()
 
   // the data source for the table
-  series: SerieDB[] = []
-  matTableDataSource: MatTableDataSource<SerieDB> = new (MatTableDataSource)
+  scatters: ScatterDB[] = []
+  matTableDataSource: MatTableDataSource<ScatterDB> = new (MatTableDataSource)
 
-  // front repo, that will be referenced by this.series
+  // front repo, that will be referenced by this.scatters
   frontRepo: FrontRepo = new (FrontRepo)
 
   // displayedColumns is referenced by the MatTable component for specify what columns
@@ -62,38 +62,32 @@ export class SeriesTableComponent implements OnInit {
   ngAfterViewInit() {
 
     // enable sorting on all fields (including pointers and reverse pointer)
-    this.matTableDataSource.sortingDataAccessor = (serieDB: SerieDB, property: string) => {
+    this.matTableDataSource.sortingDataAccessor = (scatterDB: ScatterDB, property: string) => {
       switch (property) {
         case 'ID':
-          return serieDB.ID
+          return scatterDB.ID
 
         // insertion point for specific sorting accessor
         case 'Name':
-          return serieDB.Name;
+          return scatterDB.Name;
 
-        case 'Key':
-          return (serieDB.Key ? serieDB.Key.Name : '');
+        case 'X':
+          return (scatterDB.X ? scatterDB.X.Name : '');
 
-        case 'Bar_Set':
-          if (this.frontRepo.Bars.get(serieDB.Bar_SetDBID.Int64) != undefined) {
-            return this.frontRepo.Bars.get(serieDB.Bar_SetDBID.Int64)!.Name
-          } else {
-            return ""
-          }
+        case 'Y':
+          return (scatterDB.Y ? scatterDB.Y.Name : '');
 
-        case 'Pie_Set':
-          if (this.frontRepo.Pies.get(serieDB.Pie_SetDBID.Int64) != undefined) {
-            return this.frontRepo.Pies.get(serieDB.Pie_SetDBID.Int64)!.Name
-          } else {
-            return ""
-          }
+        case 'Text':
+          return (scatterDB.Text ? scatterDB.Text.Name : '');
 
-        case 'Scatter_Set':
-          if (this.frontRepo.Scatters.get(serieDB.Scatter_SetDBID.Int64) != undefined) {
-            return this.frontRepo.Scatters.get(serieDB.Scatter_SetDBID.Int64)!.Name
-          } else {
-            return ""
-          }
+        case 'Width':
+          return scatterDB.Width;
+
+        case 'Heigth':
+          return scatterDB.Heigth;
+
+        case 'Margin':
+          return scatterDB.Margin;
 
         default:
           console.assert(false, "Unknown field")
@@ -102,29 +96,26 @@ export class SeriesTableComponent implements OnInit {
     };
 
     // enable filtering on all fields (including pointers and reverse pointer, which is not done by default)
-    this.matTableDataSource.filterPredicate = (serieDB: SerieDB, filter: string) => {
+    this.matTableDataSource.filterPredicate = (scatterDB: ScatterDB, filter: string) => {
 
       // filtering is based on finding a lower case filter into a concatenated string
-      // the serieDB properties
+      // the scatterDB properties
       let mergedContent = ""
 
       // insertion point for merging of fields
-      mergedContent += serieDB.Name.toLowerCase()
-      if (serieDB.Key) {
-        mergedContent += serieDB.Key.Name.toLowerCase()
+      mergedContent += scatterDB.Name.toLowerCase()
+      if (scatterDB.X) {
+        mergedContent += scatterDB.X.Name.toLowerCase()
       }
-      if (serieDB.Bar_SetDBID.Int64 != 0) {
-        mergedContent += this.frontRepo.Bars.get(serieDB.Bar_SetDBID.Int64)!.Name.toLowerCase()
+      if (scatterDB.Y) {
+        mergedContent += scatterDB.Y.Name.toLowerCase()
       }
-
-      if (serieDB.Pie_SetDBID.Int64 != 0) {
-        mergedContent += this.frontRepo.Pies.get(serieDB.Pie_SetDBID.Int64)!.Name.toLowerCase()
+      if (scatterDB.Text) {
+        mergedContent += scatterDB.Text.Name.toLowerCase()
       }
-
-      if (serieDB.Scatter_SetDBID.Int64 != 0) {
-        mergedContent += this.frontRepo.Scatters.get(serieDB.Scatter_SetDBID.Int64)!.Name.toLowerCase()
-      }
-
+      mergedContent += scatterDB.Width.toString()
+      mergedContent += scatterDB.Heigth.toString()
+      mergedContent += scatterDB.Margin.toString()
 
       let isSelected = mergedContent.includes(filter.toLowerCase())
       return isSelected
@@ -140,11 +131,11 @@ export class SeriesTableComponent implements OnInit {
   }
 
   constructor(
-    private serieService: SerieService,
+    private scatterService: ScatterService,
     private frontRepoService: FrontRepoService,
 
-    // not null if the component is called as a selection component of serie instances
-    public dialogRef: MatDialogRef<SeriesTableComponent>,
+    // not null if the component is called as a selection component of scatter instances
+    public dialogRef: MatDialogRef<ScattersTableComponent>,
     @Optional() @Inject(MAT_DIALOG_DATA) public dialogData: DialogData,
 
     private router: Router,
@@ -166,120 +157,124 @@ export class SeriesTableComponent implements OnInit {
     }
 
     // observable for changes in structs
-    this.serieService.SerieServiceChanged.subscribe(
+    this.scatterService.ScatterServiceChanged.subscribe(
       message => {
         if (message == "post" || message == "update" || message == "delete") {
-          this.getSeries()
+          this.getScatters()
         }
       }
     )
     if (this.mode == TableComponentMode.DISPLAY_MODE) {
       this.displayedColumns = ['ID', 'Edit', 'Delete', // insertion point for columns to display
         "Name",
-        "Key",
-        "Bar_Set",
-        "Pie_Set",
-        "Scatter_Set",
+        "X",
+        "Y",
+        "Text",
+        "Width",
+        "Heigth",
+        "Margin",
       ]
     } else {
       this.displayedColumns = ['select', 'ID', // insertion point for columns to display
         "Name",
-        "Key",
-        "Bar_Set",
-        "Pie_Set",
-        "Scatter_Set",
+        "X",
+        "Y",
+        "Text",
+        "Width",
+        "Heigth",
+        "Margin",
       ]
-      this.selection = new SelectionModel<SerieDB>(allowMultiSelect, this.initialSelection);
+      this.selection = new SelectionModel<ScatterDB>(allowMultiSelect, this.initialSelection);
     }
 
   }
 
   ngOnInit(): void {
-    this.getSeries()
-    this.matTableDataSource = new MatTableDataSource(this.series)
+    this.getScatters()
+    this.matTableDataSource = new MatTableDataSource(this.scatters)
   }
 
-  getSeries(): void {
+  getScatters(): void {
     this.frontRepoService.pull().subscribe(
       frontRepo => {
         this.frontRepo = frontRepo
 
-        this.series = this.frontRepo.Series_array;
+        this.scatters = this.frontRepo.Scatters_array;
 
         // insertion point for time duration Recoveries
         // insertion point for enum int Recoveries
         
         // in case the component is called as a selection component
         if (this.mode == TableComponentMode.ONE_MANY_ASSOCIATION_MODE) {
-          for (let serie of this.series) {
+          for (let scatter of this.scatters) {
             let ID = this.dialogData.ID
-            let revPointer = serie[this.dialogData.ReversePointer as keyof SerieDB] as unknown as NullInt64
+            let revPointer = scatter[this.dialogData.ReversePointer as keyof ScatterDB] as unknown as NullInt64
             if (revPointer.Int64 == ID) {
-              this.initialSelection.push(serie)
+              this.initialSelection.push(scatter)
             }
-            this.selection = new SelectionModel<SerieDB>(allowMultiSelect, this.initialSelection);
+            this.selection = new SelectionModel<ScatterDB>(allowMultiSelect, this.initialSelection);
           }
         }
 
         if (this.mode == TableComponentMode.MANY_MANY_ASSOCIATION_MODE) {
 
-          let mapOfSourceInstances = this.frontRepo[this.dialogData.SourceStruct + "s" as keyof FrontRepo] as Map<number, SerieDB>
+          let mapOfSourceInstances = this.frontRepo[this.dialogData.SourceStruct + "s" as keyof FrontRepo] as Map<number, ScatterDB>
           let sourceInstance = mapOfSourceInstances.get(this.dialogData.ID)!
 
-          let sourceField = sourceInstance[this.dialogData.SourceField as keyof typeof sourceInstance]! as unknown as SerieDB[]
+          let sourceField = sourceInstance[this.dialogData.SourceField as keyof typeof sourceInstance]! as unknown as ScatterDB[]
           for (let associationInstance of sourceField) {
-            let serie = associationInstance[this.dialogData.IntermediateStructField as keyof typeof associationInstance] as unknown as SerieDB
-            this.initialSelection.push(serie)
+            let scatter = associationInstance[this.dialogData.IntermediateStructField as keyof typeof associationInstance] as unknown as ScatterDB
+            this.initialSelection.push(scatter)
           }
 
-          this.selection = new SelectionModel<SerieDB>(allowMultiSelect, this.initialSelection);
+          this.selection = new SelectionModel<ScatterDB>(allowMultiSelect, this.initialSelection);
         }
 
         // update the mat table data source
-        this.matTableDataSource.data = this.series
+        this.matTableDataSource.data = this.scatters
       }
     )
   }
 
-  // newSerie initiate a new serie
-  // create a new Serie objet
-  newSerie() {
+  // newScatter initiate a new scatter
+  // create a new Scatter objet
+  newScatter() {
   }
 
-  deleteSerie(serieID: number, serie: SerieDB) {
-    // list of series is truncated of serie before the delete
-    this.series = this.series.filter(h => h !== serie);
+  deleteScatter(scatterID: number, scatter: ScatterDB) {
+    // list of scatters is truncated of scatter before the delete
+    this.scatters = this.scatters.filter(h => h !== scatter);
 
-    this.serieService.deleteSerie(serieID).subscribe(
-      serie => {
-        this.serieService.SerieServiceChanged.next("delete")
+    this.scatterService.deleteScatter(scatterID).subscribe(
+      scatter => {
+        this.scatterService.ScatterServiceChanged.next("delete")
       }
     );
   }
 
-  editSerie(serieID: number, serie: SerieDB) {
+  editScatter(scatterID: number, scatter: ScatterDB) {
 
   }
 
-  // display serie in router
-  displaySerieInRouter(serieID: number) {
-    this.router.navigate(["gongd3_go-" + "serie-display", serieID])
+  // display scatter in router
+  displayScatterInRouter(scatterID: number) {
+    this.router.navigate(["gongd3_go-" + "scatter-display", scatterID])
   }
 
   // set editor outlet
-  setEditorRouterOutlet(serieID: number) {
+  setEditorRouterOutlet(scatterID: number) {
     this.router.navigate([{
       outlets: {
-        gongd3_go_editor: ["gongd3_go-" + "serie-detail", serieID]
+        gongd3_go_editor: ["gongd3_go-" + "scatter-detail", scatterID]
       }
     }]);
   }
 
   // set presentation outlet
-  setPresentationRouterOutlet(serieID: number) {
+  setPresentationRouterOutlet(scatterID: number) {
     this.router.navigate([{
       outlets: {
-        gongd3_go_presentation: ["gongd3_go-" + "serie-presentation", serieID]
+        gongd3_go_presentation: ["gongd3_go-" + "scatter-presentation", scatterID]
       }
     }]);
   }
@@ -287,7 +282,7 @@ export class SeriesTableComponent implements OnInit {
   /** Whether the number of selected elements matches the total number of rows. */
   isAllSelected() {
     const numSelected = this.selection.selected.length;
-    const numRows = this.series.length;
+    const numRows = this.scatters.length;
     return numSelected === numRows;
   }
 
@@ -295,39 +290,39 @@ export class SeriesTableComponent implements OnInit {
   masterToggle() {
     this.isAllSelected() ?
       this.selection.clear() :
-      this.series.forEach(row => this.selection.select(row));
+      this.scatters.forEach(row => this.selection.select(row));
   }
 
   save() {
 
     if (this.mode == TableComponentMode.ONE_MANY_ASSOCIATION_MODE) {
 
-      let toUpdate = new Set<SerieDB>()
+      let toUpdate = new Set<ScatterDB>()
 
-      // reset all initial selection of serie that belong to serie
-      for (let serie of this.initialSelection) {
-        let index = serie[this.dialogData.ReversePointer as keyof SerieDB] as unknown as NullInt64
+      // reset all initial selection of scatter that belong to scatter
+      for (let scatter of this.initialSelection) {
+        let index = scatter[this.dialogData.ReversePointer as keyof ScatterDB] as unknown as NullInt64
         index.Int64 = 0
         index.Valid = true
-        toUpdate.add(serie)
+        toUpdate.add(scatter)
 
       }
 
-      // from selection, set serie that belong to serie
-      for (let serie of this.selection.selected) {
+      // from selection, set scatter that belong to scatter
+      for (let scatter of this.selection.selected) {
         let ID = this.dialogData.ID as number
-        let reversePointer = serie[this.dialogData.ReversePointer as keyof SerieDB] as unknown as NullInt64
+        let reversePointer = scatter[this.dialogData.ReversePointer as keyof ScatterDB] as unknown as NullInt64
         reversePointer.Int64 = ID
         reversePointer.Valid = true
-        toUpdate.add(serie)
+        toUpdate.add(scatter)
       }
 
 
-      // update all serie (only update selection & initial selection)
-      for (let serie of toUpdate) {
-        this.serieService.updateSerie(serie)
-          .subscribe(serie => {
-            this.serieService.SerieServiceChanged.next("update")
+      // update all scatter (only update selection & initial selection)
+      for (let scatter of toUpdate) {
+        this.scatterService.updateScatter(scatter)
+          .subscribe(scatter => {
+            this.scatterService.ScatterServiceChanged.next("update")
           });
       }
     }
@@ -335,26 +330,26 @@ export class SeriesTableComponent implements OnInit {
     if (this.mode == TableComponentMode.MANY_MANY_ASSOCIATION_MODE) {
 
       // get the source instance via the map of instances in the front repo
-      let mapOfSourceInstances = this.frontRepo[this.dialogData.SourceStruct + "s" as keyof FrontRepo] as Map<number, SerieDB>
+      let mapOfSourceInstances = this.frontRepo[this.dialogData.SourceStruct + "s" as keyof FrontRepo] as Map<number, ScatterDB>
       let sourceInstance = mapOfSourceInstances.get(this.dialogData.ID)!
 
       // First, parse all instance of the association struct and remove the instance
       // that have unselect
-      let unselectedSerie = new Set<number>()
-      for (let serie of this.initialSelection) {
-        if (this.selection.selected.includes(serie)) {
-          // console.log("serie " + serie.Name + " is still selected")
+      let unselectedScatter = new Set<number>()
+      for (let scatter of this.initialSelection) {
+        if (this.selection.selected.includes(scatter)) {
+          // console.log("scatter " + scatter.Name + " is still selected")
         } else {
-          console.log("serie " + serie.Name + " has been unselected")
-          unselectedSerie.add(serie.ID)
-          console.log("is unselected " + unselectedSerie.has(serie.ID))
+          console.log("scatter " + scatter.Name + " has been unselected")
+          unselectedScatter.add(scatter.ID)
+          console.log("is unselected " + unselectedScatter.has(scatter.ID))
         }
       }
 
       // delete the association instance
       let associationInstance = sourceInstance[this.dialogData.SourceField as keyof typeof sourceInstance]
-      let serie = associationInstance![this.dialogData.IntermediateStructField as keyof typeof associationInstance] as unknown as SerieDB
-      if (unselectedSerie.has(serie.ID)) {
+      let scatter = associationInstance![this.dialogData.IntermediateStructField as keyof typeof associationInstance] as unknown as ScatterDB
+      if (unselectedScatter.has(scatter.ID)) {
         this.frontRepoService.deleteService(this.dialogData.IntermediateStruct, associationInstance)
 
 
@@ -362,38 +357,38 @@ export class SeriesTableComponent implements OnInit {
 
       // is the source array is empty create it
       if (sourceInstance[this.dialogData.SourceField as keyof typeof sourceInstance] == undefined) {
-        (sourceInstance[this.dialogData.SourceField as keyof typeof sourceInstance] as unknown as Array<SerieDB>) = new Array<SerieDB>()
+        (sourceInstance[this.dialogData.SourceField as keyof typeof sourceInstance] as unknown as Array<ScatterDB>) = new Array<ScatterDB>()
       }
 
       // second, parse all instance of the selected
       if (sourceInstance[this.dialogData.SourceField as keyof typeof sourceInstance]) {
         this.selection.selected.forEach(
-          serie => {
-            if (!this.initialSelection.includes(serie)) {
-              // console.log("serie " + serie.Name + " has been added to the selection")
+          scatter => {
+            if (!this.initialSelection.includes(scatter)) {
+              // console.log("scatter " + scatter.Name + " has been added to the selection")
 
               let associationInstance = {
-                Name: sourceInstance["Name"] + "-" + serie.Name,
+                Name: sourceInstance["Name"] + "-" + scatter.Name,
               }
 
               let index = associationInstance[this.dialogData.IntermediateStructField + "ID" as keyof typeof associationInstance] as unknown as NullInt64
-              index.Int64 = serie.ID
+              index.Int64 = scatter.ID
               index.Valid = true
 
               let indexDB = associationInstance[this.dialogData.IntermediateStructField + "DBID" as keyof typeof associationInstance] as unknown as NullInt64
-              indexDB.Int64 = serie.ID
+              indexDB.Int64 = scatter.ID
               index.Valid = true
 
               this.frontRepoService.postService(this.dialogData.IntermediateStruct, associationInstance)
 
             } else {
-              // console.log("serie " + serie.Name + " is still selected")
+              // console.log("scatter " + scatter.Name + " is still selected")
             }
           }
         )
       }
 
-      // this.selection = new SelectionModel<SerieDB>(allowMultiSelect, this.initialSelection);
+      // this.selection = new SelectionModel<ScatterDB>(allowMultiSelect, this.initialSelection);
     }
 
     // why pizza ?

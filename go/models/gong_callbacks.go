@@ -17,6 +17,10 @@ func AfterCreateFromFront[Type Gongstruct](stage *StageStruct, instance *Type) {
 		if stage.OnAfterPieCreateCallback != nil {
 			stage.OnAfterPieCreateCallback.OnAfterCreate(stage, target)
 		}
+	case *Scatter:
+		if stage.OnAfterScatterCreateCallback != nil {
+			stage.OnAfterScatterCreateCallback.OnAfterCreate(stage, target)
+		}
 	case *Serie:
 		if stage.OnAfterSerieCreateCallback != nil {
 			stage.OnAfterSerieCreateCallback.OnAfterCreate(stage, target)
@@ -47,6 +51,11 @@ func AfterUpdateFromFront[Type Gongstruct](stage *StageStruct, old, new *Type) {
 		newTarget := any(new).(*Pie)
 		if stage.OnAfterPieUpdateCallback != nil {
 			stage.OnAfterPieUpdateCallback.OnAfterUpdate(stage, oldTarget, newTarget)
+		}
+	case *Scatter:
+		newTarget := any(new).(*Scatter)
+		if stage.OnAfterScatterUpdateCallback != nil {
+			stage.OnAfterScatterUpdateCallback.OnAfterUpdate(stage, oldTarget, newTarget)
 		}
 	case *Serie:
 		newTarget := any(new).(*Serie)
@@ -81,6 +90,11 @@ func AfterDeleteFromFront[Type Gongstruct](stage *StageStruct, staged, front *Ty
 			staged := any(staged).(*Pie)
 			stage.OnAfterPieDeleteCallback.OnAfterDelete(stage, staged, front)
 		}
+	case *Scatter:
+		if stage.OnAfterScatterDeleteCallback != nil {
+			staged := any(staged).(*Scatter)
+			stage.OnAfterScatterDeleteCallback.OnAfterDelete(stage, staged, front)
+		}
 	case *Serie:
 		if stage.OnAfterSerieDeleteCallback != nil {
 			staged := any(staged).(*Serie)
@@ -111,6 +125,10 @@ func AfterReadFromFront[Type Gongstruct](stage *StageStruct, instance *Type) {
 		if stage.OnAfterPieReadCallback != nil {
 			stage.OnAfterPieReadCallback.OnAfterRead(stage, target)
 		}
+	case *Scatter:
+		if stage.OnAfterScatterReadCallback != nil {
+			stage.OnAfterScatterReadCallback.OnAfterRead(stage, target)
+		}
 	case *Serie:
 		if stage.OnAfterSerieReadCallback != nil {
 			stage.OnAfterSerieReadCallback.OnAfterRead(stage, target)
@@ -137,6 +155,9 @@ func SetCallbackAfterUpdateFromFront[Type Gongstruct](stage *StageStruct, callba
 	case *Pie:
 		stage.OnAfterPieUpdateCallback = any(callback).(OnAfterUpdateInterface[Pie])
 	
+	case *Scatter:
+		stage.OnAfterScatterUpdateCallback = any(callback).(OnAfterUpdateInterface[Scatter])
+	
 	case *Serie:
 		stage.OnAfterSerieUpdateCallback = any(callback).(OnAfterUpdateInterface[Serie])
 	
@@ -158,6 +179,9 @@ func SetCallbackAfterCreateFromFront[Type Gongstruct](stage *StageStruct, callba
 	
 	case *Pie:
 		stage.OnAfterPieCreateCallback = any(callback).(OnAfterCreateInterface[Pie])
+	
+	case *Scatter:
+		stage.OnAfterScatterCreateCallback = any(callback).(OnAfterCreateInterface[Scatter])
 	
 	case *Serie:
 		stage.OnAfterSerieCreateCallback = any(callback).(OnAfterCreateInterface[Serie])
@@ -181,6 +205,9 @@ func SetCallbackAfterDeleteFromFront[Type Gongstruct](stage *StageStruct, callba
 	case *Pie:
 		stage.OnAfterPieDeleteCallback = any(callback).(OnAfterDeleteInterface[Pie])
 	
+	case *Scatter:
+		stage.OnAfterScatterDeleteCallback = any(callback).(OnAfterDeleteInterface[Scatter])
+	
 	case *Serie:
 		stage.OnAfterSerieDeleteCallback = any(callback).(OnAfterDeleteInterface[Serie])
 	
@@ -202,6 +229,9 @@ func SetCallbackAfterReadFromFront[Type Gongstruct](stage *StageStruct, callback
 	
 	case *Pie:
 		stage.OnAfterPieReadCallback = any(callback).(OnAfterReadInterface[Pie])
+	
+	case *Scatter:
+		stage.OnAfterScatterReadCallback = any(callback).(OnAfterReadInterface[Scatter])
 	
 	case *Serie:
 		stage.OnAfterSerieReadCallback = any(callback).(OnAfterReadInterface[Serie])

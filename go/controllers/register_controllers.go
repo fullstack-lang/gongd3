@@ -64,6 +64,13 @@ func RegisterControllers(r *gin.Engine) {
 		v1.PUT("/v1/pies/:id", UpdatePie)
 		v1.DELETE("/v1/pies/:id", DeletePie)
 
+		v1.GET("/v1/scatters", GetScatters)
+		v1.GET("/v1/scatters/:id", GetScatter)
+		v1.POST("/v1/scatters", PostScatter)
+		v1.PATCH("/v1/scatters/:id", UpdateScatter)
+		v1.PUT("/v1/scatters/:id", UpdateScatter)
+		v1.DELETE("/v1/scatters/:id", DeleteScatter)
+
 		v1.GET("/v1/series", GetSeries)
 		v1.GET("/v1/series/:id", GetSerie)
 		v1.POST("/v1/series", PostSerie)

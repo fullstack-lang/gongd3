@@ -54,6 +54,11 @@ import { PieSortingComponent } from './pie-sorting/pie-sorting.component'
 import { PieDetailComponent } from './pie-detail/pie-detail.component'
 import { PiePresentationComponent } from './pie-presentation/pie-presentation.component'
 
+import { ScattersTableComponent } from './scatters-table/scatters-table.component'
+import { ScatterSortingComponent } from './scatter-sorting/scatter-sorting.component'
+import { ScatterDetailComponent } from './scatter-detail/scatter-detail.component'
+import { ScatterPresentationComponent } from './scatter-presentation/scatter-presentation.component'
+
 import { SeriesTableComponent } from './series-table/series-table.component'
 import { SerieSortingComponent } from './serie-sorting/serie-sorting.component'
 import { SerieDetailComponent } from './serie-detail/serie-detail.component'
@@ -82,6 +87,11 @@ import { ValuePresentationComponent } from './value-presentation/value-presentat
 		PieSortingComponent,
 		PieDetailComponent,
 		PiePresentationComponent,
+
+		ScattersTableComponent,
+		ScatterSortingComponent,
+		ScatterDetailComponent,
+		ScatterPresentationComponent,
 
 		SeriesTableComponent,
 		SerieSortingComponent,
@@ -146,6 +156,11 @@ import { ValuePresentationComponent } from './value-presentation/value-presentat
 		PieSortingComponent,
 		PieDetailComponent,
 		PiePresentationComponent,
+
+		ScattersTableComponent,
+		ScatterSortingComponent,
+		ScatterDetailComponent,
+		ScatterPresentationComponent,
 
 		SeriesTableComponent,
 		SerieSortingComponent,

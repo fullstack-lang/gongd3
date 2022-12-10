@@ -1,5 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import * as d3 from 'd3';
+import { Observable, Subscription, timer } from 'rxjs';
+
+import * as gongd3 from 'gongd3'
 
 @Component({
   selector: 'lib-scatter',
@@ -7,25 +11,109 @@ import * as d3 from 'd3';
   styleUrls: ['./scatter.component.css']
 })
 export class ScatterComponent implements OnInit {
-  private data = [
-    { "Framework": "Vue", "Stars": "166443", "Released": "2014" },
-    { "Framework": "React", "Stars": "150793", "Released": "2013" },
-    { "Framework": "Angular", "Stars": "62342", "Released": "2016" },
-    { "Framework": "Backbone", "Stars": "27647", "Released": "2010" },
-    { "Framework": "Ember", "Stars": "21471", "Released": "2011" },
-  ];
+
+  @Input() name: string = ""
+
+  checkGongd3CommitNbFromBackTimer: Observable<number> = timer(500, 500);
+  checkGongd3CommitNbFromBackTimerSubscription: Subscription = new Subscription
+
+  lastCommitNbFromBack = -1
+  lastDiagramId = 0
+  currTime: number = 0
+
+  private x_serieName: string = ""
+  private y_serieName: string = ""
+
+  private data = new Array<any>()
   private svg: any
   private margin = 50;
   private width = 750 - (this.margin * 2);
   private height = 400 - (this.margin * 2);
 
-  constructor() { }
+  constructor(
+    private route: ActivatedRoute,
+    private router: Router,
+    private gongd3CommitNbFromBackService: gongd3.CommitNbFromBackService,
+    private gongd3FrontRepoService: gongd3.FrontRepoService,
+  ) { }
 
   ngOnInit(): void {
-    this.createSvg();
-    this.drawPlot();
+    // check loop for refresh from the back repo
+    this.checkGongd3CommitNbFromBackTimerSubscription = this.checkGongd3CommitNbFromBackTimer.subscribe(
+      currTime => {
+        this.currTime = currTime
+
+        this.gongd3CommitNbFromBackService.getCommitNbFromBack().subscribe(
+          commitNbFromBack => {
+            // condition for refresh
+            if (this.lastCommitNbFromBack < commitNbFromBack) {
+
+              console.log("gongd3: last commit nb " + this.lastCommitNbFromBack + " new: " + commitNbFromBack)
+              this.lastCommitNbFromBack = commitNbFromBack
+              // this.lastDiagramId = id
+              this.redraw()
+            }
+          }
+        )
+      }
+    )
   }
 
+  private redraw(): void {
+    this.gongd3FrontRepoService.pull().subscribe(
+      frontRepo => {
+        for (let scatter of frontRepo.Scatters_array) {
+          console.log("Scatter name " + scatter.Name)
+          if (scatter.Name == this.name) {
+            console.log("Selected Scatter name " + scatter.Name)
+
+            // set up setting
+            this.width = scatter.Width
+            this.height = scatter.Heigth
+            this.margin = scatter.Margin
+
+            this.x_serieName = scatter.X!.Name
+            this.y_serieName = scatter.Y!.Name
+
+            this.data = new (Array<any>)
+            let indexSerie = 0
+            for (let serie of scatter.Set!) {
+              let indexValue = 0
+
+              // sort serie.Values according to the index
+              serie.Values!.sort((t1, t2) => {
+                if (t1.Serie_ValuesDBID_Index.Int64 > t2.Serie_ValuesDBID_Index.Int64) {
+                  return 1;
+                }
+                if (t1.Serie_ValuesDBID_Index.Int64 < t2.Serie_ValuesDBID_Index.Int64) {
+                  return -1;
+                }
+                return 0;
+              });
+
+              for (let value of serie.Values!) {
+                var obj: any
+                // when parsing the first serie, creates the object
+                if (indexSerie == 0) {
+                  obj = {}
+                  obj[serie.Key!.Name] = value.Name
+                  this.data.push(obj)
+                } else {
+                  obj = this.data[indexValue]
+                  obj[serie.Key!.Name] = value.Name
+                }
+                indexValue++
+              }
+              indexSerie = indexSerie + 1
+            }
+
+            this.createSvg();
+            this.drawPlot();
+          }
+        }
+      }
+    )
+  }
   private createSvg(): void {
     this.svg = d3.select("figure#scatter")
       .append("svg")
@@ -62,7 +150,6 @@ export class ScatterComponent implements OnInit {
       .attr("r", 7)
       .style("opacity", .5)
       .style("fill", "#69b3a2");
-
     // Add labels
     dots.selectAll("text")
       .data(this.data)

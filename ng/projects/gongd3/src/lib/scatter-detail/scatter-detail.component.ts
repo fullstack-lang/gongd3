@@ -2,17 +2,14 @@
 import { Component, OnInit } from '@angular/core';
 import { UntypedFormControl } from '@angular/forms';
 
-import { SerieDB } from '../serie-db'
-import { SerieService } from '../serie.service'
+import { ScatterDB } from '../scatter-db'
+import { ScatterService } from '../scatter.service'
 
 import { FrontRepoService, FrontRepo, SelectionMode, DialogData } from '../front-repo.service'
 import { MapOfComponents } from '../map-components'
 import { MapOfSortingComponents } from '../map-components'
 
 // insertion point for imports
-import { BarDB } from '../bar-db'
-import { PieDB } from '../pie-db'
-import { ScatterDB } from '../scatter-db'
 
 import { Router, RouterState, ActivatedRoute } from '@angular/router';
 
@@ -20,28 +17,25 @@ import { MatDialog, MAT_DIALOG_DATA, MatDialogRef, MatDialogConfig } from '@angu
 
 import { NullInt64 } from '../null-int64'
 
-// SerieDetailComponent is initilizaed from different routes
-// SerieDetailComponentState detail different cases 
-enum SerieDetailComponentState {
+// ScatterDetailComponent is initilizaed from different routes
+// ScatterDetailComponentState detail different cases 
+enum ScatterDetailComponentState {
 	CREATE_INSTANCE,
 	UPDATE_INSTANCE,
 	// insertion point for declarations of enum values of state
-	CREATE_INSTANCE_WITH_ASSOCIATION_Bar_Set_SET,
-	CREATE_INSTANCE_WITH_ASSOCIATION_Pie_Set_SET,
-	CREATE_INSTANCE_WITH_ASSOCIATION_Scatter_Set_SET,
 }
 
 @Component({
-	selector: 'app-serie-detail',
-	templateUrl: './serie-detail.component.html',
-	styleUrls: ['./serie-detail.component.css'],
+	selector: 'app-scatter-detail',
+	templateUrl: './scatter-detail.component.html',
+	styleUrls: ['./scatter-detail.component.css'],
 })
-export class SerieDetailComponent implements OnInit {
+export class ScatterDetailComponent implements OnInit {
 
 	// insertion point for declarations
 
-	// the SerieDB of interest
-	serie: SerieDB = new SerieDB
+	// the ScatterDB of interest
+	scatter: ScatterDB = new ScatterDB
 
 	// front repo
 	frontRepo: FrontRepo = new FrontRepo
@@ -52,7 +46,7 @@ export class SerieDetailComponent implements OnInit {
 	mapFields_displayAsTextArea = new Map<string, boolean>()
 
 	// the state at initialization (CREATION, UPDATE or CREATE with one association set)
-	state: SerieDetailComponentState = SerieDetailComponentState.CREATE_INSTANCE
+	state: ScatterDetailComponentState = ScatterDetailComponentState.CREATE_INSTANCE
 
 	// in UDPATE state, if is the id of the instance to update
 	// in CREATE state with one association set, this is the id of the associated instance
@@ -63,7 +57,7 @@ export class SerieDetailComponent implements OnInit {
 	originStructFieldName: string = ""
 
 	constructor(
-		private serieService: SerieService,
+		private scatterService: ScatterService,
 		private frontRepoService: FrontRepoService,
 		public dialog: MatDialog,
 		private route: ActivatedRoute,
@@ -80,38 +74,26 @@ export class SerieDetailComponent implements OnInit {
 
 		const association = this.route.snapshot.paramMap.get('association');
 		if (this.id == 0) {
-			this.state = SerieDetailComponentState.CREATE_INSTANCE
+			this.state = ScatterDetailComponentState.CREATE_INSTANCE
 		} else {
 			if (this.originStruct == undefined) {
-				this.state = SerieDetailComponentState.UPDATE_INSTANCE
+				this.state = ScatterDetailComponentState.UPDATE_INSTANCE
 			} else {
 				switch (this.originStructFieldName) {
 					// insertion point for state computation
-					case "Set":
-						// console.log("Serie" + " is instanciated with back pointer to instance " + this.id + " Bar association Set")
-						this.state = SerieDetailComponentState.CREATE_INSTANCE_WITH_ASSOCIATION_Bar_Set_SET
-						break;
-					case "Set":
-						// console.log("Serie" + " is instanciated with back pointer to instance " + this.id + " Pie association Set")
-						this.state = SerieDetailComponentState.CREATE_INSTANCE_WITH_ASSOCIATION_Pie_Set_SET
-						break;
-					case "Set":
-						// console.log("Serie" + " is instanciated with back pointer to instance " + this.id + " Scatter association Set")
-						this.state = SerieDetailComponentState.CREATE_INSTANCE_WITH_ASSOCIATION_Scatter_Set_SET
-						break;
 					default:
 						console.log(this.originStructFieldName + " is unkown association")
 				}
 			}
 		}
 
-		this.getSerie()
+		this.getScatter()
 
 		// observable for changes in structs
-		this.serieService.SerieServiceChanged.subscribe(
+		this.scatterService.ScatterServiceChanged.subscribe(
 			message => {
 				if (message == "post" || message == "update" || message == "delete") {
-					this.getSerie()
+					this.getScatter()
 				}
 			}
 		)
@@ -119,34 +101,22 @@ export class SerieDetailComponent implements OnInit {
 		// insertion point for initialisation of enums list
 	}
 
-	getSerie(): void {
+	getScatter(): void {
 
 		this.frontRepoService.pull().subscribe(
 			frontRepo => {
 				this.frontRepo = frontRepo
 
 				switch (this.state) {
-					case SerieDetailComponentState.CREATE_INSTANCE:
-						this.serie = new (SerieDB)
+					case ScatterDetailComponentState.CREATE_INSTANCE:
+						this.scatter = new (ScatterDB)
 						break;
-					case SerieDetailComponentState.UPDATE_INSTANCE:
-						let serie = frontRepo.Series.get(this.id)
-						console.assert(serie != undefined, "missing serie with id:" + this.id)
-						this.serie = serie!
+					case ScatterDetailComponentState.UPDATE_INSTANCE:
+						let scatter = frontRepo.Scatters.get(this.id)
+						console.assert(scatter != undefined, "missing scatter with id:" + this.id)
+						this.scatter = scatter!
 						break;
 					// insertion point for init of association field
-					case SerieDetailComponentState.CREATE_INSTANCE_WITH_ASSOCIATION_Bar_Set_SET:
-						this.serie = new (SerieDB)
-						this.serie.Bar_Set_reverse = frontRepo.Bars.get(this.id)!
-						break;
-					case SerieDetailComponentState.CREATE_INSTANCE_WITH_ASSOCIATION_Pie_Set_SET:
-						this.serie = new (SerieDB)
-						this.serie.Pie_Set_reverse = frontRepo.Pies.get(this.id)!
-						break;
-					case SerieDetailComponentState.CREATE_INSTANCE_WITH_ASSOCIATION_Scatter_Set_SET:
-						this.serie = new (SerieDB)
-						this.serie.Scatter_Set_reverse = frontRepo.Scatters.get(this.id)!
-						break;
 					default:
 						console.log(this.state + " is unkown state")
 				}
@@ -164,68 +134,52 @@ export class SerieDetailComponent implements OnInit {
 		// pointers fields, after the translation, are nulled in order to perform serialization
 
 		// insertion point for translation/nullation of each field
-		if (this.serie.KeyID == undefined) {
-			this.serie.KeyID = new NullInt64
+		if (this.scatter.XID == undefined) {
+			this.scatter.XID = new NullInt64
 		}
-		if (this.serie.Key != undefined) {
-			this.serie.KeyID.Int64 = this.serie.Key.ID
-			this.serie.KeyID.Valid = true
+		if (this.scatter.X != undefined) {
+			this.scatter.XID.Int64 = this.scatter.X.ID
+			this.scatter.XID.Valid = true
 		} else {
-			this.serie.KeyID.Int64 = 0
-			this.serie.KeyID.Valid = true
+			this.scatter.XID.Int64 = 0
+			this.scatter.XID.Valid = true
+		}
+		if (this.scatter.YID == undefined) {
+			this.scatter.YID = new NullInt64
+		}
+		if (this.scatter.Y != undefined) {
+			this.scatter.YID.Int64 = this.scatter.Y.ID
+			this.scatter.YID.Valid = true
+		} else {
+			this.scatter.YID.Int64 = 0
+			this.scatter.YID.Valid = true
+		}
+		if (this.scatter.TextID == undefined) {
+			this.scatter.TextID = new NullInt64
+		}
+		if (this.scatter.Text != undefined) {
+			this.scatter.TextID.Int64 = this.scatter.Text.ID
+			this.scatter.TextID.Valid = true
+		} else {
+			this.scatter.TextID.Int64 = 0
+			this.scatter.TextID.Valid = true
 		}
 
 		// save from the front pointer space to the non pointer space for serialization
 
 		// insertion point for translation/nullation of each pointers
-		if (this.serie.Bar_Set_reverse != undefined) {
-			if (this.serie.Bar_SetDBID == undefined) {
-				this.serie.Bar_SetDBID = new NullInt64
-			}
-			this.serie.Bar_SetDBID.Int64 = this.serie.Bar_Set_reverse.ID
-			this.serie.Bar_SetDBID.Valid = true
-			if (this.serie.Bar_SetDBID_Index == undefined) {
-				this.serie.Bar_SetDBID_Index = new NullInt64
-			}
-			this.serie.Bar_SetDBID_Index.Valid = true
-			this.serie.Bar_Set_reverse = new BarDB // very important, otherwise, circular JSON
-		}
-		if (this.serie.Pie_Set_reverse != undefined) {
-			if (this.serie.Pie_SetDBID == undefined) {
-				this.serie.Pie_SetDBID = new NullInt64
-			}
-			this.serie.Pie_SetDBID.Int64 = this.serie.Pie_Set_reverse.ID
-			this.serie.Pie_SetDBID.Valid = true
-			if (this.serie.Pie_SetDBID_Index == undefined) {
-				this.serie.Pie_SetDBID_Index = new NullInt64
-			}
-			this.serie.Pie_SetDBID_Index.Valid = true
-			this.serie.Pie_Set_reverse = new PieDB // very important, otherwise, circular JSON
-		}
-		if (this.serie.Scatter_Set_reverse != undefined) {
-			if (this.serie.Scatter_SetDBID == undefined) {
-				this.serie.Scatter_SetDBID = new NullInt64
-			}
-			this.serie.Scatter_SetDBID.Int64 = this.serie.Scatter_Set_reverse.ID
-			this.serie.Scatter_SetDBID.Valid = true
-			if (this.serie.Scatter_SetDBID_Index == undefined) {
-				this.serie.Scatter_SetDBID_Index = new NullInt64
-			}
-			this.serie.Scatter_SetDBID_Index.Valid = true
-			this.serie.Scatter_Set_reverse = new ScatterDB // very important, otherwise, circular JSON
-		}
 
 		switch (this.state) {
-			case SerieDetailComponentState.UPDATE_INSTANCE:
-				this.serieService.updateSerie(this.serie)
-					.subscribe(serie => {
-						this.serieService.SerieServiceChanged.next("update")
+			case ScatterDetailComponentState.UPDATE_INSTANCE:
+				this.scatterService.updateScatter(this.scatter)
+					.subscribe(scatter => {
+						this.scatterService.ScatterServiceChanged.next("update")
 					});
 				break;
 			default:
-				this.serieService.postSerie(this.serie).subscribe(serie => {
-					this.serieService.SerieServiceChanged.next("post")
-					this.serie = new (SerieDB) // reset fields
+				this.scatterService.postScatter(this.scatter).subscribe(scatter => {
+					this.scatterService.ScatterServiceChanged.next("post")
+					this.scatter = new (ScatterDB) // reset fields
 				});
 		}
 	}
@@ -248,7 +202,7 @@ export class SerieDetailComponent implements OnInit {
 		dialogConfig.height = "50%"
 		if (selectionMode == SelectionMode.ONE_MANY_ASSOCIATION_MODE) {
 
-			dialogData.ID = this.serie.ID!
+			dialogData.ID = this.scatter.ID!
 			dialogData.ReversePointer = reverseField
 			dialogData.OrderingMode = false
 			dialogData.SelectionMode = selectionMode
@@ -264,13 +218,13 @@ export class SerieDetailComponent implements OnInit {
 			});
 		}
 		if (selectionMode == SelectionMode.MANY_MANY_ASSOCIATION_MODE) {
-			dialogData.ID = this.serie.ID!
+			dialogData.ID = this.scatter.ID!
 			dialogData.ReversePointer = reverseField
 			dialogData.OrderingMode = false
 			dialogData.SelectionMode = selectionMode
 
 			// set up the source
-			dialogData.SourceStruct = "Serie"
+			dialogData.SourceStruct = "Scatter"
 			dialogData.SourceField = sourceField
 
 			// set up the intermediate struct
@@ -300,7 +254,7 @@ export class SerieDetailComponent implements OnInit {
 		// dialogConfig.disableClose = true;
 		dialogConfig.autoFocus = true;
 		dialogConfig.data = {
-			ID: this.serie.ID,
+			ID: this.scatter.ID,
 			ReversePointer: reverseField,
 			OrderingMode: true,
 		};
@@ -316,8 +270,8 @@ export class SerieDetailComponent implements OnInit {
 	}
 
 	fillUpNameIfEmpty(event: { value: { Name: string; }; }) {
-		if (this.serie.Name == "") {
-			this.serie.Name = event.value.Name
+		if (this.scatter.Name == "") {
+			this.scatter.Name = event.value.Name
 		}
 	}
 

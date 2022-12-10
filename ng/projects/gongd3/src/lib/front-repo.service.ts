@@ -13,6 +13,9 @@ import { KeyService } from './key.service'
 import { PieDB } from './pie-db'
 import { PieService } from './pie.service'
 
+import { ScatterDB } from './scatter-db'
+import { ScatterService } from './scatter.service'
+
 import { SerieDB } from './serie-db'
 import { SerieService } from './serie.service'
 
@@ -31,6 +34,9 @@ export class FrontRepo { // insertion point sub template
   Pies_array = new Array<PieDB>(); // array of repo instances
   Pies = new Map<number, PieDB>(); // map of repo instances
   Pies_batch = new Map<number, PieDB>(); // same but only in last GET (for finding repo instances to delete)
+  Scatters_array = new Array<ScatterDB>(); // array of repo instances
+  Scatters = new Map<number, ScatterDB>(); // map of repo instances
+  Scatters_batch = new Map<number, ScatterDB>(); // same but only in last GET (for finding repo instances to delete)
   Series_array = new Array<SerieDB>(); // array of repo instances
   Series = new Map<number, SerieDB>(); // map of repo instances
   Series_batch = new Map<number, SerieDB>(); // same but only in last GET (for finding repo instances to delete)
@@ -98,6 +104,7 @@ export class FrontRepoService {
     private barService: BarService,
     private keyService: KeyService,
     private pieService: PieService,
+    private scatterService: ScatterService,
     private serieService: SerieService,
     private valueService: ValueService,
   ) { }
@@ -133,12 +140,14 @@ export class FrontRepoService {
     Observable<BarDB[]>,
     Observable<KeyDB[]>,
     Observable<PieDB[]>,
+    Observable<ScatterDB[]>,
     Observable<SerieDB[]>,
     Observable<ValueDB[]>,
   ] = [ // insertion point sub template 
       this.barService.getBars(),
       this.keyService.getKeys(),
       this.pieService.getPies(),
+      this.scatterService.getScatters(),
       this.serieService.getSeries(),
       this.valueService.getValues(),
     ];
@@ -159,6 +168,7 @@ export class FrontRepoService {
             bars_,
             keys_,
             pies_,
+            scatters_,
             series_,
             values_,
           ]) => {
@@ -170,6 +180,8 @@ export class FrontRepoService {
             keys = keys_ as KeyDB[]
             var pies: PieDB[]
             pies = pies_ as PieDB[]
+            var scatters: ScatterDB[]
+            scatters = scatters_ as ScatterDB[]
             var series: SerieDB[]
             series = series_ as SerieDB[]
             var values: ValueDB[]
@@ -268,6 +280,39 @@ export class FrontRepoService {
 
             // sort Pies_array array
             FrontRepoSingloton.Pies_array.sort((t1, t2) => {
+              if (t1.Name > t2.Name) {
+                return 1;
+              }
+              if (t1.Name < t2.Name) {
+                return -1;
+              }
+              return 0;
+            });
+
+            // init the array
+            FrontRepoSingloton.Scatters_array = scatters
+
+            // clear the map that counts Scatter in the GET
+            FrontRepoSingloton.Scatters_batch.clear()
+
+            scatters.forEach(
+              scatter => {
+                FrontRepoSingloton.Scatters.set(scatter.ID, scatter)
+                FrontRepoSingloton.Scatters_batch.set(scatter.ID, scatter)
+              }
+            )
+
+            // clear scatters that are absent from the batch
+            FrontRepoSingloton.Scatters.forEach(
+              scatter => {
+                if (FrontRepoSingloton.Scatters_batch.get(scatter.ID) == undefined) {
+                  FrontRepoSingloton.Scatters.delete(scatter.ID)
+                }
+              }
+            )
+
+            // sort Scatters_array array
+            FrontRepoSingloton.Scatters_array.sort((t1, t2) => {
               if (t1.Name > t2.Name) {
                 return 1;
               }
@@ -396,6 +441,34 @@ export class FrontRepoService {
                 // insertion point for redeeming ONE-MANY associations
               }
             )
+            scatters.forEach(
+              scatter => {
+                // insertion point sub sub template for ONE-/ZERO-ONE associations pointers redeeming
+                // insertion point for pointer field X redeeming
+                {
+                  let _key = FrontRepoSingloton.Keys.get(scatter.XID.Int64)
+                  if (_key) {
+                    scatter.X = _key
+                  }
+                }
+                // insertion point for pointer field Y redeeming
+                {
+                  let _key = FrontRepoSingloton.Keys.get(scatter.YID.Int64)
+                  if (_key) {
+                    scatter.Y = _key
+                  }
+                }
+                // insertion point for pointer field Text redeeming
+                {
+                  let _key = FrontRepoSingloton.Keys.get(scatter.TextID.Int64)
+                  if (_key) {
+                    scatter.Text = _key
+                  }
+                }
+
+                // insertion point for redeeming ONE-MANY associations
+              }
+            )
             series.forEach(
               serie => {
                 // insertion point sub sub template for ONE-/ZERO-ONE associations pointers redeeming
@@ -431,6 +504,19 @@ export class FrontRepoService {
                     _pie.Set.push(serie)
                     if (serie.Pie_Set_reverse == undefined) {
                       serie.Pie_Set_reverse = _pie
+                    }
+                  }
+                }
+                // insertion point for slice of pointer field Scatter.Set redeeming
+                {
+                  let _scatter = FrontRepoSingloton.Scatters.get(serie.Scatter_SetDBID.Int64)
+                  if (_scatter) {
+                    if (_scatter.Set == undefined) {
+                      _scatter.Set = new Array<SerieDB>()
+                    }
+                    _scatter.Set.push(serie)
+                    if (serie.Scatter_Set_reverse == undefined) {
+                      serie.Scatter_Set_reverse = _scatter
                     }
                   }
                 }
@@ -648,6 +734,78 @@ export class FrontRepoService {
     )
   }
 
+  // ScatterPull performs a GET on Scatter of the stack and redeem association pointers 
+  ScatterPull(): Observable<FrontRepo> {
+    return new Observable<FrontRepo>(
+      (observer) => {
+        combineLatest([
+          this.scatterService.getScatters()
+        ]).subscribe(
+          ([ // insertion point sub template 
+            scatters,
+          ]) => {
+            // init the array
+            FrontRepoSingloton.Scatters_array = scatters
+
+            // clear the map that counts Scatter in the GET
+            FrontRepoSingloton.Scatters_batch.clear()
+
+            // 
+            // First Step: init map of instances
+            // insertion point sub template 
+            scatters.forEach(
+              scatter => {
+                FrontRepoSingloton.Scatters.set(scatter.ID, scatter)
+                FrontRepoSingloton.Scatters_batch.set(scatter.ID, scatter)
+
+                // insertion point for redeeming ONE/ZERO-ONE associations
+                // insertion point for pointer field X redeeming
+                {
+                  let _key = FrontRepoSingloton.Keys.get(scatter.XID.Int64)
+                  if (_key) {
+                    scatter.X = _key
+                  }
+                }
+                // insertion point for pointer field Y redeeming
+                {
+                  let _key = FrontRepoSingloton.Keys.get(scatter.YID.Int64)
+                  if (_key) {
+                    scatter.Y = _key
+                  }
+                }
+                // insertion point for pointer field Text redeeming
+                {
+                  let _key = FrontRepoSingloton.Keys.get(scatter.TextID.Int64)
+                  if (_key) {
+                    scatter.Text = _key
+                  }
+                }
+
+                // insertion point for redeeming ONE-MANY associations
+              }
+            )
+
+            // clear scatters that are absent from the GET
+            FrontRepoSingloton.Scatters.forEach(
+              scatter => {
+                if (FrontRepoSingloton.Scatters_batch.get(scatter.ID) == undefined) {
+                  FrontRepoSingloton.Scatters.delete(scatter.ID)
+                }
+              }
+            )
+
+            // 
+            // Second Step: redeem pointers between instances (thanks to maps in the First Step)
+            // insertion point sub template 
+
+            // hand over control flow to observer
+            observer.next(FrontRepoSingloton)
+          }
+        )
+      }
+    )
+  }
+
   // SeriePull performs a GET on Serie of the stack and redeem association pointers 
   SeriePull(): Observable<FrontRepo> {
     return new Observable<FrontRepo>(
@@ -705,6 +863,19 @@ export class FrontRepoService {
                     _pie.Set.push(serie)
                     if (serie.Pie_Set_reverse == undefined) {
                       serie.Pie_Set_reverse = _pie
+                    }
+                  }
+                }
+                // insertion point for slice of pointer field Scatter.Set redeeming
+                {
+                  let _scatter = FrontRepoSingloton.Scatters.get(serie.Scatter_SetDBID.Int64)
+                  if (_scatter) {
+                    if (_scatter.Set == undefined) {
+                      _scatter.Set = new Array<SerieDB>()
+                    }
+                    _scatter.Set.push(serie)
+                    if (serie.Scatter_Set_reverse == undefined) {
+                      serie.Scatter_Set_reverse = _scatter
                     }
                   }
                 }
@@ -807,9 +978,12 @@ export function getKeyUniqueID(id: number): number {
 export function getPieUniqueID(id: number): number {
   return 41 * id
 }
-export function getSerieUniqueID(id: number): number {
+export function getScatterUniqueID(id: number): number {
   return 43 * id
 }
-export function getValueUniqueID(id: number): number {
+export function getSerieUniqueID(id: number): number {
   return 47 * id
+}
+export function getValueUniqueID(id: number): number {
+  return 53 * id
 }

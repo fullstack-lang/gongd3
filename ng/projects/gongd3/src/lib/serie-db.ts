@@ -3,6 +3,7 @@ import { KeyDB } from './key-db'
 import { ValueDB } from './value-db'
 import { BarDB } from './bar-db'
 import { PieDB } from './pie-db'
+import { ScatterDB } from './scatter-db'
 
 // usefull for managing pointer ID values that can be nullable
 import { NullInt64 } from './null-int64'
@@ -27,5 +28,9 @@ export class SerieDB {
 	Pie_SetDBID: NullInt64 = new NullInt64
 	Pie_SetDBID_Index: NullInt64  = new NullInt64 // store the index of the serie instance in Pie.Set
 	Pie_Set_reverse?: PieDB 
+
+	Scatter_SetDBID: NullInt64 = new NullInt64
+	Scatter_SetDBID_Index: NullInt64  = new NullInt64 // store the index of the serie instance in Scatter.Set
+	Scatter_Set_reverse?: ScatterDB 
 
 }

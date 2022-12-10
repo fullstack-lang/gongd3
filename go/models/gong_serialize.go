@@ -16,6 +16,7 @@ func SerializeStage(filename string) {
 		SerializeExcelize[Bar](f)
 		SerializeExcelize[Key](f)
 		SerializeExcelize[Pie](f)
+		SerializeExcelize[Scatter](f)
 		SerializeExcelize[Serie](f)
 		SerializeExcelize[Value](f)
 	}

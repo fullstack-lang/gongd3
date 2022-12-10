@@ -61,6 +61,12 @@ type SeriePointersEnconding struct {
 
 	// implementation of the index of the withing the slice
 	Pie_SetDBID_Index sql.NullInt64
+
+	// Implementation of a reverse ID for field Scatter{}.Set []*Serie
+	Scatter_SetDBID sql.NullInt64
+
+	// implementation of the index of the withing the slice
+	Scatter_SetDBID_Index sql.NullInt64
 }
 
 // SerieDB describes a serie in the database
@@ -642,6 +648,12 @@ func (backRepoSerie *BackRepoSerieStruct) RestorePhaseTwo() {
 		if serieDB.Pie_SetDBID.Int64 != 0 {
 			serieDB.Pie_SetDBID.Int64 =
 				int64(BackRepoPieid_atBckpTime_newID[uint(serieDB.Pie_SetDBID.Int64)])
+		}
+
+		// This reindex serie.Set
+		if serieDB.Scatter_SetDBID.Int64 != 0 {
+			serieDB.Scatter_SetDBID.Int64 =
+				int64(BackRepoScatterid_atBckpTime_newID[uint(serieDB.Scatter_SetDBID.Int64)])
 		}
 
 		// update databse with new index encoding

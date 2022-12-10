@@ -14,6 +14,10 @@ import { PiesTableComponent } from './pies-table/pies-table.component'
 import { PieDetailComponent } from './pie-detail/pie-detail.component'
 import { PiePresentationComponent } from './pie-presentation/pie-presentation.component'
 
+import { ScattersTableComponent } from './scatters-table/scatters-table.component'
+import { ScatterDetailComponent } from './scatter-detail/scatter-detail.component'
+import { ScatterPresentationComponent } from './scatter-presentation/scatter-presentation.component'
+
 import { SeriesTableComponent } from './series-table/series-table.component'
 import { SerieDetailComponent } from './serie-detail/serie-detail.component'
 import { SeriePresentationComponent } from './serie-presentation/serie-presentation.component'
@@ -44,6 +48,13 @@ const routes: Routes = [ // insertion point for routes declarations
 	{ path: 'gongd3_go-pie-detail/:id', component: PieDetailComponent, outlet: 'gongd3_go_editor' },
 	{ path: 'gongd3_go-pie-presentation/:id', component: PiePresentationComponent, outlet: 'gongd3_go_presentation' },
 	{ path: 'gongd3_go-pie-presentation-special/:id', component: PiePresentationComponent, outlet: 'gongd3_gopiepres' },
+
+	{ path: 'gongd3_go-scatters', component: ScattersTableComponent, outlet: 'gongd3_go_table' },
+	{ path: 'gongd3_go-scatter-adder', component: ScatterDetailComponent, outlet: 'gongd3_go_editor' },
+	{ path: 'gongd3_go-scatter-adder/:id/:originStruct/:originStructFieldName', component: ScatterDetailComponent, outlet: 'gongd3_go_editor' },
+	{ path: 'gongd3_go-scatter-detail/:id', component: ScatterDetailComponent, outlet: 'gongd3_go_editor' },
+	{ path: 'gongd3_go-scatter-presentation/:id', component: ScatterPresentationComponent, outlet: 'gongd3_go_presentation' },
+	{ path: 'gongd3_go-scatter-presentation-special/:id', component: ScatterPresentationComponent, outlet: 'gongd3_goscatterpres' },
 
 	{ path: 'gongd3_go-series', component: SeriesTableComponent, outlet: 'gongd3_go_table' },
 	{ path: 'gongd3_go-serie-adder', component: SerieDetailComponent, outlet: 'gongd3_go_editor' },

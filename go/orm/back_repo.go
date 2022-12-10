@@ -25,6 +25,8 @@ type BackRepoStruct struct {
 
 	BackRepoPie BackRepoPieStruct
 
+	BackRepoScatter BackRepoScatterStruct
+
 	BackRepoSerie BackRepoSerieStruct
 
 	BackRepoValue BackRepoValueStruct
@@ -70,6 +72,7 @@ func (backRepo *BackRepoStruct) init(db *gorm.DB) {
 	backRepo.BackRepoBar.Init(db)
 	backRepo.BackRepoKey.Init(db)
 	backRepo.BackRepoPie.Init(db)
+	backRepo.BackRepoScatter.Init(db)
 	backRepo.BackRepoSerie.Init(db)
 	backRepo.BackRepoValue.Init(db)
 
@@ -82,6 +85,7 @@ func (backRepo *BackRepoStruct) Commit(stage *models.StageStruct) {
 	backRepo.BackRepoBar.CommitPhaseOne(stage)
 	backRepo.BackRepoKey.CommitPhaseOne(stage)
 	backRepo.BackRepoPie.CommitPhaseOne(stage)
+	backRepo.BackRepoScatter.CommitPhaseOne(stage)
 	backRepo.BackRepoSerie.CommitPhaseOne(stage)
 	backRepo.BackRepoValue.CommitPhaseOne(stage)
 
@@ -89,6 +93,7 @@ func (backRepo *BackRepoStruct) Commit(stage *models.StageStruct) {
 	backRepo.BackRepoBar.CommitPhaseTwo(backRepo)
 	backRepo.BackRepoKey.CommitPhaseTwo(backRepo)
 	backRepo.BackRepoPie.CommitPhaseTwo(backRepo)
+	backRepo.BackRepoScatter.CommitPhaseTwo(backRepo)
 	backRepo.BackRepoSerie.CommitPhaseTwo(backRepo)
 	backRepo.BackRepoValue.CommitPhaseTwo(backRepo)
 
@@ -101,6 +106,7 @@ func (backRepo *BackRepoStruct) Checkout(stage *models.StageStruct) {
 	backRepo.BackRepoBar.CheckoutPhaseOne()
 	backRepo.BackRepoKey.CheckoutPhaseOne()
 	backRepo.BackRepoPie.CheckoutPhaseOne()
+	backRepo.BackRepoScatter.CheckoutPhaseOne()
 	backRepo.BackRepoSerie.CheckoutPhaseOne()
 	backRepo.BackRepoValue.CheckoutPhaseOne()
 
@@ -108,6 +114,7 @@ func (backRepo *BackRepoStruct) Checkout(stage *models.StageStruct) {
 	backRepo.BackRepoBar.CheckoutPhaseTwo(backRepo)
 	backRepo.BackRepoKey.CheckoutPhaseTwo(backRepo)
 	backRepo.BackRepoPie.CheckoutPhaseTwo(backRepo)
+	backRepo.BackRepoScatter.CheckoutPhaseTwo(backRepo)
 	backRepo.BackRepoSerie.CheckoutPhaseTwo(backRepo)
 	backRepo.BackRepoValue.CheckoutPhaseTwo(backRepo)
 }
@@ -130,6 +137,7 @@ func (backRepo *BackRepoStruct) Backup(stage *models.StageStruct, dirPath string
 	backRepo.BackRepoBar.Backup(dirPath)
 	backRepo.BackRepoKey.Backup(dirPath)
 	backRepo.BackRepoPie.Backup(dirPath)
+	backRepo.BackRepoScatter.Backup(dirPath)
 	backRepo.BackRepoSerie.Backup(dirPath)
 	backRepo.BackRepoValue.Backup(dirPath)
 }
@@ -145,6 +153,7 @@ func (backRepo *BackRepoStruct) BackupXL(stage *models.StageStruct, dirPath stri
 	backRepo.BackRepoBar.BackupXL(file)
 	backRepo.BackRepoKey.BackupXL(file)
 	backRepo.BackRepoPie.BackupXL(file)
+	backRepo.BackRepoScatter.BackupXL(file)
 	backRepo.BackRepoSerie.BackupXL(file)
 	backRepo.BackRepoValue.BackupXL(file)
 
@@ -174,6 +183,7 @@ func (backRepo *BackRepoStruct) Restore(stage *models.StageStruct, dirPath strin
 	backRepo.BackRepoBar.RestorePhaseOne(dirPath)
 	backRepo.BackRepoKey.RestorePhaseOne(dirPath)
 	backRepo.BackRepoPie.RestorePhaseOne(dirPath)
+	backRepo.BackRepoScatter.RestorePhaseOne(dirPath)
 	backRepo.BackRepoSerie.RestorePhaseOne(dirPath)
 	backRepo.BackRepoValue.RestorePhaseOne(dirPath)
 
@@ -185,6 +195,7 @@ func (backRepo *BackRepoStruct) Restore(stage *models.StageStruct, dirPath strin
 	backRepo.BackRepoBar.RestorePhaseTwo()
 	backRepo.BackRepoKey.RestorePhaseTwo()
 	backRepo.BackRepoPie.RestorePhaseTwo()
+	backRepo.BackRepoScatter.RestorePhaseTwo()
 	backRepo.BackRepoSerie.RestorePhaseTwo()
 	backRepo.BackRepoValue.RestorePhaseTwo()
 
@@ -216,6 +227,7 @@ func (backRepo *BackRepoStruct) RestoreXL(stage *models.StageStruct, dirPath str
 	backRepo.BackRepoBar.RestoreXLPhaseOne(file)
 	backRepo.BackRepoKey.RestoreXLPhaseOne(file)
 	backRepo.BackRepoPie.RestoreXLPhaseOne(file)
+	backRepo.BackRepoScatter.RestoreXLPhaseOne(file)
 	backRepo.BackRepoSerie.RestoreXLPhaseOne(file)
 	backRepo.BackRepoValue.RestoreXLPhaseOne(file)
 

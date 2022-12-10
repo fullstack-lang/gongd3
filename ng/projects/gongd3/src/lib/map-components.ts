@@ -5,6 +5,8 @@
   import { KeySortingComponent } from './key-sorting/key-sorting.component'
   import { PiesTableComponent } from './pies-table/pies-table.component'
   import { PieSortingComponent } from './pie-sorting/pie-sorting.component'
+  import { ScattersTableComponent } from './scatters-table/scatters-table.component'
+  import { ScatterSortingComponent } from './scatter-sorting/scatter-sorting.component'
   import { SeriesTableComponent } from './series-table/series-table.component'
   import { SerieSortingComponent } from './serie-sorting/serie-sorting.component'
   import { ValuesTableComponent } from './values-table/values-table.component'
@@ -17,6 +19,8 @@
   export const MapOfKeySortingComponents: Map<string, any> = new Map([["KeySortingComponent", KeySortingComponent],])
   export const MapOfPiesComponents: Map<string, any> = new Map([["PiesTableComponent", PiesTableComponent],])
   export const MapOfPieSortingComponents: Map<string, any> = new Map([["PieSortingComponent", PieSortingComponent],])
+  export const MapOfScattersComponents: Map<string, any> = new Map([["ScattersTableComponent", ScattersTableComponent],])
+  export const MapOfScatterSortingComponents: Map<string, any> = new Map([["ScatterSortingComponent", ScatterSortingComponent],])
   export const MapOfSeriesComponents: Map<string, any> = new Map([["SeriesTableComponent", SeriesTableComponent],])
   export const MapOfSerieSortingComponents: Map<string, any> = new Map([["SerieSortingComponent", SerieSortingComponent],])
   export const MapOfValuesComponents: Map<string, any> = new Map([["ValuesTableComponent", ValuesTableComponent],])
@@ -30,6 +34,7 @@ export const MapOfComponents: Map<string, any> =
       ["Bar", MapOfBarsComponents],
       ["Key", MapOfKeysComponents],
       ["Pie", MapOfPiesComponents],
+      ["Scatter", MapOfScattersComponents],
       ["Serie", MapOfSeriesComponents],
       ["Value", MapOfValuesComponents],
     ]
@@ -43,6 +48,7 @@ export const MapOfSortingComponents: Map<string, any> =
       ["Bar", MapOfBarSortingComponents],
       ["Key", MapOfKeySortingComponents],
       ["Pie", MapOfPieSortingComponents],
+      ["Scatter", MapOfScatterSortingComponents],
       ["Serie", MapOfSerieSortingComponents],
       ["Value", MapOfValueSortingComponents],
     ]

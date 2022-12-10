@@ -34,6 +34,9 @@ func stageInjection() {
 	// Declarations of staged instances of Pie
 	__Pie__000000_Pie_Stars_per_Framework := (&models.Pie{Name: `Pie Stars per Framework`}).Stage()
 
+	// Declarations of staged instances of Scatter
+	__Scatter__000000_Scatter_Stars_per_Framework := (&models.Scatter{Name: `Scatter Stars per Framework`}).Stage()
+
 	// Declarations of staged instances of Serie
 	__Serie__000000_FrameworkSerie := (&models.Serie{Name: `FrameworkSerie`}).Stage()
 	__Serie__000001_Released := (&models.Serie{Name: `Released`}).Stage()
@@ -78,6 +81,12 @@ func stageInjection() {
 	__Pie__000000_Pie_Stars_per_Framework.Width = 750.000000
 	__Pie__000000_Pie_Stars_per_Framework.Heigth = 600.000000
 	__Pie__000000_Pie_Stars_per_Framework.Margin = 50.000000
+
+	// Scatter values setup
+	__Scatter__000000_Scatter_Stars_per_Framework.Name = `Scatter Stars per Framework`
+	__Scatter__000000_Scatter_Stars_per_Framework.Width = 750.000000
+	__Scatter__000000_Scatter_Stars_per_Framework.Heigth = 400.000000
+	__Scatter__000000_Scatter_Stars_per_Framework.Margin = 50.000000
 
 	// Serie values setup
 	__Serie__000000_FrameworkSerie.Name = `FrameworkSerie`
@@ -144,6 +153,12 @@ func stageInjection() {
 	__Pie__000000_Pie_Stars_per_Framework.Set = append(__Pie__000000_Pie_Stars_per_Framework.Set, __Serie__000001_Released)
 	__Pie__000000_Pie_Stars_per_Framework.Set = append(__Pie__000000_Pie_Stars_per_Framework.Set, __Serie__000002_Stars)
 	__Pie__000000_Pie_Stars_per_Framework.Set = append(__Pie__000000_Pie_Stars_per_Framework.Set, __Serie__000000_FrameworkSerie)
+	__Scatter__000000_Scatter_Stars_per_Framework.X = __Key__000001_Released
+	__Scatter__000000_Scatter_Stars_per_Framework.Y = __Key__000002_Stars
+	__Scatter__000000_Scatter_Stars_per_Framework.Text = __Key__000000_Framework
+	__Scatter__000000_Scatter_Stars_per_Framework.Set = append(__Scatter__000000_Scatter_Stars_per_Framework.Set, __Serie__000000_FrameworkSerie)
+	__Scatter__000000_Scatter_Stars_per_Framework.Set = append(__Scatter__000000_Scatter_Stars_per_Framework.Set, __Serie__000001_Released)
+	__Scatter__000000_Scatter_Stars_per_Framework.Set = append(__Scatter__000000_Scatter_Stars_per_Framework.Set, __Serie__000002_Stars)
 	__Serie__000000_FrameworkSerie.Key = __Key__000000_Framework
 	__Serie__000000_FrameworkSerie.Values = append(__Serie__000000_FrameworkSerie.Values, __Value__000014_Vue)
 	__Serie__000000_FrameworkSerie.Values = append(__Serie__000000_FrameworkSerie.Values, __Value__000013_React)

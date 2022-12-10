@@ -56,6 +56,14 @@ type StageStruct struct { // insertion point for definition of arrays registerin
 	OnAfterPieDeleteCallback OnAfterDeleteInterface[Pie]
 	OnAfterPieReadCallback   OnAfterReadInterface[Pie]
 
+	Scatters           map[*Scatter]any
+	Scatters_mapString map[string]*Scatter
+
+	OnAfterScatterCreateCallback OnAfterCreateInterface[Scatter]
+	OnAfterScatterUpdateCallback OnAfterUpdateInterface[Scatter]
+	OnAfterScatterDeleteCallback OnAfterDeleteInterface[Scatter]
+	OnAfterScatterReadCallback   OnAfterReadInterface[Scatter]
+
 	Series           map[*Serie]any
 	Series_mapString map[string]*Serie
 
@@ -128,6 +136,8 @@ type BackRepoInterface interface {
 	CheckoutKey(key *Key)
 	CommitPie(pie *Pie)
 	CheckoutPie(pie *Pie)
+	CommitScatter(scatter *Scatter)
+	CheckoutScatter(scatter *Scatter)
 	CommitSerie(serie *Serie)
 	CheckoutSerie(serie *Serie)
 	CommitValue(value *Value)
@@ -146,6 +156,9 @@ var Stage StageStruct = StageStruct{ // insertion point for array initiatialisat
 
 	Pies:           make(map[*Pie]any),
 	Pies_mapString: make(map[string]*Pie),
+
+	Scatters:           make(map[*Scatter]any),
+	Scatters_mapString: make(map[string]*Scatter),
 
 	Series:           make(map[*Serie]any),
 	Series_mapString: make(map[string]*Serie),
@@ -166,6 +179,7 @@ func (stage *StageStruct) Commit() {
 	stage.Map_GongStructName_InstancesNb["Bar"] = len(stage.Bars)
 	stage.Map_GongStructName_InstancesNb["Key"] = len(stage.Keys)
 	stage.Map_GongStructName_InstancesNb["Pie"] = len(stage.Pies)
+	stage.Map_GongStructName_InstancesNb["Scatter"] = len(stage.Scatters)
 	stage.Map_GongStructName_InstancesNb["Serie"] = len(stage.Series)
 	stage.Map_GongStructName_InstancesNb["Value"] = len(stage.Values)
 
@@ -180,6 +194,7 @@ func (stage *StageStruct) Checkout() {
 	stage.Map_GongStructName_InstancesNb["Bar"] = len(stage.Bars)
 	stage.Map_GongStructName_InstancesNb["Key"] = len(stage.Keys)
 	stage.Map_GongStructName_InstancesNb["Pie"] = len(stage.Pies)
+	stage.Map_GongStructName_InstancesNb["Scatter"] = len(stage.Scatters)
 	stage.Map_GongStructName_InstancesNb["Serie"] = len(stage.Series)
 	stage.Map_GongStructName_InstancesNb["Value"] = len(stage.Values)
 
@@ -499,6 +514,101 @@ func (pie *Pie) GetName() (res string) {
 	return pie.Name
 }
 
+// Stage puts scatter to the model stage
+func (scatter *Scatter) Stage() *Scatter {
+	Stage.Scatters[scatter] = __member
+	Stage.Scatters_mapString[scatter.Name] = scatter
+
+	return scatter
+}
+
+// Unstage removes scatter off the model stage
+func (scatter *Scatter) Unstage() *Scatter {
+	delete(Stage.Scatters, scatter)
+	delete(Stage.Scatters_mapString, scatter.Name)
+	return scatter
+}
+
+// commit scatter to the back repo (if it is already staged)
+func (scatter *Scatter) Commit() *Scatter {
+	if _, ok := Stage.Scatters[scatter]; ok {
+		if Stage.BackRepo != nil {
+			Stage.BackRepo.CommitScatter(scatter)
+		}
+	}
+	return scatter
+}
+
+// Checkout scatter to the back repo (if it is already staged)
+func (scatter *Scatter) Checkout() *Scatter {
+	if _, ok := Stage.Scatters[scatter]; ok {
+		if Stage.BackRepo != nil {
+			Stage.BackRepo.CheckoutScatter(scatter)
+		}
+	}
+	return scatter
+}
+
+//
+// Legacy, to be deleted
+//
+
+// StageCopy appends a copy of scatter to the model stage
+func (scatter *Scatter) StageCopy() *Scatter {
+	_scatter := new(Scatter)
+	*_scatter = *scatter
+	_scatter.Stage()
+	return _scatter
+}
+
+// StageAndCommit appends scatter to the model stage and commit to the orm repo
+func (scatter *Scatter) StageAndCommit() *Scatter {
+	scatter.Stage()
+	if Stage.AllModelsStructCreateCallback != nil {
+		Stage.AllModelsStructCreateCallback.CreateORMScatter(scatter)
+	}
+	return scatter
+}
+
+// DeleteStageAndCommit appends scatter to the model stage and commit to the orm repo
+func (scatter *Scatter) DeleteStageAndCommit() *Scatter {
+	scatter.Unstage()
+	DeleteORMScatter(scatter)
+	return scatter
+}
+
+// StageCopyAndCommit appends a copy of scatter to the model stage and commit to the orm repo
+func (scatter *Scatter) StageCopyAndCommit() *Scatter {
+	_scatter := new(Scatter)
+	*_scatter = *scatter
+	_scatter.Stage()
+	if Stage.AllModelsStructCreateCallback != nil {
+		Stage.AllModelsStructCreateCallback.CreateORMScatter(scatter)
+	}
+	return _scatter
+}
+
+// CreateORMScatter enables dynamic staging of a Scatter instance
+func CreateORMScatter(scatter *Scatter) {
+	scatter.Stage()
+	if Stage.AllModelsStructCreateCallback != nil {
+		Stage.AllModelsStructCreateCallback.CreateORMScatter(scatter)
+	}
+}
+
+// DeleteORMScatter enables dynamic staging of a Scatter instance
+func DeleteORMScatter(scatter *Scatter) {
+	scatter.Unstage()
+	if Stage.AllModelsStructDeleteCallback != nil {
+		Stage.AllModelsStructDeleteCallback.DeleteORMScatter(scatter)
+	}
+}
+
+// for satisfaction of GongStruct interface
+func (scatter *Scatter) GetName() (res string) {
+	return scatter.Name
+}
+
 // Stage puts serie to the model stage
 func (serie *Serie) Stage() *Serie {
 	Stage.Series[serie] = __member
@@ -694,6 +804,7 @@ type AllModelsStructCreateInterface interface { // insertion point for Callbacks
 	CreateORMBar(Bar *Bar)
 	CreateORMKey(Key *Key)
 	CreateORMPie(Pie *Pie)
+	CreateORMScatter(Scatter *Scatter)
 	CreateORMSerie(Serie *Serie)
 	CreateORMValue(Value *Value)
 }
@@ -702,6 +813,7 @@ type AllModelsStructDeleteInterface interface { // insertion point for Callbacks
 	DeleteORMBar(Bar *Bar)
 	DeleteORMKey(Key *Key)
 	DeleteORMPie(Pie *Pie)
+	DeleteORMScatter(Scatter *Scatter)
 	DeleteORMSerie(Serie *Serie)
 	DeleteORMValue(Value *Value)
 }
@@ -715,6 +827,9 @@ func (stage *StageStruct) Reset() { // insertion point for array reset
 
 	stage.Pies = make(map[*Pie]any)
 	stage.Pies_mapString = make(map[string]*Pie)
+
+	stage.Scatters = make(map[*Scatter]any)
+	stage.Scatters_mapString = make(map[string]*Scatter)
 
 	stage.Series = make(map[*Serie]any)
 	stage.Series_mapString = make(map[string]*Serie)
@@ -733,6 +848,9 @@ func (stage *StageStruct) Nil() { // insertion point for array nil
 
 	stage.Pies = nil
 	stage.Pies_mapString = nil
+
+	stage.Scatters = nil
+	stage.Scatters_mapString = nil
 
 	stage.Series = nil
 	stage.Series_mapString = nil
@@ -954,6 +1072,56 @@ func (stage *StageStruct) Marshall(file *os.File, modelsPackageName, packageName
 
 	}
 
+	map_Scatter_Identifiers := make(map[*Scatter]string)
+	_ = map_Scatter_Identifiers
+
+	scatterOrdered := []*Scatter{}
+	for scatter := range stage.Scatters {
+		scatterOrdered = append(scatterOrdered, scatter)
+	}
+	sort.Slice(scatterOrdered[:], func(i, j int) bool {
+		return scatterOrdered[i].Name < scatterOrdered[j].Name
+	})
+	identifiersDecl += "\n\n	// Declarations of staged instances of Scatter"
+	for idx, scatter := range scatterOrdered {
+
+		id = generatesIdentifier("Scatter", idx, scatter.Name)
+		map_Scatter_Identifiers[scatter] = id
+
+		decl = IdentifiersDecls
+		decl = strings.ReplaceAll(decl, "{{Identifier}}", id)
+		decl = strings.ReplaceAll(decl, "{{GeneratedStructName}}", "Scatter")
+		decl = strings.ReplaceAll(decl, "{{GeneratedFieldNameValue}}", scatter.Name)
+		identifiersDecl += decl
+
+		initializerStatements += "\n\n	// Scatter values setup"
+		// Initialisation of values
+		setValueField = StringInitStatement
+		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
+		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "Name")
+		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", string(scatter.Name))
+		initializerStatements += setValueField
+
+		setValueField = NumberInitStatement
+		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
+		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "Width")
+		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", fmt.Sprintf("%f", scatter.Width))
+		initializerStatements += setValueField
+
+		setValueField = NumberInitStatement
+		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
+		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "Heigth")
+		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", fmt.Sprintf("%f", scatter.Heigth))
+		initializerStatements += setValueField
+
+		setValueField = NumberInitStatement
+		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
+		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "Margin")
+		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", fmt.Sprintf("%f", scatter.Margin))
+		initializerStatements += setValueField
+
+	}
+
 	map_Serie_Identifiers := make(map[*Serie]string)
 	_ = map_Serie_Identifiers
 
@@ -1088,6 +1256,48 @@ func (stage *StageStruct) Marshall(file *os.File, modelsPackageName, packageName
 		}
 
 		for _, _serie := range pie.Set {
+			setPointerField = SliceOfPointersFieldInitStatement
+			setPointerField = strings.ReplaceAll(setPointerField, "{{Identifier}}", id)
+			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldName}}", "Set")
+			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldNameValue}}", map_Serie_Identifiers[_serie])
+			pointersInitializesStatements += setPointerField
+		}
+
+	}
+
+	for idx, scatter := range scatterOrdered {
+		var setPointerField string
+		_ = setPointerField
+
+		id = generatesIdentifier("Scatter", idx, scatter.Name)
+		map_Scatter_Identifiers[scatter] = id
+
+		// Initialisation of values
+		if scatter.X != nil {
+			setPointerField = PointerFieldInitStatement
+			setPointerField = strings.ReplaceAll(setPointerField, "{{Identifier}}", id)
+			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldName}}", "X")
+			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldNameValue}}", map_Key_Identifiers[scatter.X])
+			pointersInitializesStatements += setPointerField
+		}
+
+		if scatter.Y != nil {
+			setPointerField = PointerFieldInitStatement
+			setPointerField = strings.ReplaceAll(setPointerField, "{{Identifier}}", id)
+			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldName}}", "Y")
+			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldNameValue}}", map_Key_Identifiers[scatter.Y])
+			pointersInitializesStatements += setPointerField
+		}
+
+		if scatter.Text != nil {
+			setPointerField = PointerFieldInitStatement
+			setPointerField = strings.ReplaceAll(setPointerField, "{{Identifier}}", id)
+			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldName}}", "Text")
+			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldNameValue}}", map_Key_Identifiers[scatter.Text])
+			pointersInitializesStatements += setPointerField
+		}
+
+		for _, _serie := range scatter.Set {
 			setPointerField = SliceOfPointersFieldInitStatement
 			setPointerField = strings.ReplaceAll(setPointerField, "{{Identifier}}", id)
 			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldName}}", "Set")
@@ -1268,6 +1478,80 @@ func (stageStruct *StageStruct) CreateReverseMap_Pie_Set() (res map[*Serie]*Pie)
 }
 
 
+// generate function for reverse association maps of Scatter
+func (stageStruct *StageStruct) CreateReverseMap_Scatter_X() (res map[*Key][]*Scatter) {
+	res = make(map[*Key][]*Scatter)
+
+	for scatter := range stageStruct.Scatters {
+		if scatter.X != nil {
+			key_ := scatter.X
+			var scatters []*Scatter
+			_, ok := res[key_]
+			if ok {
+				scatters = res[key_]
+			} else {
+				scatters = make([]*Scatter, 0)
+			}
+			scatters = append(scatters, scatter)
+			res[key_] = scatters
+		}
+	}
+
+	return
+}
+func (stageStruct *StageStruct) CreateReverseMap_Scatter_Y() (res map[*Key][]*Scatter) {
+	res = make(map[*Key][]*Scatter)
+
+	for scatter := range stageStruct.Scatters {
+		if scatter.Y != nil {
+			key_ := scatter.Y
+			var scatters []*Scatter
+			_, ok := res[key_]
+			if ok {
+				scatters = res[key_]
+			} else {
+				scatters = make([]*Scatter, 0)
+			}
+			scatters = append(scatters, scatter)
+			res[key_] = scatters
+		}
+	}
+
+	return
+}
+func (stageStruct *StageStruct) CreateReverseMap_Scatter_Text() (res map[*Key][]*Scatter) {
+	res = make(map[*Key][]*Scatter)
+
+	for scatter := range stageStruct.Scatters {
+		if scatter.Text != nil {
+			key_ := scatter.Text
+			var scatters []*Scatter
+			_, ok := res[key_]
+			if ok {
+				scatters = res[key_]
+			} else {
+				scatters = make([]*Scatter, 0)
+			}
+			scatters = append(scatters, scatter)
+			res[key_] = scatters
+		}
+	}
+
+	return
+}
+func (stageStruct *StageStruct) CreateReverseMap_Scatter_Set() (res map[*Serie]*Scatter) {
+	res = make(map[*Serie]*Scatter)
+
+	for scatter := range stageStruct.Scatters {
+		for _, serie_ := range scatter.Set {
+			res[serie_] = scatter
+		}
+	}
+
+	return
+}
+
+
 // generate function for reverse association maps of Serie
 func (stageStruct *StageStruct) CreateReverseMap_Serie_Key() (res map[*Key][]*Serie) {
 	res = make(map[*Key][]*Serie)
@@ -1310,7 +1594,7 @@ func (stageStruct *StageStruct) CreateReverseMap_Serie_Values() (res map[*Value]
 // - full refactoring of Gongstruct identifiers / fields
 type Gongstruct interface {
 	// insertion point for generic types
-	Bar | Key | Pie | Serie | Value
+	Bar | Key | Pie | Scatter | Serie | Value
 }
 
 // Gongstruct is the type parameter for generated generic function that allows
@@ -1319,7 +1603,7 @@ type Gongstruct interface {
 // - full refactoring of Gongstruct identifiers / fields
 type PointerToGongstruct interface {
 	// insertion point for generic types
-	*Bar | *Key | *Pie | *Serie | *Value
+	*Bar | *Key | *Pie | *Scatter | *Serie | *Value
 	GetName() string
 }
 
@@ -1329,6 +1613,7 @@ type GongstructSet interface {
 		map[*Bar]any |
 		map[*Key]any |
 		map[*Pie]any |
+		map[*Scatter]any |
 		map[*Serie]any |
 		map[*Value]any |
 		map[*any]any // because go does not support an extra "|" at the end of type specifications
@@ -1340,6 +1625,7 @@ type GongstructMapString interface {
 		map[string]*Bar |
 		map[string]*Key |
 		map[string]*Pie |
+		map[string]*Scatter |
 		map[string]*Serie |
 		map[string]*Value |
 		map[*any]any // because go does not support an extra "|" at the end of type specifications
@@ -1358,6 +1644,8 @@ func GongGetSet[Type GongstructSet]() *Type {
 		return any(&Stage.Keys).(*Type)
 	case map[*Pie]any:
 		return any(&Stage.Pies).(*Type)
+	case map[*Scatter]any:
+		return any(&Stage.Scatters).(*Type)
 	case map[*Serie]any:
 		return any(&Stage.Series).(*Type)
 	case map[*Value]any:
@@ -1380,6 +1668,8 @@ func GongGetMap[Type GongstructMapString]() *Type {
 		return any(&Stage.Keys_mapString).(*Type)
 	case map[string]*Pie:
 		return any(&Stage.Pies_mapString).(*Type)
+	case map[string]*Scatter:
+		return any(&Stage.Scatters_mapString).(*Type)
 	case map[string]*Serie:
 		return any(&Stage.Series_mapString).(*Type)
 	case map[string]*Value:
@@ -1402,6 +1692,8 @@ func GetGongstructInstancesSet[Type Gongstruct]() *map[*Type]any {
 		return any(&Stage.Keys).(*map[*Type]any)
 	case Pie:
 		return any(&Stage.Pies).(*map[*Type]any)
+	case Scatter:
+		return any(&Stage.Scatters).(*map[*Type]any)
 	case Serie:
 		return any(&Stage.Series).(*map[*Type]any)
 	case Value:
@@ -1424,6 +1716,8 @@ func GetGongstructInstancesMap[Type Gongstruct]() *map[string]*Type {
 		return any(&Stage.Keys_mapString).(*map[string]*Type)
 	case Pie:
 		return any(&Stage.Pies_mapString).(*map[string]*Type)
+	case Scatter:
+		return any(&Stage.Scatters_mapString).(*map[string]*Type)
 	case Serie:
 		return any(&Stage.Series_mapString).(*map[string]*Type)
 	case Value:
@@ -1463,6 +1757,18 @@ func GetAssociationName[Type Gongstruct]() *Type {
 			X: &Key{Name: "X"},
 			// field is initialized with an instance of Key with the name of the field
 			Y: &Key{Name: "Y"},
+			// field is initialized with an instance of Serie with the name of the field
+			Set: []*Serie{{Name: "Set"}},
+		}).(*Type)
+	case Scatter:
+		return any(&Scatter{
+			// Initialisation of associations
+			// field is initialized with an instance of Key with the name of the field
+			X: &Key{Name: "X"},
+			// field is initialized with an instance of Key with the name of the field
+			Y: &Key{Name: "Y"},
+			// field is initialized with an instance of Key with the name of the field
+			Text: &Key{Name: "Text"},
 			// field is initialized with an instance of Serie with the name of the field
 			Set: []*Serie{{Name: "Set"}},
 		}).(*Type)
@@ -1578,6 +1884,62 @@ func GetPointerReverseMap[Start, End Gongstruct](fieldname string) map[*End][]*S
 			}
 			return any(res).(map[*End][]*Start)
 		}
+	// reverse maps of direct associations of Scatter
+	case Scatter:
+		switch fieldname {
+		// insertion point for per direct association field
+		case "X":
+			res := make(map[*Key][]*Scatter)
+			for scatter := range Stage.Scatters {
+				if scatter.X != nil {
+					key_ := scatter.X
+					var scatters []*Scatter
+					_, ok := res[key_]
+					if ok {
+						scatters = res[key_]
+					} else {
+						scatters = make([]*Scatter, 0)
+					}
+					scatters = append(scatters, scatter)
+					res[key_] = scatters
+				}
+			}
+			return any(res).(map[*End][]*Start)
+		case "Y":
+			res := make(map[*Key][]*Scatter)
+			for scatter := range Stage.Scatters {
+				if scatter.Y != nil {
+					key_ := scatter.Y
+					var scatters []*Scatter
+					_, ok := res[key_]
+					if ok {
+						scatters = res[key_]
+					} else {
+						scatters = make([]*Scatter, 0)
+					}
+					scatters = append(scatters, scatter)
+					res[key_] = scatters
+				}
+			}
+			return any(res).(map[*End][]*Start)
+		case "Text":
+			res := make(map[*Key][]*Scatter)
+			for scatter := range Stage.Scatters {
+				if scatter.Text != nil {
+					key_ := scatter.Text
+					var scatters []*Scatter
+					_, ok := res[key_]
+					if ok {
+						scatters = res[key_]
+					} else {
+						scatters = make([]*Scatter, 0)
+					}
+					scatters = append(scatters, scatter)
+					res[key_] = scatters
+				}
+			}
+			return any(res).(map[*End][]*Start)
+		}
 	// reverse maps of direct associations of Serie
 	case Serie:
 		switch fieldname {
@@ -1651,6 +2013,19 @@ func GetSliceOfPointersReverseMap[Start, End Gongstruct](fieldname string) map[*
 			}
 			return any(res).(map[*End]*Start)
 		}
+	// reverse maps of direct associations of Scatter
+	case Scatter:
+		switch fieldname {
+		// insertion point for per direct association field
+		case "Set":
+			res := make(map[*Serie]*Scatter)
+			for scatter := range Stage.Scatters {
+				for _, serie_ := range scatter.Set {
+					res[serie_] = scatter
+				}
+			}
+			return any(res).(map[*End]*Start)
+		}
 	// reverse maps of direct associations of Serie
 	case Serie:
 		switch fieldname {
@@ -1687,6 +2062,8 @@ func GetGongstructName[Type Gongstruct]() (res string) {
 		res = "Key"
 	case Pie:
 		res = "Pie"
+	case Scatter:
+		res = "Scatter"
 	case Serie:
 		res = "Serie"
 	case Value:
@@ -1708,6 +2085,8 @@ func GetFields[Type Gongstruct]() (res []string) {
 		res = []string{"Name"}
 	case Pie:
 		res = []string{"Name", "X", "Y", "Set", "Width", "Heigth", "Margin"}
+	case Scatter:
+		res = []string{"Name", "X", "Y", "Text", "Set", "Width", "Heigth", "Margin"}
 	case Serie:
 		res = []string{"Name", "Key", "Values"}
 	case Value:
@@ -1780,6 +2159,37 @@ func GetFieldStringValue[Type Gongstruct](instance Type, fieldName string) (res 
 			res = fmt.Sprintf("%f", any(instance).(Pie).Heigth)
 		case "Margin":
 			res = fmt.Sprintf("%f", any(instance).(Pie).Margin)
+		}
+	case Scatter:
+		switch fieldName {
+		// string value of fields
+		case "Name":
+			res = any(instance).(Scatter).Name
+		case "X":
+			if any(instance).(Scatter).X != nil {
+				res = any(instance).(Scatter).X.Name
+			}
+		case "Y":
+			if any(instance).(Scatter).Y != nil {
+				res = any(instance).(Scatter).Y.Name
+			}
+		case "Text":
+			if any(instance).(Scatter).Text != nil {
+				res = any(instance).(Scatter).Text.Name
+			}
+		case "Set":
+			for idx, __instance__ := range any(instance).(Scatter).Set {
+				if idx > 0 {
+					res += "\n"
+				}
+				res += __instance__.Name
+			}
+		case "Width":
+			res = fmt.Sprintf("%f", any(instance).(Scatter).Width)
+		case "Heigth":
+			res = fmt.Sprintf("%f", any(instance).(Scatter).Heigth)
+		case "Margin":
+			res = fmt.Sprintf("%f", any(instance).(Scatter).Margin)
 		}
 	case Serie:
 		switch fieldName {

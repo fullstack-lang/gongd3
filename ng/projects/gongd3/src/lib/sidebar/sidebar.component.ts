@@ -17,6 +17,8 @@ import { KeyService } from '../key.service'
 import { getKeyUniqueID } from '../front-repo.service'
 import { PieService } from '../pie.service'
 import { getPieUniqueID } from '../front-repo.service'
+import { ScatterService } from '../scatter.service'
+import { getScatterUniqueID } from '../front-repo.service'
 import { SerieService } from '../serie.service'
 import { getSerieUniqueID } from '../front-repo.service'
 import { ValueService } from '../value.service'
@@ -166,6 +168,7 @@ export class SidebarComponent implements OnInit {
     private barService: BarService,
     private keyService: KeyService,
     private pieService: PieService,
+    private scatterService: ScatterService,
     private serieService: SerieService,
     private valueService: ValueService,
   ) { }
@@ -213,6 +216,14 @@ export class SidebarComponent implements OnInit {
     )
     // observable for changes in structs
     this.pieService.PieServiceChanged.subscribe(
+      message => {
+        if (message == "post" || message == "update" || message == "delete") {
+          this.refresh()
+        }
+      }
+    )
+    // observable for changes in structs
+    this.scatterService.ScatterServiceChanged.subscribe(
       message => {
         if (message == "post" || message == "update" || message == "delete") {
           this.refresh()
@@ -583,6 +594,187 @@ export class SidebarComponent implements OnInit {
               id: serieDB.ID,
               uniqueIdPerStack: // godel numbering (thank you kurt)
                 7 * getPieUniqueID(pieDB.ID)
+                + 11 * getSerieUniqueID(serieDB.ID),
+              structName: "Serie",
+              associationField: "",
+              associatedStructName: "",
+              children: new Array<GongNode>()
+            }
+            SetGongNodeAssociation.children.push(serieNode)
+          })
+
+        }
+      )
+
+      /**
+      * fill up the Scatter part of the mat tree
+      */
+      let scatterGongNodeStruct: GongNode = {
+        name: "Scatter",
+        type: GongNodeType.STRUCT,
+        id: 0,
+        uniqueIdPerStack: 13 * nonInstanceNodeId,
+        structName: "Scatter",
+        associationField: "",
+        associatedStructName: "",
+        children: new Array<GongNode>()
+      }
+      nonInstanceNodeId = nonInstanceNodeId + 1
+      this.gongNodeTree.push(scatterGongNodeStruct)
+
+      this.frontRepo.Scatters_array.sort((t1, t2) => {
+        if (t1.Name > t2.Name) {
+          return 1;
+        }
+        if (t1.Name < t2.Name) {
+          return -1;
+        }
+        return 0;
+      });
+
+      this.frontRepo.Scatters_array.forEach(
+        scatterDB => {
+          let scatterGongNodeInstance: GongNode = {
+            name: scatterDB.Name,
+            type: GongNodeType.INSTANCE,
+            id: scatterDB.ID,
+            uniqueIdPerStack: getScatterUniqueID(scatterDB.ID),
+            structName: "Scatter",
+            associationField: "",
+            associatedStructName: "",
+            children: new Array<GongNode>()
+          }
+          scatterGongNodeStruct.children!.push(scatterGongNodeInstance)
+
+          // insertion point for per field code
+          /**
+          * let append a node for the association X
+          */
+          let XGongNodeAssociation: GongNode = {
+            name: "(Key) X",
+            type: GongNodeType.ONE__ZERO_ONE_ASSOCIATION,
+            id: scatterDB.ID,
+            uniqueIdPerStack: 17 * nonInstanceNodeId,
+            structName: "Scatter",
+            associationField: "X",
+            associatedStructName: "Key",
+            children: new Array<GongNode>()
+          }
+          nonInstanceNodeId = nonInstanceNodeId + 1
+          scatterGongNodeInstance.children!.push(XGongNodeAssociation)
+
+          /**
+            * let append a node for the instance behind the asssociation X
+            */
+          if (scatterDB.X != undefined) {
+            let scatterGongNodeInstance_X: GongNode = {
+              name: scatterDB.X.Name,
+              type: GongNodeType.INSTANCE,
+              id: scatterDB.X.ID,
+              uniqueIdPerStack: // godel numbering (thank you kurt)
+                3 * getScatterUniqueID(scatterDB.ID)
+                + 5 * getKeyUniqueID(scatterDB.X.ID),
+              structName: "Key",
+              associationField: "",
+              associatedStructName: "",
+              children: new Array<GongNode>()
+            }
+            XGongNodeAssociation.children.push(scatterGongNodeInstance_X)
+          }
+
+          /**
+          * let append a node for the association Y
+          */
+          let YGongNodeAssociation: GongNode = {
+            name: "(Key) Y",
+            type: GongNodeType.ONE__ZERO_ONE_ASSOCIATION,
+            id: scatterDB.ID,
+            uniqueIdPerStack: 17 * nonInstanceNodeId,
+            structName: "Scatter",
+            associationField: "Y",
+            associatedStructName: "Key",
+            children: new Array<GongNode>()
+          }
+          nonInstanceNodeId = nonInstanceNodeId + 1
+          scatterGongNodeInstance.children!.push(YGongNodeAssociation)
+
+          /**
+            * let append a node for the instance behind the asssociation Y
+            */
+          if (scatterDB.Y != undefined) {
+            let scatterGongNodeInstance_Y: GongNode = {
+              name: scatterDB.Y.Name,
+              type: GongNodeType.INSTANCE,
+              id: scatterDB.Y.ID,
+              uniqueIdPerStack: // godel numbering (thank you kurt)
+                3 * getScatterUniqueID(scatterDB.ID)
+                + 5 * getKeyUniqueID(scatterDB.Y.ID),
+              structName: "Key",
+              associationField: "",
+              associatedStructName: "",
+              children: new Array<GongNode>()
+            }
+            YGongNodeAssociation.children.push(scatterGongNodeInstance_Y)
+          }
+
+          /**
+          * let append a node for the association Text
+          */
+          let TextGongNodeAssociation: GongNode = {
+            name: "(Key) Text",
+            type: GongNodeType.ONE__ZERO_ONE_ASSOCIATION,
+            id: scatterDB.ID,
+            uniqueIdPerStack: 17 * nonInstanceNodeId,
+            structName: "Scatter",
+            associationField: "Text",
+            associatedStructName: "Key",
+            children: new Array<GongNode>()
+          }
+          nonInstanceNodeId = nonInstanceNodeId + 1
+          scatterGongNodeInstance.children!.push(TextGongNodeAssociation)
+
+          /**
+            * let append a node for the instance behind the asssociation Text
+            */
+          if (scatterDB.Text != undefined) {
+            let scatterGongNodeInstance_Text: GongNode = {
+              name: scatterDB.Text.Name,
+              type: GongNodeType.INSTANCE,
+              id: scatterDB.Text.ID,
+              uniqueIdPerStack: // godel numbering (thank you kurt)
+                3 * getScatterUniqueID(scatterDB.ID)
+                + 5 * getKeyUniqueID(scatterDB.Text.ID),
+              structName: "Key",
+              associationField: "",
+              associatedStructName: "",
+              children: new Array<GongNode>()
+            }
+            TextGongNodeAssociation.children.push(scatterGongNodeInstance_Text)
+          }
+
+          /**
+          * let append a node for the slide of pointer Set
+          */
+          let SetGongNodeAssociation: GongNode = {
+            name: "(Serie) Set",
+            type: GongNodeType.ONE__ZERO_MANY_ASSOCIATION,
+            id: scatterDB.ID,
+            uniqueIdPerStack: 19 * nonInstanceNodeId,
+            structName: "Scatter",
+            associationField: "Set",
+            associatedStructName: "Serie",
+            children: new Array<GongNode>()
+          }
+          nonInstanceNodeId = nonInstanceNodeId + 1
+          scatterGongNodeInstance.children.push(SetGongNodeAssociation)
+
+          scatterDB.Set?.forEach(serieDB => {
+            let serieNode: GongNode = {
+              name: serieDB.Name,
+              type: GongNodeType.INSTANCE,
+              id: serieDB.ID,
+              uniqueIdPerStack: // godel numbering (thank you kurt)
+                7 * getScatterUniqueID(scatterDB.ID)
                 + 11 * getSerieUniqueID(serieDB.ID),
               structName: "Serie",
               associationField: "",
