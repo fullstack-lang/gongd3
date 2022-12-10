@@ -27,13 +27,7 @@ export class BarComponent implements OnInit {
   lastDiagramId = 0
   currTime: number = 0
 
-  private data = [
-    { "Framework": "Vue", "Stars": "166443", "Released": "2014" },
-    { "Framework": "React", "Stars": "150793", "Released": "2013" },
-    { "Framework": "Angular", "Stars": "62342", "Released": "2016" },
-    { "Framework": "Backbone", "Stars": "27647", "Released": "2010" },
-    { "Framework": "Ember", "Stars": "21471", "Released": "2011" },
-  ];
+  private data = new (Array<any>)
   private x_serieName: string = ""
   private y_serieName: string = ""
 
@@ -94,7 +88,7 @@ export class BarComponent implements OnInit {
             this.x_serieName = bar.X!.Name
             this.y_serieName = bar.Y!.Name
 
-            this.data = []
+            this.data = new (Array<any>)
             let indexSerie = 0
             for (let serie of bar.Set!) {
               let indexValue = 0
