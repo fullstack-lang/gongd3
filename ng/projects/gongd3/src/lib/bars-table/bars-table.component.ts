@@ -77,6 +77,36 @@ export class BarsTableComponent implements OnInit {
         case 'Y':
           return (barDB.Y ? barDB.Y.Name : '');
 
+        case 'AutoDomainX':
+          return barDB.AutoDomainX?"true":"false";
+
+        case 'XMin':
+          return barDB.XMin;
+
+        case 'XMax':
+          return barDB.XMax;
+
+        case 'AutoDomainY':
+          return barDB.AutoDomainY?"true":"false";
+
+        case 'YMin':
+          return barDB.YMin;
+
+        case 'YMax':
+          return barDB.YMax;
+
+        case 'YLabelPresent':
+          return barDB.YLabelPresent?"true":"false";
+
+        case 'YLabelOffset':
+          return barDB.YLabelOffset;
+
+        case 'XLabelPresent':
+          return barDB.XLabelPresent?"true":"false";
+
+        case 'XLabelOffset':
+          return barDB.XLabelOffset;
+
         case 'Width':
           return barDB.Width;
 
@@ -107,6 +137,12 @@ export class BarsTableComponent implements OnInit {
       if (barDB.Y) {
         mergedContent += barDB.Y.Name.toLowerCase()
       }
+      mergedContent += barDB.XMin.toString()
+      mergedContent += barDB.XMax.toString()
+      mergedContent += barDB.YMin.toString()
+      mergedContent += barDB.YMax.toString()
+      mergedContent += barDB.YLabelOffset.toString()
+      mergedContent += barDB.XLabelOffset.toString()
       mergedContent += barDB.Width.toString()
       mergedContent += barDB.Heigth.toString()
       mergedContent += barDB.Margin.toString()
@@ -163,6 +199,16 @@ export class BarsTableComponent implements OnInit {
         "Name",
         "X",
         "Y",
+        "AutoDomainX",
+        "XMin",
+        "XMax",
+        "AutoDomainY",
+        "YMin",
+        "YMax",
+        "YLabelPresent",
+        "YLabelOffset",
+        "XLabelPresent",
+        "XLabelOffset",
         "Width",
         "Heigth",
         "Margin",
@@ -172,6 +218,16 @@ export class BarsTableComponent implements OnInit {
         "Name",
         "X",
         "Y",
+        "AutoDomainX",
+        "XMin",
+        "XMax",
+        "AutoDomainY",
+        "YMin",
+        "YMax",
+        "YLabelPresent",
+        "YLabelOffset",
+        "XLabelPresent",
+        "XLabelOffset",
         "Width",
         "Heigth",
         "Margin",

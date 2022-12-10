@@ -69,6 +69,40 @@ type BarDB struct {
 	// Declation for basic field barDB.Name
 	Name_Data sql.NullString
 
+	// Declation for basic field barDB.AutoDomainX
+	// provide the sql storage for the boolan
+	AutoDomainX_Data sql.NullBool
+
+	// Declation for basic field barDB.XMin
+	XMin_Data sql.NullFloat64
+
+	// Declation for basic field barDB.XMax
+	XMax_Data sql.NullFloat64
+
+	// Declation for basic field barDB.AutoDomainY
+	// provide the sql storage for the boolan
+	AutoDomainY_Data sql.NullBool
+
+	// Declation for basic field barDB.YMin
+	YMin_Data sql.NullFloat64
+
+	// Declation for basic field barDB.YMax
+	YMax_Data sql.NullFloat64
+
+	// Declation for basic field barDB.YLabelPresent
+	// provide the sql storage for the boolan
+	YLabelPresent_Data sql.NullBool
+
+	// Declation for basic field barDB.YLabelOffset
+	YLabelOffset_Data sql.NullFloat64
+
+	// Declation for basic field barDB.XLabelPresent
+	// provide the sql storage for the boolan
+	XLabelPresent_Data sql.NullBool
+
+	// Declation for basic field barDB.XLabelOffset
+	XLabelOffset_Data sql.NullFloat64
+
 	// Declation for basic field barDB.Width
 	Width_Data sql.NullFloat64
 
@@ -100,11 +134,31 @@ type BarWOP struct {
 
 	Name string `xlsx:"1"`
 
-	Width float64 `xlsx:"2"`
+	AutoDomainX bool `xlsx:"2"`
 
-	Heigth float64 `xlsx:"3"`
+	XMin float64 `xlsx:"3"`
 
-	Margin float64 `xlsx:"4"`
+	XMax float64 `xlsx:"4"`
+
+	AutoDomainY bool `xlsx:"5"`
+
+	YMin float64 `xlsx:"6"`
+
+	YMax float64 `xlsx:"7"`
+
+	YLabelPresent bool `xlsx:"8"`
+
+	YLabelOffset float64 `xlsx:"9"`
+
+	XLabelPresent bool `xlsx:"10"`
+
+	XLabelOffset float64 `xlsx:"11"`
+
+	Width float64 `xlsx:"12"`
+
+	Heigth float64 `xlsx:"13"`
+
+	Margin float64 `xlsx:"14"`
 	// insertion for WOP pointer fields
 }
 
@@ -112,6 +166,16 @@ var Bar_Fields = []string{
 	// insertion for WOP basic fields
 	"ID",
 	"Name",
+	"AutoDomainX",
+	"XMin",
+	"XMax",
+	"AutoDomainY",
+	"YMin",
+	"YMax",
+	"YLabelPresent",
+	"YLabelOffset",
+	"XLabelPresent",
+	"XLabelOffset",
 	"Width",
 	"Heigth",
 	"Margin",
@@ -472,6 +536,36 @@ func (barDB *BarDB) CopyBasicFieldsFromBar(bar *models.Bar) {
 	barDB.Name_Data.String = bar.Name
 	barDB.Name_Data.Valid = true
 
+	barDB.AutoDomainX_Data.Bool = bar.AutoDomainX
+	barDB.AutoDomainX_Data.Valid = true
+
+	barDB.XMin_Data.Float64 = bar.XMin
+	barDB.XMin_Data.Valid = true
+
+	barDB.XMax_Data.Float64 = bar.XMax
+	barDB.XMax_Data.Valid = true
+
+	barDB.AutoDomainY_Data.Bool = bar.AutoDomainY
+	barDB.AutoDomainY_Data.Valid = true
+
+	barDB.YMin_Data.Float64 = bar.YMin
+	barDB.YMin_Data.Valid = true
+
+	barDB.YMax_Data.Float64 = bar.YMax
+	barDB.YMax_Data.Valid = true
+
+	barDB.YLabelPresent_Data.Bool = bar.YLabelPresent
+	barDB.YLabelPresent_Data.Valid = true
+
+	barDB.YLabelOffset_Data.Float64 = bar.YLabelOffset
+	barDB.YLabelOffset_Data.Valid = true
+
+	barDB.XLabelPresent_Data.Bool = bar.XLabelPresent
+	barDB.XLabelPresent_Data.Valid = true
+
+	barDB.XLabelOffset_Data.Float64 = bar.XLabelOffset
+	barDB.XLabelOffset_Data.Valid = true
+
 	barDB.Width_Data.Float64 = bar.Width
 	barDB.Width_Data.Valid = true
 
@@ -489,6 +583,36 @@ func (barDB *BarDB) CopyBasicFieldsFromBarWOP(bar *BarWOP) {
 	barDB.Name_Data.String = bar.Name
 	barDB.Name_Data.Valid = true
 
+	barDB.AutoDomainX_Data.Bool = bar.AutoDomainX
+	barDB.AutoDomainX_Data.Valid = true
+
+	barDB.XMin_Data.Float64 = bar.XMin
+	barDB.XMin_Data.Valid = true
+
+	barDB.XMax_Data.Float64 = bar.XMax
+	barDB.XMax_Data.Valid = true
+
+	barDB.AutoDomainY_Data.Bool = bar.AutoDomainY
+	barDB.AutoDomainY_Data.Valid = true
+
+	barDB.YMin_Data.Float64 = bar.YMin
+	barDB.YMin_Data.Valid = true
+
+	barDB.YMax_Data.Float64 = bar.YMax
+	barDB.YMax_Data.Valid = true
+
+	barDB.YLabelPresent_Data.Bool = bar.YLabelPresent
+	barDB.YLabelPresent_Data.Valid = true
+
+	barDB.YLabelOffset_Data.Float64 = bar.YLabelOffset
+	barDB.YLabelOffset_Data.Valid = true
+
+	barDB.XLabelPresent_Data.Bool = bar.XLabelPresent
+	barDB.XLabelPresent_Data.Valid = true
+
+	barDB.XLabelOffset_Data.Float64 = bar.XLabelOffset
+	barDB.XLabelOffset_Data.Valid = true
+
 	barDB.Width_Data.Float64 = bar.Width
 	barDB.Width_Data.Valid = true
 
@@ -503,6 +627,16 @@ func (barDB *BarDB) CopyBasicFieldsFromBarWOP(bar *BarWOP) {
 func (barDB *BarDB) CopyBasicFieldsToBar(bar *models.Bar) {
 	// insertion point for checkout of basic fields (back repo to stage)
 	bar.Name = barDB.Name_Data.String
+	bar.AutoDomainX = barDB.AutoDomainX_Data.Bool
+	bar.XMin = barDB.XMin_Data.Float64
+	bar.XMax = barDB.XMax_Data.Float64
+	bar.AutoDomainY = barDB.AutoDomainY_Data.Bool
+	bar.YMin = barDB.YMin_Data.Float64
+	bar.YMax = barDB.YMax_Data.Float64
+	bar.YLabelPresent = barDB.YLabelPresent_Data.Bool
+	bar.YLabelOffset = barDB.YLabelOffset_Data.Float64
+	bar.XLabelPresent = barDB.XLabelPresent_Data.Bool
+	bar.XLabelOffset = barDB.XLabelOffset_Data.Float64
 	bar.Width = barDB.Width_Data.Float64
 	bar.Heigth = barDB.Heigth_Data.Float64
 	bar.Margin = barDB.Margin_Data.Float64
@@ -513,6 +647,16 @@ func (barDB *BarDB) CopyBasicFieldsToBarWOP(bar *BarWOP) {
 	bar.ID = int(barDB.ID)
 	// insertion point for checkout of basic fields (back repo to stage)
 	bar.Name = barDB.Name_Data.String
+	bar.AutoDomainX = barDB.AutoDomainX_Data.Bool
+	bar.XMin = barDB.XMin_Data.Float64
+	bar.XMax = barDB.XMax_Data.Float64
+	bar.AutoDomainY = barDB.AutoDomainY_Data.Bool
+	bar.YMin = barDB.YMin_Data.Float64
+	bar.YMax = barDB.YMax_Data.Float64
+	bar.YLabelPresent = barDB.YLabelPresent_Data.Bool
+	bar.YLabelOffset = barDB.YLabelOffset_Data.Float64
+	bar.XLabelPresent = barDB.XLabelPresent_Data.Bool
+	bar.XLabelOffset = barDB.XLabelOffset_Data.Float64
 	bar.Width = barDB.Width_Data.Float64
 	bar.Heigth = barDB.Heigth_Data.Float64
 	bar.Margin = barDB.Margin_Data.Float64

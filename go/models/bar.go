@@ -10,6 +10,21 @@ type Bar struct {
 	Y   *Key
 	Set []*Serie
 
+	// Domain for X & Y
+	AutoDomainX bool // computes automaticaly XMin and XMax
+	XMin        float64
+	XMax        float64
+
+	AutoDomainY bool // computes automaticaly YMin and YMax
+	YMin        float64
+	YMax        float64
+
+	YLabelPresent bool
+	YLabelOffset  float64
+
+	XLabelPresent bool
+	XLabelOffset  float64
+
 	// display settings
 	Width  float64
 	Heigth float64

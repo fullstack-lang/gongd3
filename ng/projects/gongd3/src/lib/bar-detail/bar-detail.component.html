@@ -55,6 +55,54 @@
         </mat-grid-tile>
     </mat-grid-list>
     <!-- -->
+    <mat-checkbox [formControl]="AutoDomainXFormControl">AutoDomainX</mat-checkbox>
+
+    <!-- -->
+    <mat-form-field class="detail-full-width">
+        <mat-label>XMin</mat-label>
+        <input type="number" [ngModelOptions]="{standalone: true}" matInput [(ngModel)]="bar.XMin" [ngModelOptions]="{standalone: true}">
+    </mat-form-field>
+
+    <!-- -->
+    <mat-form-field class="detail-full-width">
+        <mat-label>XMax</mat-label>
+        <input type="number" [ngModelOptions]="{standalone: true}" matInput [(ngModel)]="bar.XMax" [ngModelOptions]="{standalone: true}">
+    </mat-form-field>
+
+    <!-- -->
+    <mat-checkbox [formControl]="AutoDomainYFormControl">AutoDomainY</mat-checkbox>
+
+    <!-- -->
+    <mat-form-field class="detail-full-width">
+        <mat-label>YMin</mat-label>
+        <input type="number" [ngModelOptions]="{standalone: true}" matInput [(ngModel)]="bar.YMin" [ngModelOptions]="{standalone: true}">
+    </mat-form-field>
+
+    <!-- -->
+    <mat-form-field class="detail-full-width">
+        <mat-label>YMax</mat-label>
+        <input type="number" [ngModelOptions]="{standalone: true}" matInput [(ngModel)]="bar.YMax" [ngModelOptions]="{standalone: true}">
+    </mat-form-field>
+
+    <!-- -->
+    <mat-checkbox [formControl]="YLabelPresentFormControl">YLabelPresent</mat-checkbox>
+
+    <!-- -->
+    <mat-form-field class="detail-full-width">
+        <mat-label>YLabelOffset</mat-label>
+        <input type="number" [ngModelOptions]="{standalone: true}" matInput [(ngModel)]="bar.YLabelOffset" [ngModelOptions]="{standalone: true}">
+    </mat-form-field>
+
+    <!-- -->
+    <mat-checkbox [formControl]="XLabelPresentFormControl">XLabelPresent</mat-checkbox>
+
+    <!-- -->
+    <mat-form-field class="detail-full-width">
+        <mat-label>XLabelOffset</mat-label>
+        <input type="number" [ngModelOptions]="{standalone: true}" matInput [(ngModel)]="bar.XLabelOffset" [ngModelOptions]="{standalone: true}">
+    </mat-form-field>
+
+    <!-- -->
     <mat-form-field class="detail-full-width">
         <mat-label>Width</mat-label>
         <input type="number" [ngModelOptions]="{standalone: true}" matInput [(ngModel)]="bar.Width" [ngModelOptions]="{standalone: true}">

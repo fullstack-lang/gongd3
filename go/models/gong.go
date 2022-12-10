@@ -972,6 +972,66 @@ func (stage *StageStruct) Marshall(file *os.File, modelsPackageName, packageName
 
 		setValueField = NumberInitStatement
 		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
+		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "AutoDomainX")
+		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", fmt.Sprintf("%t", bar.AutoDomainX))
+		initializerStatements += setValueField
+
+		setValueField = NumberInitStatement
+		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
+		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "XMin")
+		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", fmt.Sprintf("%f", bar.XMin))
+		initializerStatements += setValueField
+
+		setValueField = NumberInitStatement
+		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
+		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "XMax")
+		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", fmt.Sprintf("%f", bar.XMax))
+		initializerStatements += setValueField
+
+		setValueField = NumberInitStatement
+		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
+		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "AutoDomainY")
+		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", fmt.Sprintf("%t", bar.AutoDomainY))
+		initializerStatements += setValueField
+
+		setValueField = NumberInitStatement
+		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
+		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "YMin")
+		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", fmt.Sprintf("%f", bar.YMin))
+		initializerStatements += setValueField
+
+		setValueField = NumberInitStatement
+		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
+		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "YMax")
+		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", fmt.Sprintf("%f", bar.YMax))
+		initializerStatements += setValueField
+
+		setValueField = NumberInitStatement
+		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
+		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "YLabelPresent")
+		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", fmt.Sprintf("%t", bar.YLabelPresent))
+		initializerStatements += setValueField
+
+		setValueField = NumberInitStatement
+		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
+		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "YLabelOffset")
+		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", fmt.Sprintf("%f", bar.YLabelOffset))
+		initializerStatements += setValueField
+
+		setValueField = NumberInitStatement
+		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
+		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "XLabelPresent")
+		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", fmt.Sprintf("%t", bar.XLabelPresent))
+		initializerStatements += setValueField
+
+		setValueField = NumberInitStatement
+		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
+		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "XLabelOffset")
+		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", fmt.Sprintf("%f", bar.XLabelOffset))
+		initializerStatements += setValueField
+
+		setValueField = NumberInitStatement
+		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
 		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "Width")
 		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", fmt.Sprintf("%f", bar.Width))
 		initializerStatements += setValueField
@@ -2080,7 +2140,7 @@ func GetFields[Type Gongstruct]() (res []string) {
 	switch any(ret).(type) {
 	// insertion point for generic get gongstruct name
 	case Bar:
-		res = []string{"Name", "X", "Y", "Set", "Width", "Heigth", "Margin"}
+		res = []string{"Name", "X", "Y", "Set", "AutoDomainX", "XMin", "XMax", "AutoDomainY", "YMin", "YMax", "YLabelPresent", "YLabelOffset", "XLabelPresent", "XLabelOffset", "Width", "Heigth", "Margin"}
 	case Key:
 		res = []string{"Name"}
 	case Pie:
@@ -2120,6 +2180,26 @@ func GetFieldStringValue[Type Gongstruct](instance Type, fieldName string) (res 
 				}
 				res += __instance__.Name
 			}
+		case "AutoDomainX":
+			res = fmt.Sprintf("%t", any(instance).(Bar).AutoDomainX)
+		case "XMin":
+			res = fmt.Sprintf("%f", any(instance).(Bar).XMin)
+		case "XMax":
+			res = fmt.Sprintf("%f", any(instance).(Bar).XMax)
+		case "AutoDomainY":
+			res = fmt.Sprintf("%t", any(instance).(Bar).AutoDomainY)
+		case "YMin":
+			res = fmt.Sprintf("%f", any(instance).(Bar).YMin)
+		case "YMax":
+			res = fmt.Sprintf("%f", any(instance).(Bar).YMax)
+		case "YLabelPresent":
+			res = fmt.Sprintf("%t", any(instance).(Bar).YLabelPresent)
+		case "YLabelOffset":
+			res = fmt.Sprintf("%f", any(instance).(Bar).YLabelOffset)
+		case "XLabelPresent":
+			res = fmt.Sprintf("%t", any(instance).(Bar).XLabelPresent)
+		case "XLabelOffset":
+			res = fmt.Sprintf("%f", any(instance).(Bar).XLabelOffset)
 		case "Width":
 			res = fmt.Sprintf("%f", any(instance).(Bar).Width)
 		case "Heigth":

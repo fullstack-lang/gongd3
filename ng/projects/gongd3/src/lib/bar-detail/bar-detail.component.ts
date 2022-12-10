@@ -33,6 +33,10 @@ enum BarDetailComponentState {
 export class BarDetailComponent implements OnInit {
 
 	// insertion point for declarations
+	AutoDomainXFormControl: UntypedFormControl = new UntypedFormControl(false);
+	AutoDomainYFormControl: UntypedFormControl = new UntypedFormControl(false);
+	YLabelPresentFormControl: UntypedFormControl = new UntypedFormControl(false);
+	XLabelPresentFormControl: UntypedFormControl = new UntypedFormControl(false);
 
 	// the BarDB of interest
 	bar: BarDB = new BarDB
@@ -122,6 +126,10 @@ export class BarDetailComponent implements OnInit {
 				}
 
 				// insertion point for recovery of form controls value for bool fields
+				this.AutoDomainXFormControl.setValue(this.bar.AutoDomainX)
+				this.AutoDomainYFormControl.setValue(this.bar.AutoDomainY)
+				this.YLabelPresentFormControl.setValue(this.bar.YLabelPresent)
+				this.XLabelPresentFormControl.setValue(this.bar.XLabelPresent)
 			}
 		)
 
@@ -154,6 +162,10 @@ export class BarDetailComponent implements OnInit {
 			this.bar.YID.Int64 = 0
 			this.bar.YID.Valid = true
 		}
+		this.bar.AutoDomainX = this.AutoDomainXFormControl.value
+		this.bar.AutoDomainY = this.AutoDomainYFormControl.value
+		this.bar.YLabelPresent = this.YLabelPresentFormControl.value
+		this.bar.XLabelPresent = this.XLabelPresentFormControl.value
 
 		// save from the front pointer space to the non pointer space for serialization
 

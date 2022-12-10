@@ -128,6 +128,21 @@ export class BarComponent implements OnInit {
   }
 
   private drawBars(data: any[]): void {
+
+    let xDomain: any[]
+    if (this.bar.AutoDomainX) {
+      xDomain = data.map(d => d[this.bar.X!.Name])
+    } else {
+      xDomain = [this.bar.XMin, this.bar.XMax]
+    }
+
+    let yDomain: any[]
+    if (this.bar.AutoDomainY) {
+      yDomain = data.map(d => parseInt(d[this.bar.Y!.Name]))
+    } else {
+      yDomain = [this.bar.YMin, this.bar.YMax]
+    }
+
     // Create the X-axis band scale
     const x = d3.scaleBand()
       .range([0, this.bar.Width])
@@ -144,7 +159,7 @@ export class BarComponent implements OnInit {
 
     // Create the Y-axis band scale
     const y = d3.scaleLinear()
-      .domain([0, 200000])
+      .domain(yDomain)
       .range([this.bar.Heigth, 0]);
 
     // Draw the Y-axis on the DOM

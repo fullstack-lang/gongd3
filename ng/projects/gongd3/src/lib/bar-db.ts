@@ -12,6 +12,16 @@ export class BarDB {
 
 	// insertion point for basic fields declarations
 	Name: string = ""
+	AutoDomainX: boolean = false
+	XMin: number = 0
+	XMax: number = 0
+	AutoDomainY: boolean = false
+	YMin: number = 0
+	YMax: number = 0
+	YLabelPresent: boolean = false
+	YLabelOffset: number = 0
+	XLabelPresent: boolean = false
+	XLabelOffset: number = 0
 	Width: number = 0
 	Heigth: number = 0
 	Margin: number = 0

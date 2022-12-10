@@ -417,6 +417,48 @@ func UnmarshallGongstructStaging(assignStmt *ast.AssignStmt, astCoordinate_ stri
 					// remove first and last char
 					fielValue := basicLit.Value[1 : len(basicLit.Value)-1]
 					__gong__map_Bar[identifier].Name = fielValue
+				case "XMin":
+					// convert string to float64
+					fielValue, err := strconv.ParseFloat(basicLit.Value, 64)
+					if err != nil {
+						log.Fatalln(err)
+					}
+					__gong__map_Bar[identifier].XMin = fielValue
+				case "XMax":
+					// convert string to float64
+					fielValue, err := strconv.ParseFloat(basicLit.Value, 64)
+					if err != nil {
+						log.Fatalln(err)
+					}
+					__gong__map_Bar[identifier].XMax = fielValue
+				case "YMin":
+					// convert string to float64
+					fielValue, err := strconv.ParseFloat(basicLit.Value, 64)
+					if err != nil {
+						log.Fatalln(err)
+					}
+					__gong__map_Bar[identifier].YMin = fielValue
+				case "YMax":
+					// convert string to float64
+					fielValue, err := strconv.ParseFloat(basicLit.Value, 64)
+					if err != nil {
+						log.Fatalln(err)
+					}
+					__gong__map_Bar[identifier].YMax = fielValue
+				case "YLabelOffset":
+					// convert string to float64
+					fielValue, err := strconv.ParseFloat(basicLit.Value, 64)
+					if err != nil {
+						log.Fatalln(err)
+					}
+					__gong__map_Bar[identifier].YLabelOffset = fielValue
+				case "XLabelOffset":
+					// convert string to float64
+					fielValue, err := strconv.ParseFloat(basicLit.Value, 64)
+					if err != nil {
+						log.Fatalln(err)
+					}
+					__gong__map_Bar[identifier].XLabelOffset = fielValue
 				case "Width":
 					// convert string to float64
 					fielValue, err := strconv.ParseFloat(basicLit.Value, 64)
@@ -544,6 +586,34 @@ func UnmarshallGongstructStaging(assignStmt *ast.AssignStmt, astCoordinate_ stri
 				case "Y":
 					targetIdentifier := ident.Name
 					__gong__map_Bar[identifier].Y = __gong__map_Key[targetIdentifier]
+				case "AutoDomainX":
+					// convert string to boolean
+					fielValue, err := strconv.ParseBool(ident.Name)
+					if err != nil {
+						log.Fatalln(err)
+					}
+					__gong__map_Bar[identifier].AutoDomainX = fielValue
+				case "AutoDomainY":
+					// convert string to boolean
+					fielValue, err := strconv.ParseBool(ident.Name)
+					if err != nil {
+						log.Fatalln(err)
+					}
+					__gong__map_Bar[identifier].AutoDomainY = fielValue
+				case "YLabelPresent":
+					// convert string to boolean
+					fielValue, err := strconv.ParseBool(ident.Name)
+					if err != nil {
+						log.Fatalln(err)
+					}
+					__gong__map_Bar[identifier].YLabelPresent = fielValue
+				case "XLabelPresent":
+					// convert string to boolean
+					fielValue, err := strconv.ParseBool(ident.Name)
+					if err != nil {
+						log.Fatalln(err)
+					}
+					__gong__map_Bar[identifier].XLabelPresent = fielValue
 				}
 			case "Key":
 				switch fieldName {

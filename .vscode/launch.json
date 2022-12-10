@@ -20,6 +20,13 @@
             ]
         },
         {
+            "type": "chrome",
+            "request": "launch",
+            "name": "Launch Chrome against localhost on 4200",
+            "url": "http://localhost:4200",
+            "webRoot": "${workspaceFolder}/ng"
+        },
+        {
             "name": "Launch firefox localhost:8080",
             "type": "firefox",
             "request": "launch",
