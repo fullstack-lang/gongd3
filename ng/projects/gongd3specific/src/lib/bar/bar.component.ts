@@ -28,13 +28,10 @@ export class BarComponent implements OnInit {
   currTime: number = 0
 
   private data = new (Array<any>)
-  private x_serieName: string = ""
-  private y_serieName: string = ""
 
   private svg: any;
-  private margin = 50;
-  private width = 750 - (this.margin * 2);
-  private height = 400 - (this.margin * 2);
+
+  private bar = new (gongd3.BarDB)
 
   constructor(
     private route: ActivatedRoute,
@@ -77,15 +74,8 @@ export class BarComponent implements OnInit {
         for (let bar of frontRepo.Bars_array) {
           console.log("Bar name " + bar.Name)
           if (bar.Name == this.name) {
+            this.bar = bar
             console.log("Selected Bar name " + bar.Name)
-
-            // set up setting
-            this.width = bar.Width
-            this.height = bar.Heigth
-            this.margin = bar.Margin
-
-            this.x_serieName = bar.X!.Name
-            this.y_serieName = bar.Y!.Name
 
             this.data = new (Array<any>)
             let indexSerie = 0
@@ -131,22 +121,22 @@ export class BarComponent implements OnInit {
   private createSvg(): void {
     this.svg = d3.select("figure#bar")
       .append("svg")
-      .attr("width", this.width + (this.margin * 2))
-      .attr("height", this.height + (this.margin * 2))
+      .attr("width", this.bar.Width + (this.bar.Margin * 2))
+      .attr("height", this.bar.Heigth + (this.bar.Margin * 2))
       .append("g")
-      .attr("transform", "translate(" + this.margin + "," + this.margin + ")");
+      .attr("transform", "translate(" + this.bar.Margin + "," + this.bar.Margin + ")");
   }
 
   private drawBars(data: any[]): void {
     // Create the X-axis band scale
     const x = d3.scaleBand()
-      .range([0, this.width])
-      .domain(data.map(d => d[this.x_serieName]))
-      .padding(0.2);
+      .range([0, this.bar.Width])
+      .domain(data.map(d => d[this.bar.X!.Name]))
+      .padding(0.2)
 
     // Draw the X-axis on the DOM
     this.svg.append("g")
-      .attr("transform", "translate(0," + this.height + ")")
+      .attr("transform", "translate(0," + this.bar.Heigth + ")")
       .call(d3.axisBottom(x))
       .selectAll("text")
       .attr("transform", "translate(-10,0)rotate(-45)")
@@ -155,21 +145,28 @@ export class BarComponent implements OnInit {
     // Create the Y-axis band scale
     const y = d3.scaleLinear()
       .domain([0, 200000])
-      .range([this.height, 0]);
+      .range([this.bar.Heigth, 0]);
 
     // Draw the Y-axis on the DOM
     this.svg.append("g")
       .call(d3.axisLeft(y));
+
+    this.svg.append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("x", -(this.bar.Heigth / 2))
+      .attr("y", -50)
+      .attr("text-anchor", "middle")
+      .text("Y-axis label")
 
     // Create and fill the bars
     this.svg.selectAll("bars")
       .data(data)
       .enter()
       .append("rect")
-      .attr("x", (d: any) => x(d[this.x_serieName]))
-      .attr("y", (d: any) => y(d[this.y_serieName]))
+      .attr("x", (d: any) => x(d[this.bar.X!.Name]))
+      .attr("y", (d: any) => y(d[this.bar.Y!.Name]))
       .attr("width", x.bandwidth())
-      .attr("height", (d: any) => this.height - y(d[this.y_serieName]))
-      .attr("fill", "#d04a35");
+      .attr("height", (d: any) => this.bar.Heigth - y(d[this.bar.Y!.Name]))
+      .attr("fill", "#d04a35")
   }
 }

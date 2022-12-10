@@ -65,7 +65,7 @@ func stageInjection() {
 	__Bar__000000_Bar_Stars_per_Framework.Name = `Bar Stars per Framework`
 	__Bar__000000_Bar_Stars_per_Framework.Width = 750.000000
 	__Bar__000000_Bar_Stars_per_Framework.Heigth = 500.000000
-	__Bar__000000_Bar_Stars_per_Framework.Margin = 50.000000
+	__Bar__000000_Bar_Stars_per_Framework.Margin = 100.000000
 
 	// Key values setup
 	__Key__000000_Framework_not_hardcoded.Name = `Framework not hardcoded`
