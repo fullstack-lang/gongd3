@@ -27,9 +27,9 @@ func stageInjection() {
 	__Bar__000000_Bar_Stars_per_Framework := (&models.Bar{Name: `Bar Stars per Framework`}).Stage()
 
 	// Declarations of staged instances of Key
-	__Key__000000_Framework := (&models.Key{Name: `Framework`}).Stage()
-	__Key__000001_Released := (&models.Key{Name: `Released`}).Stage()
-	__Key__000002_Stars := (&models.Key{Name: `Stars`}).Stage()
+	__Key__000000_Framework_not_hardcoded := (&models.Key{Name: `Framework not hardcoded`}).Stage()
+	__Key__000001_Released_not_hardcoded := (&models.Key{Name: `Released not hardcoded`}).Stage()
+	__Key__000002_Stars_not_hardcoded := (&models.Key{Name: `Stars not hardcoded`}).Stage()
 
 	// Declarations of staged instances of Pie
 	__Pie__000000_Pie_Stars_per_Framework := (&models.Pie{Name: `Pie Stars per Framework`}).Stage()
@@ -68,13 +68,13 @@ func stageInjection() {
 	__Bar__000000_Bar_Stars_per_Framework.Margin = 50.000000
 
 	// Key values setup
-	__Key__000000_Framework.Name = `Framework`
+	__Key__000000_Framework_not_hardcoded.Name = `Framework not hardcoded`
 
 	// Key values setup
-	__Key__000001_Released.Name = `Released`
+	__Key__000001_Released_not_hardcoded.Name = `Released not hardcoded`
 
 	// Key values setup
-	__Key__000002_Stars.Name = `Stars`
+	__Key__000002_Stars_not_hardcoded.Name = `Stars not hardcoded`
 
 	// Pie values setup
 	__Pie__000000_Pie_Stars_per_Framework.Name = `Pie Stars per Framework`
@@ -143,35 +143,35 @@ func stageInjection() {
 	__Value__000014_Vue.Name = `Vue`
 
 	// Setup of pointers
-	__Bar__000000_Bar_Stars_per_Framework.X = __Key__000000_Framework
-	__Bar__000000_Bar_Stars_per_Framework.Y = __Key__000002_Stars
+	__Bar__000000_Bar_Stars_per_Framework.X = __Key__000000_Framework_not_hardcoded
+	__Bar__000000_Bar_Stars_per_Framework.Y = __Key__000002_Stars_not_hardcoded
 	__Bar__000000_Bar_Stars_per_Framework.Set = append(__Bar__000000_Bar_Stars_per_Framework.Set, __Serie__000002_Stars)
 	__Bar__000000_Bar_Stars_per_Framework.Set = append(__Bar__000000_Bar_Stars_per_Framework.Set, __Serie__000001_Released)
 	__Bar__000000_Bar_Stars_per_Framework.Set = append(__Bar__000000_Bar_Stars_per_Framework.Set, __Serie__000000_FrameworkSerie)
-	__Pie__000000_Pie_Stars_per_Framework.X = __Key__000000_Framework
-	__Pie__000000_Pie_Stars_per_Framework.Y = __Key__000002_Stars
+	__Pie__000000_Pie_Stars_per_Framework.X = __Key__000000_Framework_not_hardcoded
+	__Pie__000000_Pie_Stars_per_Framework.Y = __Key__000002_Stars_not_hardcoded
 	__Pie__000000_Pie_Stars_per_Framework.Set = append(__Pie__000000_Pie_Stars_per_Framework.Set, __Serie__000001_Released)
 	__Pie__000000_Pie_Stars_per_Framework.Set = append(__Pie__000000_Pie_Stars_per_Framework.Set, __Serie__000002_Stars)
 	__Pie__000000_Pie_Stars_per_Framework.Set = append(__Pie__000000_Pie_Stars_per_Framework.Set, __Serie__000000_FrameworkSerie)
-	__Scatter__000000_Scatter_Stars_per_Framework.X = __Key__000001_Released
-	__Scatter__000000_Scatter_Stars_per_Framework.Y = __Key__000002_Stars
-	__Scatter__000000_Scatter_Stars_per_Framework.Text = __Key__000000_Framework
+	__Scatter__000000_Scatter_Stars_per_Framework.X = __Key__000001_Released_not_hardcoded
+	__Scatter__000000_Scatter_Stars_per_Framework.Y = __Key__000002_Stars_not_hardcoded
+	__Scatter__000000_Scatter_Stars_per_Framework.Text = __Key__000000_Framework_not_hardcoded
+	__Scatter__000000_Scatter_Stars_per_Framework.Set = append(__Scatter__000000_Scatter_Stars_per_Framework.Set, __Serie__000002_Stars)
 	__Scatter__000000_Scatter_Stars_per_Framework.Set = append(__Scatter__000000_Scatter_Stars_per_Framework.Set, __Serie__000000_FrameworkSerie)
 	__Scatter__000000_Scatter_Stars_per_Framework.Set = append(__Scatter__000000_Scatter_Stars_per_Framework.Set, __Serie__000001_Released)
-	__Scatter__000000_Scatter_Stars_per_Framework.Set = append(__Scatter__000000_Scatter_Stars_per_Framework.Set, __Serie__000002_Stars)
-	__Serie__000000_FrameworkSerie.Key = __Key__000000_Framework
+	__Serie__000000_FrameworkSerie.Key = __Key__000000_Framework_not_hardcoded
 	__Serie__000000_FrameworkSerie.Values = append(__Serie__000000_FrameworkSerie.Values, __Value__000014_Vue)
 	__Serie__000000_FrameworkSerie.Values = append(__Serie__000000_FrameworkSerie.Values, __Value__000013_React)
 	__Serie__000000_FrameworkSerie.Values = append(__Serie__000000_FrameworkSerie.Values, __Value__000010_Angular)
 	__Serie__000000_FrameworkSerie.Values = append(__Serie__000000_FrameworkSerie.Values, __Value__000011_Backbone)
 	__Serie__000000_FrameworkSerie.Values = append(__Serie__000000_FrameworkSerie.Values, __Value__000012_Ember)
-	__Serie__000001_Released.Key = __Key__000001_Released
+	__Serie__000001_Released.Key = __Key__000001_Released_not_hardcoded
 	__Serie__000001_Released.Values = append(__Serie__000001_Released.Values, __Value__000005_2014)
 	__Serie__000001_Released.Values = append(__Serie__000001_Released.Values, __Value__000004_2013)
 	__Serie__000001_Released.Values = append(__Serie__000001_Released.Values, __Value__000006_2016)
 	__Serie__000001_Released.Values = append(__Serie__000001_Released.Values, __Value__000002_2010)
 	__Serie__000001_Released.Values = append(__Serie__000001_Released.Values, __Value__000003_2011)
-	__Serie__000002_Stars.Key = __Key__000002_Stars
+	__Serie__000002_Stars.Key = __Key__000002_Stars_not_hardcoded
 	__Serie__000002_Stars.Values = append(__Serie__000002_Stars.Values, __Value__000001_166443)
 	__Serie__000002_Stars.Values = append(__Serie__000002_Stars.Values, __Value__000000_150793)
 	__Serie__000002_Stars.Values = append(__Serie__000002_Stars.Values, __Value__000009_62342)

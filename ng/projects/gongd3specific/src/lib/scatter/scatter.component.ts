@@ -23,6 +23,7 @@ export class ScatterComponent implements OnInit {
 
   private x_serieName: string = ""
   private y_serieName: string = ""
+  private text_serieName: string = ""
 
   private data = new Array<any>()
   private svg: any
@@ -74,6 +75,7 @@ export class ScatterComponent implements OnInit {
 
             this.x_serieName = scatter.X!.Name
             this.y_serieName = scatter.Y!.Name
+            this.text_serieName = scatter.Text!.Name
 
             this.data = new (Array<any>)
             let indexSerie = 0
@@ -145,8 +147,8 @@ export class ScatterComponent implements OnInit {
       .data(this.data)
       .enter()
       .append("circle")
-      .attr("cx", (d: any) => x(d.Released))
-      .attr("cy", (d: any) => y(d.Stars))
+      .attr("cx", (d: any) => x(d[this.x_serieName]))
+      .attr("cy", (d: any) => y(d[this.y_serieName]))
       .attr("r", 7)
       .style("opacity", .5)
       .style("fill", "#69b3a2");
@@ -155,8 +157,8 @@ export class ScatterComponent implements OnInit {
       .data(this.data)
       .enter()
       .append("text")
-      .text((d: any) => d.Framework)
-      .attr("x", (d: any) => x(d.Released))
-      .attr("y", (d: any) => y(d.Stars))
+      .text((d: any) => d[this.text_serieName])
+      .attr("x", (d: any) => x(d[this.x_serieName]))
+      .attr("y", (d: any) => y(d[this.y_serieName]))
   }
 }
