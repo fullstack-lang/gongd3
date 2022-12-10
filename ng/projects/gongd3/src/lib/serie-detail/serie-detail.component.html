@@ -53,6 +53,15 @@
             </mat-option>
         </mat-select>
     </mat-form-field>
+    <mat-form-field class="detail-full-width">
+        <mat-label>(Pie) Set</mat-label>
+        <mat-select [compareWith]="compareObjects" [(ngModel)]="serie.Pie_Set_reverse" [ngModelOptions]="{standalone: true}">
+            <mat-option>None</mat-option>
+            <mat-option *ngFor="let pie of frontRepo.Pies_array" [value]="pie">
+                {{pie.Name}}
+            </mat-option>
+        </mat-select>
+    </mat-form-field>
     <div class="details__save">
         <button mat-raised-button color="primary" (click)="save()">
             Save serie

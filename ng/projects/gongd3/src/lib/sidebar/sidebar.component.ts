@@ -15,6 +15,8 @@ import { BarService } from '../bar.service'
 import { getBarUniqueID } from '../front-repo.service'
 import { KeyService } from '../key.service'
 import { getKeyUniqueID } from '../front-repo.service'
+import { PieService } from '../pie.service'
+import { getPieUniqueID } from '../front-repo.service'
 import { SerieService } from '../serie.service'
 import { getSerieUniqueID } from '../front-repo.service'
 import { ValueService } from '../value.service'
@@ -163,6 +165,7 @@ export class SidebarComponent implements OnInit {
     // insertion point for per struct service declaration
     private barService: BarService,
     private keyService: KeyService,
+    private pieService: PieService,
     private serieService: SerieService,
     private valueService: ValueService,
   ) { }
@@ -202,6 +205,14 @@ export class SidebarComponent implements OnInit {
     )
     // observable for changes in structs
     this.keyService.KeyServiceChanged.subscribe(
+      message => {
+        if (message == "post" || message == "update" || message == "delete") {
+          this.refresh()
+        }
+      }
+    )
+    // observable for changes in structs
+    this.pieService.PieServiceChanged.subscribe(
       message => {
         if (message == "post" || message == "update" || message == "delete") {
           this.refresh()
@@ -435,6 +446,152 @@ export class SidebarComponent implements OnInit {
           keyGongNodeStruct.children!.push(keyGongNodeInstance)
 
           // insertion point for per field code
+        }
+      )
+
+      /**
+      * fill up the Pie part of the mat tree
+      */
+      let pieGongNodeStruct: GongNode = {
+        name: "Pie",
+        type: GongNodeType.STRUCT,
+        id: 0,
+        uniqueIdPerStack: 13 * nonInstanceNodeId,
+        structName: "Pie",
+        associationField: "",
+        associatedStructName: "",
+        children: new Array<GongNode>()
+      }
+      nonInstanceNodeId = nonInstanceNodeId + 1
+      this.gongNodeTree.push(pieGongNodeStruct)
+
+      this.frontRepo.Pies_array.sort((t1, t2) => {
+        if (t1.Name > t2.Name) {
+          return 1;
+        }
+        if (t1.Name < t2.Name) {
+          return -1;
+        }
+        return 0;
+      });
+
+      this.frontRepo.Pies_array.forEach(
+        pieDB => {
+          let pieGongNodeInstance: GongNode = {
+            name: pieDB.Name,
+            type: GongNodeType.INSTANCE,
+            id: pieDB.ID,
+            uniqueIdPerStack: getPieUniqueID(pieDB.ID),
+            structName: "Pie",
+            associationField: "",
+            associatedStructName: "",
+            children: new Array<GongNode>()
+          }
+          pieGongNodeStruct.children!.push(pieGongNodeInstance)
+
+          // insertion point for per field code
+          /**
+          * let append a node for the association X
+          */
+          let XGongNodeAssociation: GongNode = {
+            name: "(Key) X",
+            type: GongNodeType.ONE__ZERO_ONE_ASSOCIATION,
+            id: pieDB.ID,
+            uniqueIdPerStack: 17 * nonInstanceNodeId,
+            structName: "Pie",
+            associationField: "X",
+            associatedStructName: "Key",
+            children: new Array<GongNode>()
+          }
+          nonInstanceNodeId = nonInstanceNodeId + 1
+          pieGongNodeInstance.children!.push(XGongNodeAssociation)
+
+          /**
+            * let append a node for the instance behind the asssociation X
+            */
+          if (pieDB.X != undefined) {
+            let pieGongNodeInstance_X: GongNode = {
+              name: pieDB.X.Name,
+              type: GongNodeType.INSTANCE,
+              id: pieDB.X.ID,
+              uniqueIdPerStack: // godel numbering (thank you kurt)
+                3 * getPieUniqueID(pieDB.ID)
+                + 5 * getKeyUniqueID(pieDB.X.ID),
+              structName: "Key",
+              associationField: "",
+              associatedStructName: "",
+              children: new Array<GongNode>()
+            }
+            XGongNodeAssociation.children.push(pieGongNodeInstance_X)
+          }
+
+          /**
+          * let append a node for the association Y
+          */
+          let YGongNodeAssociation: GongNode = {
+            name: "(Key) Y",
+            type: GongNodeType.ONE__ZERO_ONE_ASSOCIATION,
+            id: pieDB.ID,
+            uniqueIdPerStack: 17 * nonInstanceNodeId,
+            structName: "Pie",
+            associationField: "Y",
+            associatedStructName: "Key",
+            children: new Array<GongNode>()
+          }
+          nonInstanceNodeId = nonInstanceNodeId + 1
+          pieGongNodeInstance.children!.push(YGongNodeAssociation)
+
+          /**
+            * let append a node for the instance behind the asssociation Y
+            */
+          if (pieDB.Y != undefined) {
+            let pieGongNodeInstance_Y: GongNode = {
+              name: pieDB.Y.Name,
+              type: GongNodeType.INSTANCE,
+              id: pieDB.Y.ID,
+              uniqueIdPerStack: // godel numbering (thank you kurt)
+                3 * getPieUniqueID(pieDB.ID)
+                + 5 * getKeyUniqueID(pieDB.Y.ID),
+              structName: "Key",
+              associationField: "",
+              associatedStructName: "",
+              children: new Array<GongNode>()
+            }
+            YGongNodeAssociation.children.push(pieGongNodeInstance_Y)
+          }
+
+          /**
+          * let append a node for the slide of pointer Set
+          */
+          let SetGongNodeAssociation: GongNode = {
+            name: "(Serie) Set",
+            type: GongNodeType.ONE__ZERO_MANY_ASSOCIATION,
+            id: pieDB.ID,
+            uniqueIdPerStack: 19 * nonInstanceNodeId,
+            structName: "Pie",
+            associationField: "Set",
+            associatedStructName: "Serie",
+            children: new Array<GongNode>()
+          }
+          nonInstanceNodeId = nonInstanceNodeId + 1
+          pieGongNodeInstance.children.push(SetGongNodeAssociation)
+
+          pieDB.Set?.forEach(serieDB => {
+            let serieNode: GongNode = {
+              name: serieDB.Name,
+              type: GongNodeType.INSTANCE,
+              id: serieDB.ID,
+              uniqueIdPerStack: // godel numbering (thank you kurt)
+                7 * getPieUniqueID(pieDB.ID)
+                + 11 * getSerieUniqueID(serieDB.ID),
+              structName: "Serie",
+              associationField: "",
+              associatedStructName: "",
+              children: new Array<GongNode>()
+            }
+            SetGongNodeAssociation.children.push(serieNode)
+          })
+
         }
       )
 

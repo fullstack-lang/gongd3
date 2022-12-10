@@ -48,6 +48,14 @@ type StageStruct struct { // insertion point for definition of arrays registerin
 	OnAfterKeyDeleteCallback OnAfterDeleteInterface[Key]
 	OnAfterKeyReadCallback   OnAfterReadInterface[Key]
 
+	Pies           map[*Pie]any
+	Pies_mapString map[string]*Pie
+
+	OnAfterPieCreateCallback OnAfterCreateInterface[Pie]
+	OnAfterPieUpdateCallback OnAfterUpdateInterface[Pie]
+	OnAfterPieDeleteCallback OnAfterDeleteInterface[Pie]
+	OnAfterPieReadCallback   OnAfterReadInterface[Pie]
+
 	Series           map[*Serie]any
 	Series_mapString map[string]*Serie
 
@@ -118,6 +126,8 @@ type BackRepoInterface interface {
 	CheckoutBar(bar *Bar)
 	CommitKey(key *Key)
 	CheckoutKey(key *Key)
+	CommitPie(pie *Pie)
+	CheckoutPie(pie *Pie)
 	CommitSerie(serie *Serie)
 	CheckoutSerie(serie *Serie)
 	CommitValue(value *Value)
@@ -133,6 +143,9 @@ var Stage StageStruct = StageStruct{ // insertion point for array initiatialisat
 
 	Keys:           make(map[*Key]any),
 	Keys_mapString: make(map[string]*Key),
+
+	Pies:           make(map[*Pie]any),
+	Pies_mapString: make(map[string]*Pie),
 
 	Series:           make(map[*Serie]any),
 	Series_mapString: make(map[string]*Serie),
@@ -152,6 +165,7 @@ func (stage *StageStruct) Commit() {
 	// insertion point for computing the map of number of instances per gongstruct
 	stage.Map_GongStructName_InstancesNb["Bar"] = len(stage.Bars)
 	stage.Map_GongStructName_InstancesNb["Key"] = len(stage.Keys)
+	stage.Map_GongStructName_InstancesNb["Pie"] = len(stage.Pies)
 	stage.Map_GongStructName_InstancesNb["Serie"] = len(stage.Series)
 	stage.Map_GongStructName_InstancesNb["Value"] = len(stage.Values)
 
@@ -165,6 +179,7 @@ func (stage *StageStruct) Checkout() {
 	// insertion point for computing the map of number of instances per gongstruct
 	stage.Map_GongStructName_InstancesNb["Bar"] = len(stage.Bars)
 	stage.Map_GongStructName_InstancesNb["Key"] = len(stage.Keys)
+	stage.Map_GongStructName_InstancesNb["Pie"] = len(stage.Pies)
 	stage.Map_GongStructName_InstancesNb["Serie"] = len(stage.Series)
 	stage.Map_GongStructName_InstancesNb["Value"] = len(stage.Values)
 
@@ -389,6 +404,101 @@ func (key *Key) GetName() (res string) {
 	return key.Name
 }
 
+// Stage puts pie to the model stage
+func (pie *Pie) Stage() *Pie {
+	Stage.Pies[pie] = __member
+	Stage.Pies_mapString[pie.Name] = pie
+
+	return pie
+}
+
+// Unstage removes pie off the model stage
+func (pie *Pie) Unstage() *Pie {
+	delete(Stage.Pies, pie)
+	delete(Stage.Pies_mapString, pie.Name)
+	return pie
+}
+
+// commit pie to the back repo (if it is already staged)
+func (pie *Pie) Commit() *Pie {
+	if _, ok := Stage.Pies[pie]; ok {
+		if Stage.BackRepo != nil {
+			Stage.BackRepo.CommitPie(pie)
+		}
+	}
+	return pie
+}
+
+// Checkout pie to the back repo (if it is already staged)
+func (pie *Pie) Checkout() *Pie {
+	if _, ok := Stage.Pies[pie]; ok {
+		if Stage.BackRepo != nil {
+			Stage.BackRepo.CheckoutPie(pie)
+		}
+	}
+	return pie
+}
+
+//
+// Legacy, to be deleted
+//
+
+// StageCopy appends a copy of pie to the model stage
+func (pie *Pie) StageCopy() *Pie {
+	_pie := new(Pie)
+	*_pie = *pie
+	_pie.Stage()
+	return _pie
+}
+
+// StageAndCommit appends pie to the model stage and commit to the orm repo
+func (pie *Pie) StageAndCommit() *Pie {
+	pie.Stage()
+	if Stage.AllModelsStructCreateCallback != nil {
+		Stage.AllModelsStructCreateCallback.CreateORMPie(pie)
+	}
+	return pie
+}
+
+// DeleteStageAndCommit appends pie to the model stage and commit to the orm repo
+func (pie *Pie) DeleteStageAndCommit() *Pie {
+	pie.Unstage()
+	DeleteORMPie(pie)
+	return pie
+}
+
+// StageCopyAndCommit appends a copy of pie to the model stage and commit to the orm repo
+func (pie *Pie) StageCopyAndCommit() *Pie {
+	_pie := new(Pie)
+	*_pie = *pie
+	_pie.Stage()
+	if Stage.AllModelsStructCreateCallback != nil {
+		Stage.AllModelsStructCreateCallback.CreateORMPie(pie)
+	}
+	return _pie
+}
+
+// CreateORMPie enables dynamic staging of a Pie instance
+func CreateORMPie(pie *Pie) {
+	pie.Stage()
+	if Stage.AllModelsStructCreateCallback != nil {
+		Stage.AllModelsStructCreateCallback.CreateORMPie(pie)
+	}
+}
+
+// DeleteORMPie enables dynamic staging of a Pie instance
+func DeleteORMPie(pie *Pie) {
+	pie.Unstage()
+	if Stage.AllModelsStructDeleteCallback != nil {
+		Stage.AllModelsStructDeleteCallback.DeleteORMPie(pie)
+	}
+}
+
+// for satisfaction of GongStruct interface
+func (pie *Pie) GetName() (res string) {
+	return pie.Name
+}
+
 // Stage puts serie to the model stage
 func (serie *Serie) Stage() *Serie {
 	Stage.Series[serie] = __member
@@ -583,6 +693,7 @@ func (value *Value) GetName() (res string) {
 type AllModelsStructCreateInterface interface { // insertion point for Callbacks on creation
 	CreateORMBar(Bar *Bar)
 	CreateORMKey(Key *Key)
+	CreateORMPie(Pie *Pie)
 	CreateORMSerie(Serie *Serie)
 	CreateORMValue(Value *Value)
 }
@@ -590,6 +701,7 @@ type AllModelsStructCreateInterface interface { // insertion point for Callbacks
 type AllModelsStructDeleteInterface interface { // insertion point for Callbacks on deletion
 	DeleteORMBar(Bar *Bar)
 	DeleteORMKey(Key *Key)
+	DeleteORMPie(Pie *Pie)
 	DeleteORMSerie(Serie *Serie)
 	DeleteORMValue(Value *Value)
 }
@@ -600,6 +712,9 @@ func (stage *StageStruct) Reset() { // insertion point for array reset
 
 	stage.Keys = make(map[*Key]any)
 	stage.Keys_mapString = make(map[string]*Key)
+
+	stage.Pies = make(map[*Pie]any)
+	stage.Pies_mapString = make(map[string]*Pie)
 
 	stage.Series = make(map[*Serie]any)
 	stage.Series_mapString = make(map[string]*Serie)
@@ -615,6 +730,9 @@ func (stage *StageStruct) Nil() { // insertion point for array nil
 
 	stage.Keys = nil
 	stage.Keys_mapString = nil
+
+	stage.Pies = nil
+	stage.Pies_mapString = nil
 
 	stage.Series = nil
 	stage.Series_mapString = nil
@@ -786,6 +904,56 @@ func (stage *StageStruct) Marshall(file *os.File, modelsPackageName, packageName
 
 	}
 
+	map_Pie_Identifiers := make(map[*Pie]string)
+	_ = map_Pie_Identifiers
+
+	pieOrdered := []*Pie{}
+	for pie := range stage.Pies {
+		pieOrdered = append(pieOrdered, pie)
+	}
+	sort.Slice(pieOrdered[:], func(i, j int) bool {
+		return pieOrdered[i].Name < pieOrdered[j].Name
+	})
+	identifiersDecl += "\n\n	// Declarations of staged instances of Pie"
+	for idx, pie := range pieOrdered {
+
+		id = generatesIdentifier("Pie", idx, pie.Name)
+		map_Pie_Identifiers[pie] = id
+
+		decl = IdentifiersDecls
+		decl = strings.ReplaceAll(decl, "{{Identifier}}", id)
+		decl = strings.ReplaceAll(decl, "{{GeneratedStructName}}", "Pie")
+		decl = strings.ReplaceAll(decl, "{{GeneratedFieldNameValue}}", pie.Name)
+		identifiersDecl += decl
+
+		initializerStatements += "\n\n	// Pie values setup"
+		// Initialisation of values
+		setValueField = StringInitStatement
+		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
+		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "Name")
+		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", string(pie.Name))
+		initializerStatements += setValueField
+
+		setValueField = NumberInitStatement
+		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
+		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "Width")
+		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", fmt.Sprintf("%f", pie.Width))
+		initializerStatements += setValueField
+
+		setValueField = NumberInitStatement
+		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
+		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "Heigth")
+		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", fmt.Sprintf("%f", pie.Heigth))
+		initializerStatements += setValueField
+
+		setValueField = NumberInitStatement
+		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
+		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "Margin")
+		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", fmt.Sprintf("%f", pie.Margin))
+		initializerStatements += setValueField
+
+	}
+
 	map_Serie_Identifiers := make(map[*Serie]string)
 	_ = map_Serie_Identifiers
 
@@ -893,6 +1061,40 @@ func (stage *StageStruct) Marshall(file *os.File, modelsPackageName, packageName
 		map_Key_Identifiers[key] = id
 
 		// Initialisation of values
+	}
+
+	for idx, pie := range pieOrdered {
+		var setPointerField string
+		_ = setPointerField
+
+		id = generatesIdentifier("Pie", idx, pie.Name)
+		map_Pie_Identifiers[pie] = id
+
+		// Initialisation of values
+		if pie.X != nil {
+			setPointerField = PointerFieldInitStatement
+			setPointerField = strings.ReplaceAll(setPointerField, "{{Identifier}}", id)
+			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldName}}", "X")
+			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldNameValue}}", map_Key_Identifiers[pie.X])
+			pointersInitializesStatements += setPointerField
+		}
+
+		if pie.Y != nil {
+			setPointerField = PointerFieldInitStatement
+			setPointerField = strings.ReplaceAll(setPointerField, "{{Identifier}}", id)
+			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldName}}", "Y")
+			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldNameValue}}", map_Key_Identifiers[pie.Y])
+			pointersInitializesStatements += setPointerField
+		}
+
+		for _, _serie := range pie.Set {
+			setPointerField = SliceOfPointersFieldInitStatement
+			setPointerField = strings.ReplaceAll(setPointerField, "{{Identifier}}", id)
+			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldName}}", "Set")
+			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldNameValue}}", map_Serie_Identifiers[_serie])
+			pointersInitializesStatements += setPointerField
+		}
+
 	}
 
 	for idx, serie := range serieOrdered {
@@ -1012,6 +1214,60 @@ func (stageStruct *StageStruct) CreateReverseMap_Bar_Set() (res map[*Serie]*Bar)
 
 // generate function for reverse association maps of Key
 
+// generate function for reverse association maps of Pie
+func (stageStruct *StageStruct) CreateReverseMap_Pie_X() (res map[*Key][]*Pie) {
+	res = make(map[*Key][]*Pie)
+
+	for pie := range stageStruct.Pies {
+		if pie.X != nil {
+			key_ := pie.X
+			var pies []*Pie
+			_, ok := res[key_]
+			if ok {
+				pies = res[key_]
+			} else {
+				pies = make([]*Pie, 0)
+			}
+			pies = append(pies, pie)
+			res[key_] = pies
+		}
+	}
+
+	return
+}
+func (stageStruct *StageStruct) CreateReverseMap_Pie_Y() (res map[*Key][]*Pie) {
+	res = make(map[*Key][]*Pie)
+
+	for pie := range stageStruct.Pies {
+		if pie.Y != nil {
+			key_ := pie.Y
+			var pies []*Pie
+			_, ok := res[key_]
+			if ok {
+				pies = res[key_]
+			} else {
+				pies = make([]*Pie, 0)
+			}
+			pies = append(pies, pie)
+			res[key_] = pies
+		}
+	}
+
+	return
+}
+func (stageStruct *StageStruct) CreateReverseMap_Pie_Set() (res map[*Serie]*Pie) {
+	res = make(map[*Serie]*Pie)
+
+	for pie := range stageStruct.Pies {
+		for _, serie_ := range pie.Set {
+			res[serie_] = pie
+		}
+	}
+
+	return
+}
+
+
 // generate function for reverse association maps of Serie
 func (stageStruct *StageStruct) CreateReverseMap_Serie_Key() (res map[*Key][]*Serie) {
 	res = make(map[*Key][]*Serie)
@@ -1054,7 +1310,7 @@ func (stageStruct *StageStruct) CreateReverseMap_Serie_Values() (res map[*Value]
 // - full refactoring of Gongstruct identifiers / fields
 type Gongstruct interface {
 	// insertion point for generic types
-	Bar | Key | Serie | Value
+	Bar | Key | Pie | Serie | Value
 }
 
 // Gongstruct is the type parameter for generated generic function that allows
@@ -1063,7 +1319,7 @@ type Gongstruct interface {
 // - full refactoring of Gongstruct identifiers / fields
 type PointerToGongstruct interface {
 	// insertion point for generic types
-	*Bar | *Key | *Serie | *Value
+	*Bar | *Key | *Pie | *Serie | *Value
 	GetName() string
 }
 
@@ -1072,6 +1328,7 @@ type GongstructSet interface {
 		// insertion point for generic types
 		map[*Bar]any |
 		map[*Key]any |
+		map[*Pie]any |
 		map[*Serie]any |
 		map[*Value]any |
 		map[*any]any // because go does not support an extra "|" at the end of type specifications
@@ -1082,6 +1339,7 @@ type GongstructMapString interface {
 		// insertion point for generic types
 		map[string]*Bar |
 		map[string]*Key |
+		map[string]*Pie |
 		map[string]*Serie |
 		map[string]*Value |
 		map[*any]any // because go does not support an extra "|" at the end of type specifications
@@ -1098,6 +1356,8 @@ func GongGetSet[Type GongstructSet]() *Type {
 		return any(&Stage.Bars).(*Type)
 	case map[*Key]any:
 		return any(&Stage.Keys).(*Type)
+	case map[*Pie]any:
+		return any(&Stage.Pies).(*Type)
 	case map[*Serie]any:
 		return any(&Stage.Series).(*Type)
 	case map[*Value]any:
@@ -1118,6 +1378,8 @@ func GongGetMap[Type GongstructMapString]() *Type {
 		return any(&Stage.Bars_mapString).(*Type)
 	case map[string]*Key:
 		return any(&Stage.Keys_mapString).(*Type)
+	case map[string]*Pie:
+		return any(&Stage.Pies_mapString).(*Type)
 	case map[string]*Serie:
 		return any(&Stage.Series_mapString).(*Type)
 	case map[string]*Value:
@@ -1138,6 +1400,8 @@ func GetGongstructInstancesSet[Type Gongstruct]() *map[*Type]any {
 		return any(&Stage.Bars).(*map[*Type]any)
 	case Key:
 		return any(&Stage.Keys).(*map[*Type]any)
+	case Pie:
+		return any(&Stage.Pies).(*map[*Type]any)
 	case Serie:
 		return any(&Stage.Series).(*map[*Type]any)
 	case Value:
@@ -1158,6 +1422,8 @@ func GetGongstructInstancesMap[Type Gongstruct]() *map[string]*Type {
 		return any(&Stage.Bars_mapString).(*map[string]*Type)
 	case Key:
 		return any(&Stage.Keys_mapString).(*map[string]*Type)
+	case Pie:
+		return any(&Stage.Pies_mapString).(*map[string]*Type)
 	case Serie:
 		return any(&Stage.Series_mapString).(*map[string]*Type)
 	case Value:
@@ -1189,6 +1455,16 @@ func GetAssociationName[Type Gongstruct]() *Type {
 	case Key:
 		return any(&Key{
 			// Initialisation of associations
+		}).(*Type)
+	case Pie:
+		return any(&Pie{
+			// Initialisation of associations
+			// field is initialized with an instance of Key with the name of the field
+			X: &Key{Name: "X"},
+			// field is initialized with an instance of Key with the name of the field
+			Y: &Key{Name: "Y"},
+			// field is initialized with an instance of Serie with the name of the field
+			Set: []*Serie{{Name: "Set"}},
 		}).(*Type)
 	case Serie:
 		return any(&Serie{
@@ -1263,6 +1539,45 @@ func GetPointerReverseMap[Start, End Gongstruct](fieldname string) map[*End][]*S
 		switch fieldname {
 		// insertion point for per direct association field
 		}
+	// reverse maps of direct associations of Pie
+	case Pie:
+		switch fieldname {
+		// insertion point for per direct association field
+		case "X":
+			res := make(map[*Key][]*Pie)
+			for pie := range Stage.Pies {
+				if pie.X != nil {
+					key_ := pie.X
+					var pies []*Pie
+					_, ok := res[key_]
+					if ok {
+						pies = res[key_]
+					} else {
+						pies = make([]*Pie, 0)
+					}
+					pies = append(pies, pie)
+					res[key_] = pies
+				}
+			}
+			return any(res).(map[*End][]*Start)
+		case "Y":
+			res := make(map[*Key][]*Pie)
+			for pie := range Stage.Pies {
+				if pie.Y != nil {
+					key_ := pie.Y
+					var pies []*Pie
+					_, ok := res[key_]
+					if ok {
+						pies = res[key_]
+					} else {
+						pies = make([]*Pie, 0)
+					}
+					pies = append(pies, pie)
+					res[key_] = pies
+				}
+			}
+			return any(res).(map[*End][]*Start)
+		}
 	// reverse maps of direct associations of Serie
 	case Serie:
 		switch fieldname {
@@ -1323,6 +1638,19 @@ func GetSliceOfPointersReverseMap[Start, End Gongstruct](fieldname string) map[*
 		switch fieldname {
 		// insertion point for per direct association field
 		}
+	// reverse maps of direct associations of Pie
+	case Pie:
+		switch fieldname {
+		// insertion point for per direct association field
+		case "Set":
+			res := make(map[*Serie]*Pie)
+			for pie := range Stage.Pies {
+				for _, serie_ := range pie.Set {
+					res[serie_] = pie
+				}
+			}
+			return any(res).(map[*End]*Start)
+		}
 	// reverse maps of direct associations of Serie
 	case Serie:
 		switch fieldname {
@@ -1357,6 +1685,8 @@ func GetGongstructName[Type Gongstruct]() (res string) {
 		res = "Bar"
 	case Key:
 		res = "Key"
+	case Pie:
+		res = "Pie"
 	case Serie:
 		res = "Serie"
 	case Value:
@@ -1376,6 +1706,8 @@ func GetFields[Type Gongstruct]() (res []string) {
 		res = []string{"Name", "X", "Y", "Set", "Width", "Heigth", "Margin"}
 	case Key:
 		res = []string{"Name"}
+	case Pie:
+		res = []string{"Name", "X", "Y", "Set", "Width", "Heigth", "Margin"}
 	case Serie:
 		res = []string{"Name", "Key", "Values"}
 	case Value:
@@ -1421,6 +1753,33 @@ func GetFieldStringValue[Type Gongstruct](instance Type, fieldName string) (res 
 		// string value of fields
 		case "Name":
 			res = any(instance).(Key).Name
+		}
+	case Pie:
+		switch fieldName {
+		// string value of fields
+		case "Name":
+			res = any(instance).(Pie).Name
+		case "X":
+			if any(instance).(Pie).X != nil {
+				res = any(instance).(Pie).X.Name
+			}
+		case "Y":
+			if any(instance).(Pie).Y != nil {
+				res = any(instance).(Pie).Y.Name
+			}
+		case "Set":
+			for idx, __instance__ := range any(instance).(Pie).Set {
+				if idx > 0 {
+					res += "\n"
+				}
+				res += __instance__.Name
+			}
+		case "Width":
+			res = fmt.Sprintf("%f", any(instance).(Pie).Width)
+		case "Heigth":
+			res = fmt.Sprintf("%f", any(instance).(Pie).Heigth)
+		case "Margin":
+			res = fmt.Sprintf("%f", any(instance).(Pie).Margin)
 		}
 	case Serie:
 		switch fieldName {

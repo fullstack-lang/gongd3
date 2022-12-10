@@ -49,6 +49,11 @@ import { KeySortingComponent } from './key-sorting/key-sorting.component'
 import { KeyDetailComponent } from './key-detail/key-detail.component'
 import { KeyPresentationComponent } from './key-presentation/key-presentation.component'
 
+import { PiesTableComponent } from './pies-table/pies-table.component'
+import { PieSortingComponent } from './pie-sorting/pie-sorting.component'
+import { PieDetailComponent } from './pie-detail/pie-detail.component'
+import { PiePresentationComponent } from './pie-presentation/pie-presentation.component'
+
 import { SeriesTableComponent } from './series-table/series-table.component'
 import { SerieSortingComponent } from './serie-sorting/serie-sorting.component'
 import { SerieDetailComponent } from './serie-detail/serie-detail.component'
@@ -72,6 +77,11 @@ import { ValuePresentationComponent } from './value-presentation/value-presentat
 		KeySortingComponent,
 		KeyDetailComponent,
 		KeyPresentationComponent,
+
+		PiesTableComponent,
+		PieSortingComponent,
+		PieDetailComponent,
+		PiePresentationComponent,
 
 		SeriesTableComponent,
 		SerieSortingComponent,
@@ -131,6 +141,11 @@ import { ValuePresentationComponent } from './value-presentation/value-presentat
 		KeySortingComponent,
 		KeyDetailComponent,
 		KeyPresentationComponent,
+
+		PiesTableComponent,
+		PieSortingComponent,
+		PieDetailComponent,
+		PiePresentationComponent,
 
 		SeriesTableComponent,
 		SerieSortingComponent,

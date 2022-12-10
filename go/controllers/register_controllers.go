@@ -57,6 +57,13 @@ func RegisterControllers(r *gin.Engine) {
 		v1.PUT("/v1/keys/:id", UpdateKey)
 		v1.DELETE("/v1/keys/:id", DeleteKey)
 
+		v1.GET("/v1/pies", GetPies)
+		v1.GET("/v1/pies/:id", GetPie)
+		v1.POST("/v1/pies", PostPie)
+		v1.PATCH("/v1/pies/:id", UpdatePie)
+		v1.PUT("/v1/pies/:id", UpdatePie)
+		v1.DELETE("/v1/pies/:id", DeletePie)
+
 		v1.GET("/v1/series", GetSeries)
 		v1.GET("/v1/series/:id", GetSerie)
 		v1.POST("/v1/series", PostSerie)

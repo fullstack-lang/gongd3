@@ -2,16 +2,14 @@
 import { Component, OnInit } from '@angular/core';
 import { UntypedFormControl } from '@angular/forms';
 
-import { SerieDB } from '../serie-db'
-import { SerieService } from '../serie.service'
+import { PieDB } from '../pie-db'
+import { PieService } from '../pie.service'
 
 import { FrontRepoService, FrontRepo, SelectionMode, DialogData } from '../front-repo.service'
 import { MapOfComponents } from '../map-components'
 import { MapOfSortingComponents } from '../map-components'
 
 // insertion point for imports
-import { BarDB } from '../bar-db'
-import { PieDB } from '../pie-db'
 
 import { Router, RouterState, ActivatedRoute } from '@angular/router';
 
@@ -19,27 +17,25 @@ import { MatDialog, MAT_DIALOG_DATA, MatDialogRef, MatDialogConfig } from '@angu
 
 import { NullInt64 } from '../null-int64'
 
-// SerieDetailComponent is initilizaed from different routes
-// SerieDetailComponentState detail different cases 
-enum SerieDetailComponentState {
+// PieDetailComponent is initilizaed from different routes
+// PieDetailComponentState detail different cases 
+enum PieDetailComponentState {
 	CREATE_INSTANCE,
 	UPDATE_INSTANCE,
 	// insertion point for declarations of enum values of state
-	CREATE_INSTANCE_WITH_ASSOCIATION_Bar_Set_SET,
-	CREATE_INSTANCE_WITH_ASSOCIATION_Pie_Set_SET,
 }
 
 @Component({
-	selector: 'app-serie-detail',
-	templateUrl: './serie-detail.component.html',
-	styleUrls: ['./serie-detail.component.css'],
+	selector: 'app-pie-detail',
+	templateUrl: './pie-detail.component.html',
+	styleUrls: ['./pie-detail.component.css'],
 })
-export class SerieDetailComponent implements OnInit {
+export class PieDetailComponent implements OnInit {
 
 	// insertion point for declarations
 
-	// the SerieDB of interest
-	serie: SerieDB = new SerieDB
+	// the PieDB of interest
+	pie: PieDB = new PieDB
 
 	// front repo
 	frontRepo: FrontRepo = new FrontRepo
@@ -50,7 +46,7 @@ export class SerieDetailComponent implements OnInit {
 	mapFields_displayAsTextArea = new Map<string, boolean>()
 
 	// the state at initialization (CREATION, UPDATE or CREATE with one association set)
-	state: SerieDetailComponentState = SerieDetailComponentState.CREATE_INSTANCE
+	state: PieDetailComponentState = PieDetailComponentState.CREATE_INSTANCE
 
 	// in UDPATE state, if is the id of the instance to update
 	// in CREATE state with one association set, this is the id of the associated instance
@@ -61,7 +57,7 @@ export class SerieDetailComponent implements OnInit {
 	originStructFieldName: string = ""
 
 	constructor(
-		private serieService: SerieService,
+		private pieService: PieService,
 		private frontRepoService: FrontRepoService,
 		public dialog: MatDialog,
 		private route: ActivatedRoute,
@@ -78,34 +74,26 @@ export class SerieDetailComponent implements OnInit {
 
 		const association = this.route.snapshot.paramMap.get('association');
 		if (this.id == 0) {
-			this.state = SerieDetailComponentState.CREATE_INSTANCE
+			this.state = PieDetailComponentState.CREATE_INSTANCE
 		} else {
 			if (this.originStruct == undefined) {
-				this.state = SerieDetailComponentState.UPDATE_INSTANCE
+				this.state = PieDetailComponentState.UPDATE_INSTANCE
 			} else {
 				switch (this.originStructFieldName) {
 					// insertion point for state computation
-					case "Set":
-						// console.log("Serie" + " is instanciated with back pointer to instance " + this.id + " Bar association Set")
-						this.state = SerieDetailComponentState.CREATE_INSTANCE_WITH_ASSOCIATION_Bar_Set_SET
-						break;
-					case "Set":
-						// console.log("Serie" + " is instanciated with back pointer to instance " + this.id + " Pie association Set")
-						this.state = SerieDetailComponentState.CREATE_INSTANCE_WITH_ASSOCIATION_Pie_Set_SET
-						break;
 					default:
 						console.log(this.originStructFieldName + " is unkown association")
 				}
 			}
 		}
 
-		this.getSerie()
+		this.getPie()
 
 		// observable for changes in structs
-		this.serieService.SerieServiceChanged.subscribe(
+		this.pieService.PieServiceChanged.subscribe(
 			message => {
 				if (message == "post" || message == "update" || message == "delete") {
-					this.getSerie()
+					this.getPie()
 				}
 			}
 		)
@@ -113,30 +101,22 @@ export class SerieDetailComponent implements OnInit {
 		// insertion point for initialisation of enums list
 	}
 
-	getSerie(): void {
+	getPie(): void {
 
 		this.frontRepoService.pull().subscribe(
 			frontRepo => {
 				this.frontRepo = frontRepo
 
 				switch (this.state) {
-					case SerieDetailComponentState.CREATE_INSTANCE:
-						this.serie = new (SerieDB)
+					case PieDetailComponentState.CREATE_INSTANCE:
+						this.pie = new (PieDB)
 						break;
-					case SerieDetailComponentState.UPDATE_INSTANCE:
-						let serie = frontRepo.Series.get(this.id)
-						console.assert(serie != undefined, "missing serie with id:" + this.id)
-						this.serie = serie!
+					case PieDetailComponentState.UPDATE_INSTANCE:
+						let pie = frontRepo.Pies.get(this.id)
+						console.assert(pie != undefined, "missing pie with id:" + this.id)
+						this.pie = pie!
 						break;
 					// insertion point for init of association field
-					case SerieDetailComponentState.CREATE_INSTANCE_WITH_ASSOCIATION_Bar_Set_SET:
-						this.serie = new (SerieDB)
-						this.serie.Bar_Set_reverse = frontRepo.Bars.get(this.id)!
-						break;
-					case SerieDetailComponentState.CREATE_INSTANCE_WITH_ASSOCIATION_Pie_Set_SET:
-						this.serie = new (SerieDB)
-						this.serie.Pie_Set_reverse = frontRepo.Pies.get(this.id)!
-						break;
 					default:
 						console.log(this.state + " is unkown state")
 				}
@@ -154,56 +134,42 @@ export class SerieDetailComponent implements OnInit {
 		// pointers fields, after the translation, are nulled in order to perform serialization
 
 		// insertion point for translation/nullation of each field
-		if (this.serie.KeyID == undefined) {
-			this.serie.KeyID = new NullInt64
+		if (this.pie.XID == undefined) {
+			this.pie.XID = new NullInt64
 		}
-		if (this.serie.Key != undefined) {
-			this.serie.KeyID.Int64 = this.serie.Key.ID
-			this.serie.KeyID.Valid = true
+		if (this.pie.X != undefined) {
+			this.pie.XID.Int64 = this.pie.X.ID
+			this.pie.XID.Valid = true
 		} else {
-			this.serie.KeyID.Int64 = 0
-			this.serie.KeyID.Valid = true
+			this.pie.XID.Int64 = 0
+			this.pie.XID.Valid = true
+		}
+		if (this.pie.YID == undefined) {
+			this.pie.YID = new NullInt64
+		}
+		if (this.pie.Y != undefined) {
+			this.pie.YID.Int64 = this.pie.Y.ID
+			this.pie.YID.Valid = true
+		} else {
+			this.pie.YID.Int64 = 0
+			this.pie.YID.Valid = true
 		}
 
 		// save from the front pointer space to the non pointer space for serialization
 
 		// insertion point for translation/nullation of each pointers
-		if (this.serie.Bar_Set_reverse != undefined) {
-			if (this.serie.Bar_SetDBID == undefined) {
-				this.serie.Bar_SetDBID = new NullInt64
-			}
-			this.serie.Bar_SetDBID.Int64 = this.serie.Bar_Set_reverse.ID
-			this.serie.Bar_SetDBID.Valid = true
-			if (this.serie.Bar_SetDBID_Index == undefined) {
-				this.serie.Bar_SetDBID_Index = new NullInt64
-			}
-			this.serie.Bar_SetDBID_Index.Valid = true
-			this.serie.Bar_Set_reverse = new BarDB // very important, otherwise, circular JSON
-		}
-		if (this.serie.Pie_Set_reverse != undefined) {
-			if (this.serie.Pie_SetDBID == undefined) {
-				this.serie.Pie_SetDBID = new NullInt64
-			}
-			this.serie.Pie_SetDBID.Int64 = this.serie.Pie_Set_reverse.ID
-			this.serie.Pie_SetDBID.Valid = true
-			if (this.serie.Pie_SetDBID_Index == undefined) {
-				this.serie.Pie_SetDBID_Index = new NullInt64
-			}
-			this.serie.Pie_SetDBID_Index.Valid = true
-			this.serie.Pie_Set_reverse = new PieDB // very important, otherwise, circular JSON
-		}
 
 		switch (this.state) {
-			case SerieDetailComponentState.UPDATE_INSTANCE:
-				this.serieService.updateSerie(this.serie)
-					.subscribe(serie => {
-						this.serieService.SerieServiceChanged.next("update")
+			case PieDetailComponentState.UPDATE_INSTANCE:
+				this.pieService.updatePie(this.pie)
+					.subscribe(pie => {
+						this.pieService.PieServiceChanged.next("update")
 					});
 				break;
 			default:
-				this.serieService.postSerie(this.serie).subscribe(serie => {
-					this.serieService.SerieServiceChanged.next("post")
-					this.serie = new (SerieDB) // reset fields
+				this.pieService.postPie(this.pie).subscribe(pie => {
+					this.pieService.PieServiceChanged.next("post")
+					this.pie = new (PieDB) // reset fields
 				});
 		}
 	}
@@ -226,7 +192,7 @@ export class SerieDetailComponent implements OnInit {
 		dialogConfig.height = "50%"
 		if (selectionMode == SelectionMode.ONE_MANY_ASSOCIATION_MODE) {
 
-			dialogData.ID = this.serie.ID!
+			dialogData.ID = this.pie.ID!
 			dialogData.ReversePointer = reverseField
 			dialogData.OrderingMode = false
 			dialogData.SelectionMode = selectionMode
@@ -242,13 +208,13 @@ export class SerieDetailComponent implements OnInit {
 			});
 		}
 		if (selectionMode == SelectionMode.MANY_MANY_ASSOCIATION_MODE) {
-			dialogData.ID = this.serie.ID!
+			dialogData.ID = this.pie.ID!
 			dialogData.ReversePointer = reverseField
 			dialogData.OrderingMode = false
 			dialogData.SelectionMode = selectionMode
 
 			// set up the source
-			dialogData.SourceStruct = "Serie"
+			dialogData.SourceStruct = "Pie"
 			dialogData.SourceField = sourceField
 
 			// set up the intermediate struct
@@ -278,7 +244,7 @@ export class SerieDetailComponent implements OnInit {
 		// dialogConfig.disableClose = true;
 		dialogConfig.autoFocus = true;
 		dialogConfig.data = {
-			ID: this.serie.ID,
+			ID: this.pie.ID,
 			ReversePointer: reverseField,
 			OrderingMode: true,
 		};
@@ -294,8 +260,8 @@ export class SerieDetailComponent implements OnInit {
 	}
 
 	fillUpNameIfEmpty(event: { value: { Name: string; }; }) {
-		if (this.serie.Name == "") {
-			this.serie.Name = event.value.Name
+		if (this.pie.Name == "") {
+			this.pie.Name = event.value.Name
 		}
 	}
 

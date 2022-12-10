@@ -24,12 +24,15 @@ func stageInjection() {
 	// Declaration of instances to stage
 
 	// Declarations of staged instances of Bar
-	__Bar__000000_Stars_per_Framework := (&models.Bar{Name: `Stars per Framework`}).Stage()
+	__Bar__000000_Bar_Stars_per_Framework := (&models.Bar{Name: `Bar Stars per Framework`}).Stage()
 
 	// Declarations of staged instances of Key
-	__Key__000000_Framework2 := (&models.Key{Name: `Framework2`}).Stage()
+	__Key__000000_Framework := (&models.Key{Name: `Framework`}).Stage()
 	__Key__000001_Released := (&models.Key{Name: `Released`}).Stage()
-	__Key__000002_Stars2 := (&models.Key{Name: `Stars2`}).Stage()
+	__Key__000002_Stars := (&models.Key{Name: `Stars`}).Stage()
+
+	// Declarations of staged instances of Pie
+	__Pie__000000_Pie_Stars_per_Framework := (&models.Pie{Name: `Pie Stars per Framework`}).Stage()
 
 	// Declarations of staged instances of Serie
 	__Serie__000000_FrameworkSerie := (&models.Serie{Name: `FrameworkSerie`}).Stage()
@@ -56,19 +59,25 @@ func stageInjection() {
 	// Setup of values
 
 	// Bar values setup
-	__Bar__000000_Stars_per_Framework.Name = `Stars per Framework`
-	__Bar__000000_Stars_per_Framework.Width = 750.000000
-	__Bar__000000_Stars_per_Framework.Heigth = 500.000000
-	__Bar__000000_Stars_per_Framework.Margin = 50.000000
+	__Bar__000000_Bar_Stars_per_Framework.Name = `Bar Stars per Framework`
+	__Bar__000000_Bar_Stars_per_Framework.Width = 750.000000
+	__Bar__000000_Bar_Stars_per_Framework.Heigth = 500.000000
+	__Bar__000000_Bar_Stars_per_Framework.Margin = 50.000000
 
 	// Key values setup
-	__Key__000000_Framework2.Name = `Framework2`
+	__Key__000000_Framework.Name = `Framework`
 
 	// Key values setup
 	__Key__000001_Released.Name = `Released`
 
 	// Key values setup
-	__Key__000002_Stars2.Name = `Stars2`
+	__Key__000002_Stars.Name = `Stars`
+
+	// Pie values setup
+	__Pie__000000_Pie_Stars_per_Framework.Name = `Pie Stars per Framework`
+	__Pie__000000_Pie_Stars_per_Framework.Width = 750.000000
+	__Pie__000000_Pie_Stars_per_Framework.Heigth = 600.000000
+	__Pie__000000_Pie_Stars_per_Framework.Margin = 50.000000
 
 	// Serie values setup
 	__Serie__000000_FrameworkSerie.Name = `FrameworkSerie`
@@ -125,12 +134,17 @@ func stageInjection() {
 	__Value__000014_Vue.Name = `Vue`
 
 	// Setup of pointers
-	__Bar__000000_Stars_per_Framework.X = __Key__000000_Framework2
-	__Bar__000000_Stars_per_Framework.Y = __Key__000002_Stars2
-	__Bar__000000_Stars_per_Framework.Set = append(__Bar__000000_Stars_per_Framework.Set, __Serie__000002_Stars)
-	__Bar__000000_Stars_per_Framework.Set = append(__Bar__000000_Stars_per_Framework.Set, __Serie__000001_Released)
-	__Bar__000000_Stars_per_Framework.Set = append(__Bar__000000_Stars_per_Framework.Set, __Serie__000000_FrameworkSerie)
-	__Serie__000000_FrameworkSerie.Key = __Key__000000_Framework2
+	__Bar__000000_Bar_Stars_per_Framework.X = __Key__000000_Framework
+	__Bar__000000_Bar_Stars_per_Framework.Y = __Key__000002_Stars
+	__Bar__000000_Bar_Stars_per_Framework.Set = append(__Bar__000000_Bar_Stars_per_Framework.Set, __Serie__000002_Stars)
+	__Bar__000000_Bar_Stars_per_Framework.Set = append(__Bar__000000_Bar_Stars_per_Framework.Set, __Serie__000001_Released)
+	__Bar__000000_Bar_Stars_per_Framework.Set = append(__Bar__000000_Bar_Stars_per_Framework.Set, __Serie__000000_FrameworkSerie)
+	__Pie__000000_Pie_Stars_per_Framework.X = __Key__000000_Framework
+	__Pie__000000_Pie_Stars_per_Framework.Y = __Key__000002_Stars
+	__Pie__000000_Pie_Stars_per_Framework.Set = append(__Pie__000000_Pie_Stars_per_Framework.Set, __Serie__000001_Released)
+	__Pie__000000_Pie_Stars_per_Framework.Set = append(__Pie__000000_Pie_Stars_per_Framework.Set, __Serie__000002_Stars)
+	__Pie__000000_Pie_Stars_per_Framework.Set = append(__Pie__000000_Pie_Stars_per_Framework.Set, __Serie__000000_FrameworkSerie)
+	__Serie__000000_FrameworkSerie.Key = __Key__000000_Framework
 	__Serie__000000_FrameworkSerie.Values = append(__Serie__000000_FrameworkSerie.Values, __Value__000014_Vue)
 	__Serie__000000_FrameworkSerie.Values = append(__Serie__000000_FrameworkSerie.Values, __Value__000013_React)
 	__Serie__000000_FrameworkSerie.Values = append(__Serie__000000_FrameworkSerie.Values, __Value__000010_Angular)
@@ -142,7 +156,7 @@ func stageInjection() {
 	__Serie__000001_Released.Values = append(__Serie__000001_Released.Values, __Value__000006_2016)
 	__Serie__000001_Released.Values = append(__Serie__000001_Released.Values, __Value__000002_2010)
 	__Serie__000001_Released.Values = append(__Serie__000001_Released.Values, __Value__000003_2011)
-	__Serie__000002_Stars.Key = __Key__000002_Stars2
+	__Serie__000002_Stars.Key = __Key__000002_Stars
 	__Serie__000002_Stars.Values = append(__Serie__000002_Stars.Values, __Value__000001_166443)
 	__Serie__000002_Stars.Values = append(__Serie__000002_Stars.Values, __Value__000000_150793)
 	__Serie__000002_Stars.Values = append(__Serie__000002_Stars.Values, __Value__000009_62342)

@@ -114,6 +114,7 @@ var __gong__map_Indentifiers_gongstructName = make(map[string]string)
 // insertion point for identifiers maps
 var __gong__map_Bar = make(map[string]*Bar)
 var __gong__map_Key = make(map[string]*Key)
+var __gong__map_Pie = make(map[string]*Pie)
 var __gong__map_Serie = make(map[string]*Serie)
 var __gong__map_Value = make(map[string]*Value)
 
@@ -228,6 +229,10 @@ func UnmarshallGongstructStaging(assignStmt *ast.AssignStmt, astCoordinate_ stri
 										instanceKey := (&Key{Name: instanceName}).Stage()
 										instance = any(instanceKey)
 										__gong__map_Key[identifier] = instanceKey
+									case "Pie":
+										instancePie := (&Pie{Name: instanceName}).Stage()
+										instance = any(instancePie)
+										__gong__map_Pie[identifier] = instancePie
 									case "Serie":
 										instanceSerie := (&Serie{Name: instanceName}).Stage()
 										instance = any(instanceSerie)
@@ -280,6 +285,10 @@ func UnmarshallGongstructStaging(assignStmt *ast.AssignStmt, astCoordinate_ stri
 							switch fieldName {
 							// insertion point for date assign code
 							}
+						case "Pie":
+							switch fieldName {
+							// insertion point for date assign code
+							}
 						case "Serie":
 							switch fieldName {
 							// insertion point for date assign code
@@ -326,6 +335,16 @@ func UnmarshallGongstructStaging(assignStmt *ast.AssignStmt, astCoordinate_ stri
 					case "Key":
 						switch fieldName {
 						// insertion point for slice of pointers assign code
+						}
+					case "Pie":
+						switch fieldName {
+						// insertion point for slice of pointers assign code
+						case "Set":
+							// remove first and last char
+							targetIdentifier := ident.Name
+							target := __gong__map_Serie[targetIdentifier]
+							__gong__map_Pie[identifier].Set =
+								append(__gong__map_Pie[identifier].Set, target)
 						}
 					case "Serie":
 						switch fieldName {
@@ -409,6 +428,35 @@ func UnmarshallGongstructStaging(assignStmt *ast.AssignStmt, astCoordinate_ stri
 					fielValue := basicLit.Value[1 : len(basicLit.Value)-1]
 					__gong__map_Key[identifier].Name = fielValue
 				}
+			case "Pie":
+				switch fieldName {
+				// insertion point for field dependant code
+				case "Name":
+					// remove first and last char
+					fielValue := basicLit.Value[1 : len(basicLit.Value)-1]
+					__gong__map_Pie[identifier].Name = fielValue
+				case "Width":
+					// convert string to float64
+					fielValue, err := strconv.ParseFloat(basicLit.Value, 64)
+					if err != nil {
+						log.Fatalln(err)
+					}
+					__gong__map_Pie[identifier].Width = fielValue
+				case "Heigth":
+					// convert string to float64
+					fielValue, err := strconv.ParseFloat(basicLit.Value, 64)
+					if err != nil {
+						log.Fatalln(err)
+					}
+					__gong__map_Pie[identifier].Heigth = fielValue
+				case "Margin":
+					// convert string to float64
+					fielValue, err := strconv.ParseFloat(basicLit.Value, 64)
+					if err != nil {
+						log.Fatalln(err)
+					}
+					__gong__map_Pie[identifier].Margin = fielValue
+				}
 			case "Serie":
 				switch fieldName {
 				// insertion point for field dependant code
@@ -452,6 +500,16 @@ func UnmarshallGongstructStaging(assignStmt *ast.AssignStmt, astCoordinate_ stri
 			case "Key":
 				switch fieldName {
 				// insertion point for field dependant code
+				}
+			case "Pie":
+				switch fieldName {
+				// insertion point for field dependant code
+				case "X":
+					targetIdentifier := ident.Name
+					__gong__map_Pie[identifier].X = __gong__map_Key[targetIdentifier]
+				case "Y":
+					targetIdentifier := ident.Name
+					__gong__map_Pie[identifier].Y = __gong__map_Key[targetIdentifier]
 				}
 			case "Serie":
 				switch fieldName {
@@ -497,6 +555,10 @@ func UnmarshallGongstructStaging(assignStmt *ast.AssignStmt, astCoordinate_ stri
 					// insertion point for enum assign code
 					}
 				case "Key":
+					switch fieldName {
+					// insertion point for enum assign code
+					}
+				case "Pie":
 					switch fieldName {
 					// insertion point for enum assign code
 					}

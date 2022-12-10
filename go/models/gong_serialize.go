@@ -15,6 +15,7 @@ func SerializeStage(filename string) {
 		// insertion point
 		SerializeExcelize[Bar](f)
 		SerializeExcelize[Key](f)
+		SerializeExcelize[Pie](f)
 		SerializeExcelize[Serie](f)
 		SerializeExcelize[Value](f)
 	}

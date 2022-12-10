@@ -16,6 +16,7 @@ import { SerieDB } from './serie-db';
 // insertion point for imports
 import { KeyDB } from './key-db'
 import { BarDB } from './bar-db'
+import { PieDB } from './pie-db'
 
 @Injectable({
   providedIn: 'root'
@@ -76,11 +77,14 @@ export class SerieService {
     seriedb.Values = []
     let _Bar_Set_reverse = seriedb.Bar_Set_reverse
     seriedb.Bar_Set_reverse = new BarDB
+    let _Pie_Set_reverse = seriedb.Pie_Set_reverse
+    seriedb.Pie_Set_reverse = new PieDB
 
     return this.http.post<SerieDB>(this.seriesUrl, seriedb, this.httpOptions).pipe(
       tap(_ => {
         // insertion point for restoration of reverse pointers
         seriedb.Bar_Set_reverse = _Bar_Set_reverse
+        seriedb.Pie_Set_reverse = _Pie_Set_reverse
         this.log(`posted seriedb id=${seriedb.ID}`)
       }),
       catchError(this.handleError<SerieDB>('postSerie'))
@@ -108,11 +112,14 @@ export class SerieService {
     seriedb.Values = []
     let _Bar_Set_reverse = seriedb.Bar_Set_reverse
     seriedb.Bar_Set_reverse = new BarDB
+    let _Pie_Set_reverse = seriedb.Pie_Set_reverse
+    seriedb.Pie_Set_reverse = new PieDB
 
     return this.http.put<SerieDB>(url, seriedb, this.httpOptions).pipe(
       tap(_ => {
         // insertion point for restoration of reverse pointers
         seriedb.Bar_Set_reverse = _Bar_Set_reverse
+        seriedb.Pie_Set_reverse = _Pie_Set_reverse
         this.log(`updated seriedb id=${seriedb.ID}`)
       }),
       catchError(this.handleError<SerieDB>('updateSerie'))

@@ -14,8 +14,8 @@ import { SelectionModel } from '@angular/cdk/collections';
 const allowMultiSelect = true;
 
 import { Router, RouterState } from '@angular/router';
-import { SerieDB } from '../serie-db'
-import { SerieService } from '../serie.service'
+import { PieDB } from '../pie-db'
+import { PieService } from '../pie.service'
 
 // insertion point for additional imports
 
@@ -29,24 +29,24 @@ enum TableComponentMode {
 
 // generated table component
 @Component({
-  selector: 'app-seriestable',
-  templateUrl: './series-table.component.html',
-  styleUrls: ['./series-table.component.css'],
+  selector: 'app-piestable',
+  templateUrl: './pies-table.component.html',
+  styleUrls: ['./pies-table.component.css'],
 })
-export class SeriesTableComponent implements OnInit {
+export class PiesTableComponent implements OnInit {
 
   // mode at invocation
   mode: TableComponentMode = TableComponentMode.DISPLAY_MODE
 
-  // used if the component is called as a selection component of Serie instances
-  selection: SelectionModel<SerieDB> = new (SelectionModel)
-  initialSelection = new Array<SerieDB>()
+  // used if the component is called as a selection component of Pie instances
+  selection: SelectionModel<PieDB> = new (SelectionModel)
+  initialSelection = new Array<PieDB>()
 
   // the data source for the table
-  series: SerieDB[] = []
-  matTableDataSource: MatTableDataSource<SerieDB> = new (MatTableDataSource)
+  pies: PieDB[] = []
+  matTableDataSource: MatTableDataSource<PieDB> = new (MatTableDataSource)
 
-  // front repo, that will be referenced by this.series
+  // front repo, that will be referenced by this.pies
   frontRepo: FrontRepo = new (FrontRepo)
 
   // displayedColumns is referenced by the MatTable component for specify what columns
@@ -62,31 +62,29 @@ export class SeriesTableComponent implements OnInit {
   ngAfterViewInit() {
 
     // enable sorting on all fields (including pointers and reverse pointer)
-    this.matTableDataSource.sortingDataAccessor = (serieDB: SerieDB, property: string) => {
+    this.matTableDataSource.sortingDataAccessor = (pieDB: PieDB, property: string) => {
       switch (property) {
         case 'ID':
-          return serieDB.ID
+          return pieDB.ID
 
         // insertion point for specific sorting accessor
         case 'Name':
-          return serieDB.Name;
+          return pieDB.Name;
 
-        case 'Key':
-          return (serieDB.Key ? serieDB.Key.Name : '');
+        case 'X':
+          return (pieDB.X ? pieDB.X.Name : '');
 
-        case 'Bar_Set':
-          if (this.frontRepo.Bars.get(serieDB.Bar_SetDBID.Int64) != undefined) {
-            return this.frontRepo.Bars.get(serieDB.Bar_SetDBID.Int64)!.Name
-          } else {
-            return ""
-          }
+        case 'Y':
+          return (pieDB.Y ? pieDB.Y.Name : '');
 
-        case 'Pie_Set':
-          if (this.frontRepo.Pies.get(serieDB.Pie_SetDBID.Int64) != undefined) {
-            return this.frontRepo.Pies.get(serieDB.Pie_SetDBID.Int64)!.Name
-          } else {
-            return ""
-          }
+        case 'Width':
+          return pieDB.Width;
+
+        case 'Heigth':
+          return pieDB.Heigth;
+
+        case 'Margin':
+          return pieDB.Margin;
 
         default:
           console.assert(false, "Unknown field")
@@ -95,25 +93,23 @@ export class SeriesTableComponent implements OnInit {
     };
 
     // enable filtering on all fields (including pointers and reverse pointer, which is not done by default)
-    this.matTableDataSource.filterPredicate = (serieDB: SerieDB, filter: string) => {
+    this.matTableDataSource.filterPredicate = (pieDB: PieDB, filter: string) => {
 
       // filtering is based on finding a lower case filter into a concatenated string
-      // the serieDB properties
+      // the pieDB properties
       let mergedContent = ""
 
       // insertion point for merging of fields
-      mergedContent += serieDB.Name.toLowerCase()
-      if (serieDB.Key) {
-        mergedContent += serieDB.Key.Name.toLowerCase()
+      mergedContent += pieDB.Name.toLowerCase()
+      if (pieDB.X) {
+        mergedContent += pieDB.X.Name.toLowerCase()
       }
-      if (serieDB.Bar_SetDBID.Int64 != 0) {
-        mergedContent += this.frontRepo.Bars.get(serieDB.Bar_SetDBID.Int64)!.Name.toLowerCase()
+      if (pieDB.Y) {
+        mergedContent += pieDB.Y.Name.toLowerCase()
       }
-
-      if (serieDB.Pie_SetDBID.Int64 != 0) {
-        mergedContent += this.frontRepo.Pies.get(serieDB.Pie_SetDBID.Int64)!.Name.toLowerCase()
-      }
-
+      mergedContent += pieDB.Width.toString()
+      mergedContent += pieDB.Heigth.toString()
+      mergedContent += pieDB.Margin.toString()
 
       let isSelected = mergedContent.includes(filter.toLowerCase())
       return isSelected
@@ -129,11 +125,11 @@ export class SeriesTableComponent implements OnInit {
   }
 
   constructor(
-    private serieService: SerieService,
+    private pieService: PieService,
     private frontRepoService: FrontRepoService,
 
-    // not null if the component is called as a selection component of serie instances
-    public dialogRef: MatDialogRef<SeriesTableComponent>,
+    // not null if the component is called as a selection component of pie instances
+    public dialogRef: MatDialogRef<PiesTableComponent>,
     @Optional() @Inject(MAT_DIALOG_DATA) public dialogData: DialogData,
 
     private router: Router,
@@ -155,118 +151,122 @@ export class SeriesTableComponent implements OnInit {
     }
 
     // observable for changes in structs
-    this.serieService.SerieServiceChanged.subscribe(
+    this.pieService.PieServiceChanged.subscribe(
       message => {
         if (message == "post" || message == "update" || message == "delete") {
-          this.getSeries()
+          this.getPies()
         }
       }
     )
     if (this.mode == TableComponentMode.DISPLAY_MODE) {
       this.displayedColumns = ['ID', 'Edit', 'Delete', // insertion point for columns to display
         "Name",
-        "Key",
-        "Bar_Set",
-        "Pie_Set",
+        "X",
+        "Y",
+        "Width",
+        "Heigth",
+        "Margin",
       ]
     } else {
       this.displayedColumns = ['select', 'ID', // insertion point for columns to display
         "Name",
-        "Key",
-        "Bar_Set",
-        "Pie_Set",
+        "X",
+        "Y",
+        "Width",
+        "Heigth",
+        "Margin",
       ]
-      this.selection = new SelectionModel<SerieDB>(allowMultiSelect, this.initialSelection);
+      this.selection = new SelectionModel<PieDB>(allowMultiSelect, this.initialSelection);
     }
 
   }
 
   ngOnInit(): void {
-    this.getSeries()
-    this.matTableDataSource = new MatTableDataSource(this.series)
+    this.getPies()
+    this.matTableDataSource = new MatTableDataSource(this.pies)
   }
 
-  getSeries(): void {
+  getPies(): void {
     this.frontRepoService.pull().subscribe(
       frontRepo => {
         this.frontRepo = frontRepo
 
-        this.series = this.frontRepo.Series_array;
+        this.pies = this.frontRepo.Pies_array;
 
         // insertion point for time duration Recoveries
         // insertion point for enum int Recoveries
         
         // in case the component is called as a selection component
         if (this.mode == TableComponentMode.ONE_MANY_ASSOCIATION_MODE) {
-          for (let serie of this.series) {
+          for (let pie of this.pies) {
             let ID = this.dialogData.ID
-            let revPointer = serie[this.dialogData.ReversePointer as keyof SerieDB] as unknown as NullInt64
+            let revPointer = pie[this.dialogData.ReversePointer as keyof PieDB] as unknown as NullInt64
             if (revPointer.Int64 == ID) {
-              this.initialSelection.push(serie)
+              this.initialSelection.push(pie)
             }
-            this.selection = new SelectionModel<SerieDB>(allowMultiSelect, this.initialSelection);
+            this.selection = new SelectionModel<PieDB>(allowMultiSelect, this.initialSelection);
           }
         }
 
         if (this.mode == TableComponentMode.MANY_MANY_ASSOCIATION_MODE) {
 
-          let mapOfSourceInstances = this.frontRepo[this.dialogData.SourceStruct + "s" as keyof FrontRepo] as Map<number, SerieDB>
+          let mapOfSourceInstances = this.frontRepo[this.dialogData.SourceStruct + "s" as keyof FrontRepo] as Map<number, PieDB>
           let sourceInstance = mapOfSourceInstances.get(this.dialogData.ID)!
 
-          let sourceField = sourceInstance[this.dialogData.SourceField as keyof typeof sourceInstance]! as unknown as SerieDB[]
+          let sourceField = sourceInstance[this.dialogData.SourceField as keyof typeof sourceInstance]! as unknown as PieDB[]
           for (let associationInstance of sourceField) {
-            let serie = associationInstance[this.dialogData.IntermediateStructField as keyof typeof associationInstance] as unknown as SerieDB
-            this.initialSelection.push(serie)
+            let pie = associationInstance[this.dialogData.IntermediateStructField as keyof typeof associationInstance] as unknown as PieDB
+            this.initialSelection.push(pie)
           }
 
-          this.selection = new SelectionModel<SerieDB>(allowMultiSelect, this.initialSelection);
+          this.selection = new SelectionModel<PieDB>(allowMultiSelect, this.initialSelection);
         }
 
         // update the mat table data source
-        this.matTableDataSource.data = this.series
+        this.matTableDataSource.data = this.pies
       }
     )
   }
 
-  // newSerie initiate a new serie
-  // create a new Serie objet
-  newSerie() {
+  // newPie initiate a new pie
+  // create a new Pie objet
+  newPie() {
   }
 
-  deleteSerie(serieID: number, serie: SerieDB) {
-    // list of series is truncated of serie before the delete
-    this.series = this.series.filter(h => h !== serie);
+  deletePie(pieID: number, pie: PieDB) {
+    // list of pies is truncated of pie before the delete
+    this.pies = this.pies.filter(h => h !== pie);
 
-    this.serieService.deleteSerie(serieID).subscribe(
-      serie => {
-        this.serieService.SerieServiceChanged.next("delete")
+    this.pieService.deletePie(pieID).subscribe(
+      pie => {
+        this.pieService.PieServiceChanged.next("delete")
       }
     );
   }
 
-  editSerie(serieID: number, serie: SerieDB) {
+  editPie(pieID: number, pie: PieDB) {
 
   }
 
-  // display serie in router
-  displaySerieInRouter(serieID: number) {
-    this.router.navigate(["gongd3_go-" + "serie-display", serieID])
+  // display pie in router
+  displayPieInRouter(pieID: number) {
+    this.router.navigate(["gongd3_go-" + "pie-display", pieID])
   }
 
   // set editor outlet
-  setEditorRouterOutlet(serieID: number) {
+  setEditorRouterOutlet(pieID: number) {
     this.router.navigate([{
       outlets: {
-        gongd3_go_editor: ["gongd3_go-" + "serie-detail", serieID]
+        gongd3_go_editor: ["gongd3_go-" + "pie-detail", pieID]
       }
     }]);
   }
 
   // set presentation outlet
-  setPresentationRouterOutlet(serieID: number) {
+  setPresentationRouterOutlet(pieID: number) {
     this.router.navigate([{
       outlets: {
-        gongd3_go_presentation: ["gongd3_go-" + "serie-presentation", serieID]
+        gongd3_go_presentation: ["gongd3_go-" + "pie-presentation", pieID]
       }
     }]);
   }
@@ -274,7 +274,7 @@ export class SeriesTableComponent implements OnInit {
   /** Whether the number of selected elements matches the total number of rows. */
   isAllSelected() {
     const numSelected = this.selection.selected.length;
-    const numRows = this.series.length;
+    const numRows = this.pies.length;
     return numSelected === numRows;
   }
 
@@ -282,39 +282,39 @@ export class SeriesTableComponent implements OnInit {
   masterToggle() {
     this.isAllSelected() ?
       this.selection.clear() :
-      this.series.forEach(row => this.selection.select(row));
+      this.pies.forEach(row => this.selection.select(row));
   }
 
   save() {
 
     if (this.mode == TableComponentMode.ONE_MANY_ASSOCIATION_MODE) {
 
-      let toUpdate = new Set<SerieDB>()
+      let toUpdate = new Set<PieDB>()
 
-      // reset all initial selection of serie that belong to serie
-      for (let serie of this.initialSelection) {
-        let index = serie[this.dialogData.ReversePointer as keyof SerieDB] as unknown as NullInt64
+      // reset all initial selection of pie that belong to pie
+      for (let pie of this.initialSelection) {
+        let index = pie[this.dialogData.ReversePointer as keyof PieDB] as unknown as NullInt64
         index.Int64 = 0
         index.Valid = true
-        toUpdate.add(serie)
+        toUpdate.add(pie)
 
       }
 
-      // from selection, set serie that belong to serie
-      for (let serie of this.selection.selected) {
+      // from selection, set pie that belong to pie
+      for (let pie of this.selection.selected) {
         let ID = this.dialogData.ID as number
-        let reversePointer = serie[this.dialogData.ReversePointer as keyof SerieDB] as unknown as NullInt64
+        let reversePointer = pie[this.dialogData.ReversePointer as keyof PieDB] as unknown as NullInt64
         reversePointer.Int64 = ID
         reversePointer.Valid = true
-        toUpdate.add(serie)
+        toUpdate.add(pie)
       }
 
 
-      // update all serie (only update selection & initial selection)
-      for (let serie of toUpdate) {
-        this.serieService.updateSerie(serie)
-          .subscribe(serie => {
-            this.serieService.SerieServiceChanged.next("update")
+      // update all pie (only update selection & initial selection)
+      for (let pie of toUpdate) {
+        this.pieService.updatePie(pie)
+          .subscribe(pie => {
+            this.pieService.PieServiceChanged.next("update")
           });
       }
     }
@@ -322,26 +322,26 @@ export class SeriesTableComponent implements OnInit {
     if (this.mode == TableComponentMode.MANY_MANY_ASSOCIATION_MODE) {
 
       // get the source instance via the map of instances in the front repo
-      let mapOfSourceInstances = this.frontRepo[this.dialogData.SourceStruct + "s" as keyof FrontRepo] as Map<number, SerieDB>
+      let mapOfSourceInstances = this.frontRepo[this.dialogData.SourceStruct + "s" as keyof FrontRepo] as Map<number, PieDB>
       let sourceInstance = mapOfSourceInstances.get(this.dialogData.ID)!
 
       // First, parse all instance of the association struct and remove the instance
       // that have unselect
-      let unselectedSerie = new Set<number>()
-      for (let serie of this.initialSelection) {
-        if (this.selection.selected.includes(serie)) {
-          // console.log("serie " + serie.Name + " is still selected")
+      let unselectedPie = new Set<number>()
+      for (let pie of this.initialSelection) {
+        if (this.selection.selected.includes(pie)) {
+          // console.log("pie " + pie.Name + " is still selected")
         } else {
-          console.log("serie " + serie.Name + " has been unselected")
-          unselectedSerie.add(serie.ID)
-          console.log("is unselected " + unselectedSerie.has(serie.ID))
+          console.log("pie " + pie.Name + " has been unselected")
+          unselectedPie.add(pie.ID)
+          console.log("is unselected " + unselectedPie.has(pie.ID))
         }
       }
 
       // delete the association instance
       let associationInstance = sourceInstance[this.dialogData.SourceField as keyof typeof sourceInstance]
-      let serie = associationInstance![this.dialogData.IntermediateStructField as keyof typeof associationInstance] as unknown as SerieDB
-      if (unselectedSerie.has(serie.ID)) {
+      let pie = associationInstance![this.dialogData.IntermediateStructField as keyof typeof associationInstance] as unknown as PieDB
+      if (unselectedPie.has(pie.ID)) {
         this.frontRepoService.deleteService(this.dialogData.IntermediateStruct, associationInstance)
 
 
@@ -349,38 +349,38 @@ export class SeriesTableComponent implements OnInit {
 
       // is the source array is empty create it
       if (sourceInstance[this.dialogData.SourceField as keyof typeof sourceInstance] == undefined) {
-        (sourceInstance[this.dialogData.SourceField as keyof typeof sourceInstance] as unknown as Array<SerieDB>) = new Array<SerieDB>()
+        (sourceInstance[this.dialogData.SourceField as keyof typeof sourceInstance] as unknown as Array<PieDB>) = new Array<PieDB>()
       }
 
       // second, parse all instance of the selected
       if (sourceInstance[this.dialogData.SourceField as keyof typeof sourceInstance]) {
         this.selection.selected.forEach(
-          serie => {
-            if (!this.initialSelection.includes(serie)) {
-              // console.log("serie " + serie.Name + " has been added to the selection")
+          pie => {
+            if (!this.initialSelection.includes(pie)) {
+              // console.log("pie " + pie.Name + " has been added to the selection")
 
               let associationInstance = {
-                Name: sourceInstance["Name"] + "-" + serie.Name,
+                Name: sourceInstance["Name"] + "-" + pie.Name,
               }
 
               let index = associationInstance[this.dialogData.IntermediateStructField + "ID" as keyof typeof associationInstance] as unknown as NullInt64
-              index.Int64 = serie.ID
+              index.Int64 = pie.ID
               index.Valid = true
 
               let indexDB = associationInstance[this.dialogData.IntermediateStructField + "DBID" as keyof typeof associationInstance] as unknown as NullInt64
-              indexDB.Int64 = serie.ID
+              indexDB.Int64 = pie.ID
               index.Valid = true
 
               this.frontRepoService.postService(this.dialogData.IntermediateStruct, associationInstance)
 
             } else {
-              // console.log("serie " + serie.Name + " is still selected")
+              // console.log("pie " + pie.Name + " is still selected")
             }
           }
         )
       }
 
-      // this.selection = new SelectionModel<SerieDB>(allowMultiSelect, this.initialSelection);
+      // this.selection = new SelectionModel<PieDB>(allowMultiSelect, this.initialSelection);
     }
 
     // why pizza ?

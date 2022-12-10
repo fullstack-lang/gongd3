@@ -10,6 +10,9 @@ import { BarService } from './bar.service'
 import { KeyDB } from './key-db'
 import { KeyService } from './key.service'
 
+import { PieDB } from './pie-db'
+import { PieService } from './pie.service'
+
 import { SerieDB } from './serie-db'
 import { SerieService } from './serie.service'
 
@@ -25,6 +28,9 @@ export class FrontRepo { // insertion point sub template
   Keys_array = new Array<KeyDB>(); // array of repo instances
   Keys = new Map<number, KeyDB>(); // map of repo instances
   Keys_batch = new Map<number, KeyDB>(); // same but only in last GET (for finding repo instances to delete)
+  Pies_array = new Array<PieDB>(); // array of repo instances
+  Pies = new Map<number, PieDB>(); // map of repo instances
+  Pies_batch = new Map<number, PieDB>(); // same but only in last GET (for finding repo instances to delete)
   Series_array = new Array<SerieDB>(); // array of repo instances
   Series = new Map<number, SerieDB>(); // map of repo instances
   Series_batch = new Map<number, SerieDB>(); // same but only in last GET (for finding repo instances to delete)
@@ -91,6 +97,7 @@ export class FrontRepoService {
     private http: HttpClient, // insertion point sub template 
     private barService: BarService,
     private keyService: KeyService,
+    private pieService: PieService,
     private serieService: SerieService,
     private valueService: ValueService,
   ) { }
@@ -125,11 +132,13 @@ export class FrontRepoService {
   observableFrontRepo: [ // insertion point sub template 
     Observable<BarDB[]>,
     Observable<KeyDB[]>,
+    Observable<PieDB[]>,
     Observable<SerieDB[]>,
     Observable<ValueDB[]>,
   ] = [ // insertion point sub template 
       this.barService.getBars(),
       this.keyService.getKeys(),
+      this.pieService.getPies(),
       this.serieService.getSeries(),
       this.valueService.getValues(),
     ];
@@ -149,6 +158,7 @@ export class FrontRepoService {
           ([ // insertion point sub template for declarations 
             bars_,
             keys_,
+            pies_,
             series_,
             values_,
           ]) => {
@@ -158,6 +168,8 @@ export class FrontRepoService {
             bars = bars_ as BarDB[]
             var keys: KeyDB[]
             keys = keys_ as KeyDB[]
+            var pies: PieDB[]
+            pies = pies_ as PieDB[]
             var series: SerieDB[]
             series = series_ as SerieDB[]
             var values: ValueDB[]
@@ -223,6 +235,39 @@ export class FrontRepoService {
 
             // sort Keys_array array
             FrontRepoSingloton.Keys_array.sort((t1, t2) => {
+              if (t1.Name > t2.Name) {
+                return 1;
+              }
+              if (t1.Name < t2.Name) {
+                return -1;
+              }
+              return 0;
+            });
+
+            // init the array
+            FrontRepoSingloton.Pies_array = pies
+
+            // clear the map that counts Pie in the GET
+            FrontRepoSingloton.Pies_batch.clear()
+
+            pies.forEach(
+              pie => {
+                FrontRepoSingloton.Pies.set(pie.ID, pie)
+                FrontRepoSingloton.Pies_batch.set(pie.ID, pie)
+              }
+            )
+
+            // clear pies that are absent from the batch
+            FrontRepoSingloton.Pies.forEach(
+              pie => {
+                if (FrontRepoSingloton.Pies_batch.get(pie.ID) == undefined) {
+                  FrontRepoSingloton.Pies.delete(pie.ID)
+                }
+              }
+            )
+
+            // sort Pies_array array
+            FrontRepoSingloton.Pies_array.sort((t1, t2) => {
               if (t1.Name > t2.Name) {
                 return 1;
               }
@@ -330,6 +375,27 @@ export class FrontRepoService {
                 // insertion point for redeeming ONE-MANY associations
               }
             )
+            pies.forEach(
+              pie => {
+                // insertion point sub sub template for ONE-/ZERO-ONE associations pointers redeeming
+                // insertion point for pointer field X redeeming
+                {
+                  let _key = FrontRepoSingloton.Keys.get(pie.XID.Int64)
+                  if (_key) {
+                    pie.X = _key
+                  }
+                }
+                // insertion point for pointer field Y redeeming
+                {
+                  let _key = FrontRepoSingloton.Keys.get(pie.YID.Int64)
+                  if (_key) {
+                    pie.Y = _key
+                  }
+                }
+
+                // insertion point for redeeming ONE-MANY associations
+              }
+            )
             series.forEach(
               serie => {
                 // insertion point sub sub template for ONE-/ZERO-ONE associations pointers redeeming
@@ -352,6 +418,19 @@ export class FrontRepoService {
                     _bar.Set.push(serie)
                     if (serie.Bar_Set_reverse == undefined) {
                       serie.Bar_Set_reverse = _bar
+                    }
+                  }
+                }
+                // insertion point for slice of pointer field Pie.Set redeeming
+                {
+                  let _pie = FrontRepoSingloton.Pies.get(serie.Pie_SetDBID.Int64)
+                  if (_pie) {
+                    if (_pie.Set == undefined) {
+                      _pie.Set = new Array<SerieDB>()
+                    }
+                    _pie.Set.push(serie)
+                    if (serie.Pie_Set_reverse == undefined) {
+                      serie.Pie_Set_reverse = _pie
                     }
                   }
                 }
@@ -504,6 +583,71 @@ export class FrontRepoService {
     )
   }
 
+  // PiePull performs a GET on Pie of the stack and redeem association pointers 
+  PiePull(): Observable<FrontRepo> {
+    return new Observable<FrontRepo>(
+      (observer) => {
+        combineLatest([
+          this.pieService.getPies()
+        ]).subscribe(
+          ([ // insertion point sub template 
+            pies,
+          ]) => {
+            // init the array
+            FrontRepoSingloton.Pies_array = pies
+
+            // clear the map that counts Pie in the GET
+            FrontRepoSingloton.Pies_batch.clear()
+
+            // 
+            // First Step: init map of instances
+            // insertion point sub template 
+            pies.forEach(
+              pie => {
+                FrontRepoSingloton.Pies.set(pie.ID, pie)
+                FrontRepoSingloton.Pies_batch.set(pie.ID, pie)
+
+                // insertion point for redeeming ONE/ZERO-ONE associations
+                // insertion point for pointer field X redeeming
+                {
+                  let _key = FrontRepoSingloton.Keys.get(pie.XID.Int64)
+                  if (_key) {
+                    pie.X = _key
+                  }
+                }
+                // insertion point for pointer field Y redeeming
+                {
+                  let _key = FrontRepoSingloton.Keys.get(pie.YID.Int64)
+                  if (_key) {
+                    pie.Y = _key
+                  }
+                }
+
+                // insertion point for redeeming ONE-MANY associations
+              }
+            )
+
+            // clear pies that are absent from the GET
+            FrontRepoSingloton.Pies.forEach(
+              pie => {
+                if (FrontRepoSingloton.Pies_batch.get(pie.ID) == undefined) {
+                  FrontRepoSingloton.Pies.delete(pie.ID)
+                }
+              }
+            )
+
+            // 
+            // Second Step: redeem pointers between instances (thanks to maps in the First Step)
+            // insertion point sub template 
+
+            // hand over control flow to observer
+            observer.next(FrontRepoSingloton)
+          }
+        )
+      }
+    )
+  }
+
   // SeriePull performs a GET on Serie of the stack and redeem association pointers 
   SeriePull(): Observable<FrontRepo> {
     return new Observable<FrontRepo>(
@@ -548,6 +692,19 @@ export class FrontRepoService {
                     _bar.Set.push(serie)
                     if (serie.Bar_Set_reverse == undefined) {
                       serie.Bar_Set_reverse = _bar
+                    }
+                  }
+                }
+                // insertion point for slice of pointer field Pie.Set redeeming
+                {
+                  let _pie = FrontRepoSingloton.Pies.get(serie.Pie_SetDBID.Int64)
+                  if (_pie) {
+                    if (_pie.Set == undefined) {
+                      _pie.Set = new Array<SerieDB>()
+                    }
+                    _pie.Set.push(serie)
+                    if (serie.Pie_Set_reverse == undefined) {
+                      serie.Pie_Set_reverse = _pie
                     }
                   }
                 }
@@ -647,9 +804,12 @@ export function getBarUniqueID(id: number): number {
 export function getKeyUniqueID(id: number): number {
   return 37 * id
 }
-export function getSerieUniqueID(id: number): number {
+export function getPieUniqueID(id: number): number {
   return 41 * id
 }
-export function getValueUniqueID(id: number): number {
+export function getSerieUniqueID(id: number): number {
   return 43 * id
+}
+export function getValueUniqueID(id: number): number {
+  return 47 * id
 }

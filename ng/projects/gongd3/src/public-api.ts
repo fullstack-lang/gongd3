@@ -29,6 +29,13 @@ export * from './lib/keys-table/keys-table.component'
 export * from './lib/key-db'
 export * from './lib/key.service'
 
+export * from './lib/pie-detail/pie-detail.component'
+export * from './lib/pie-presentation/pie-presentation.component'
+export * from './lib/pie-sorting/pie-sorting.component'
+export * from './lib/pies-table/pies-table.component'
+export * from './lib/pie-db'
+export * from './lib/pie.service'
+
 export * from './lib/serie-detail/serie-detail.component'
 export * from './lib/serie-presentation/serie-presentation.component'
 export * from './lib/serie-sorting/serie-sorting.component'

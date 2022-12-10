@@ -10,6 +10,10 @@ import { KeysTableComponent } from './keys-table/keys-table.component'
 import { KeyDetailComponent } from './key-detail/key-detail.component'
 import { KeyPresentationComponent } from './key-presentation/key-presentation.component'
 
+import { PiesTableComponent } from './pies-table/pies-table.component'
+import { PieDetailComponent } from './pie-detail/pie-detail.component'
+import { PiePresentationComponent } from './pie-presentation/pie-presentation.component'
+
 import { SeriesTableComponent } from './series-table/series-table.component'
 import { SerieDetailComponent } from './serie-detail/serie-detail.component'
 import { SeriePresentationComponent } from './serie-presentation/serie-presentation.component'
@@ -33,6 +37,13 @@ const routes: Routes = [ // insertion point for routes declarations
 	{ path: 'gongd3_go-key-detail/:id', component: KeyDetailComponent, outlet: 'gongd3_go_editor' },
 	{ path: 'gongd3_go-key-presentation/:id', component: KeyPresentationComponent, outlet: 'gongd3_go_presentation' },
 	{ path: 'gongd3_go-key-presentation-special/:id', component: KeyPresentationComponent, outlet: 'gongd3_gokeypres' },
+
+	{ path: 'gongd3_go-pies', component: PiesTableComponent, outlet: 'gongd3_go_table' },
+	{ path: 'gongd3_go-pie-adder', component: PieDetailComponent, outlet: 'gongd3_go_editor' },
+	{ path: 'gongd3_go-pie-adder/:id/:originStruct/:originStructFieldName', component: PieDetailComponent, outlet: 'gongd3_go_editor' },
+	{ path: 'gongd3_go-pie-detail/:id', component: PieDetailComponent, outlet: 'gongd3_go_editor' },
+	{ path: 'gongd3_go-pie-presentation/:id', component: PiePresentationComponent, outlet: 'gongd3_go_presentation' },
+	{ path: 'gongd3_go-pie-presentation-special/:id', component: PiePresentationComponent, outlet: 'gongd3_gopiepres' },
 
 	{ path: 'gongd3_go-series', component: SeriesTableComponent, outlet: 'gongd3_go_table' },
 	{ path: 'gongd3_go-serie-adder', component: SerieDetailComponent, outlet: 'gongd3_go_editor' },
