@@ -24,13 +24,7 @@ export class PieComponent implements OnInit {
   private x_serieName: string = ""
   private y_serieName: string = ""
 
-  private data = [
-    { "Framework": "Vue", "Stars": "166443", "Released": "2014" },
-    { "Framework": "React", "Stars": "150793", "Released": "2013" },
-    { "Framework": "Angular", "Stars": "62342", "Released": "2016" },
-    { "Framework": "Backbone", "Stars": "27647", "Released": "2010" },
-    { "Framework": "Ember", "Stars": "21471", "Released": "2011" },
-  ];
+  private data = new Array<any>()
   private svg: any;
   private margin = 50;
   private width = 750;
@@ -145,7 +139,11 @@ export class PieComponent implements OnInit {
   }
   private createColors(): void {
     this.colors = d3.scaleOrdinal()
-      .domain(this.data.map(d => d.Stars.toString()))
+      .domain(this.data.map(
+
+        d => d[this.y_serieName].toString()
+
+      ))
       .range(["#c7d3ec", "#a5b8db", "#879cc4", "#677795", "#5a6782"]);
   }
 
@@ -154,9 +152,10 @@ export class PieComponent implements OnInit {
     const pie = d3.pie<any>().value((d: any) => Number(d[this.y_serieName]));
 
     // Build the pie chart
+    let pieD3 = pie(this.data)
     this.svg
       .selectAll('pieces')
-      .data(pie(this.data))
+      .data(pieD3)
       .enter()
       .append('path')
       .attr('d', d3.arc()
@@ -174,7 +173,7 @@ export class PieComponent implements OnInit {
 
     this.svg
       .selectAll('pieces')
-      .data(pie(this.data))
+      .data(pieD3)
       .enter()
       .append('text')
       .text((d: any) => d.data[this.x_serieName])
