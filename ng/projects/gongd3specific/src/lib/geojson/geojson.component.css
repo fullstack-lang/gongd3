@@ -1,0 +1,9 @@
+p {
+    font-family: Lato;
+}
+
+#map {
+    max-width: 1000px;
+    margin: 2%;
+    padding: 20px;
+}

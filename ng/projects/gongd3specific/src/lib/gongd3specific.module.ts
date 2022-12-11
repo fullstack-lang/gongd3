@@ -3,6 +3,7 @@ import { Gongd3specificComponent } from './gongd3specific.component';
 import { BarComponent } from './bar/bar.component';
 import { PieComponent } from './pie/pie.component';
 import { ScatterComponent } from './scatter/scatter.component';
+import { GeojsonComponent } from './geojson/geojson.component';
 
 
 
@@ -11,7 +12,8 @@ import { ScatterComponent } from './scatter/scatter.component';
     Gongd3specificComponent,
     BarComponent,
     PieComponent,
-    ScatterComponent
+    ScatterComponent,
+    GeojsonComponent
   ],
   imports: [
   ],
@@ -19,7 +21,8 @@ import { ScatterComponent } from './scatter/scatter.component';
     Gongd3specificComponent,
     BarComponent,
     PieComponent,
-    ScatterComponent
+    ScatterComponent,
+    GeojsonComponent
   ]
 })
 export class Gongd3specificModule { }
