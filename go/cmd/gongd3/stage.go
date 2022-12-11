@@ -25,7 +25,7 @@ func stageInjection() {
 
 	// Declarations of staged instances of Bar
 	__Bar__000000_Bar_Stars_per_Framework := (&models.Bar{Name: `Bar Stars per Framework`}).Stage()
-	__Bar__000001_Default := (&models.Bar{Name: `Default`}).Stage()
+	__Bar__000001_Random_X_Y := (&models.Bar{Name: `Random X & Y`}).Stage()
 
 	// Declarations of staged instances of Key
 	__Key__000000_Framework_not_hardcoded := (&models.Key{Name: `Framework not hardcoded`}).Stage()
@@ -91,20 +91,20 @@ func stageInjection() {
 	__Bar__000000_Bar_Stars_per_Framework.Margin = 100.000000
 
 	// Bar values setup
-	__Bar__000001_Default.Name = `Default`
-	__Bar__000001_Default.AutoDomainX = false
-	__Bar__000001_Default.XMin = 100.000000
-	__Bar__000001_Default.XMax = 230.000000
-	__Bar__000001_Default.AutoDomainY = false
-	__Bar__000001_Default.YMin = 15.000000
-	__Bar__000001_Default.YMax = 35.000000
-	__Bar__000001_Default.YLabelPresent = false
-	__Bar__000001_Default.YLabelOffset = 0.000000
-	__Bar__000001_Default.XLabelPresent = false
-	__Bar__000001_Default.XLabelOffset = 0.000000
-	__Bar__000001_Default.Width = 750.000000
-	__Bar__000001_Default.Heigth = 500.000000
-	__Bar__000001_Default.Margin = 50.000000
+	__Bar__000001_Random_X_Y.Name = `Random X & Y`
+	__Bar__000001_Random_X_Y.AutoDomainX = false
+	__Bar__000001_Random_X_Y.XMin = 100.000000
+	__Bar__000001_Random_X_Y.XMax = 230.000000
+	__Bar__000001_Random_X_Y.AutoDomainY = false
+	__Bar__000001_Random_X_Y.YMin = 15.000000
+	__Bar__000001_Random_X_Y.YMax = 35.000000
+	__Bar__000001_Random_X_Y.YLabelPresent = false
+	__Bar__000001_Random_X_Y.YLabelOffset = 0.000000
+	__Bar__000001_Random_X_Y.XLabelPresent = false
+	__Bar__000001_Random_X_Y.XLabelOffset = 0.000000
+	__Bar__000001_Random_X_Y.Width = 750.000000
+	__Bar__000001_Random_X_Y.Heigth = 500.000000
+	__Bar__000001_Random_X_Y.Margin = 50.000000
 
 	// Key values setup
 	__Key__000000_Framework_not_hardcoded.Name = `Framework not hardcoded`
@@ -223,10 +223,10 @@ func stageInjection() {
 	__Bar__000000_Bar_Stars_per_Framework.Set = append(__Bar__000000_Bar_Stars_per_Framework.Set, __Serie__000002_Stars)
 	__Bar__000000_Bar_Stars_per_Framework.Set = append(__Bar__000000_Bar_Stars_per_Framework.Set, __Serie__000001_Released)
 	__Bar__000000_Bar_Stars_per_Framework.Set = append(__Bar__000000_Bar_Stars_per_Framework.Set, __Serie__000000_FrameworkSerie)
-	__Bar__000001_Default.X = __Key__000003_X
-	__Bar__000001_Default.Y = __Key__000004_Y
-	__Bar__000001_Default.Set = append(__Bar__000001_Default.Set, __Serie__000003_XSerie)
-	__Bar__000001_Default.Set = append(__Bar__000001_Default.Set, __Serie__000004_YSerie)
+	__Bar__000001_Random_X_Y.X = __Key__000003_X
+	__Bar__000001_Random_X_Y.Y = __Key__000004_Y
+	__Bar__000001_Random_X_Y.Set = append(__Bar__000001_Random_X_Y.Set, __Serie__000003_XSerie)
+	__Bar__000001_Random_X_Y.Set = append(__Bar__000001_Random_X_Y.Set, __Serie__000004_YSerie)
 	__Pie__000000_Pie_Stars_per_Framework.X = __Key__000000_Framework_not_hardcoded
 	__Pie__000000_Pie_Stars_per_Framework.Y = __Key__000002_Stars_not_hardcoded
 	__Pie__000000_Pie_Stars_per_Framework.Set = append(__Pie__000000_Pie_Stars_per_Framework.Set, __Serie__000001_Released)
@@ -257,10 +257,10 @@ func stageInjection() {
 	__Serie__000002_Stars.Values = append(__Serie__000002_Stars.Values, __Value__000016_27647)
 	__Serie__000002_Stars.Values = append(__Serie__000002_Stars.Values, __Value__000012_21471)
 	__Serie__000003_XSerie.Key = __Key__000003_X
-	__Serie__000003_XSerie.Values = append(__Serie__000003_XSerie.Values, __Value__000003_160)
-	__Serie__000003_XSerie.Values = append(__Serie__000003_XSerie.Values, __Value__000006_180)
 	__Serie__000003_XSerie.Values = append(__Serie__000003_XSerie.Values, __Value__000001_150)
 	__Serie__000003_XSerie.Values = append(__Serie__000003_XSerie.Values, __Value__000005_170)
+	__Serie__000003_XSerie.Values = append(__Serie__000003_XSerie.Values, __Value__000003_160)
+	__Serie__000003_XSerie.Values = append(__Serie__000003_XSerie.Values, __Value__000006_180)
 	__Serie__000004_YSerie.Key = __Key__000004_Y
 	__Serie__000004_YSerie.Values = append(__Serie__000004_YSerie.Values, __Value__000014_25_2)
 	__Serie__000004_YSerie.Values = append(__Serie__000004_YSerie.Values, __Value__000015_26_3)

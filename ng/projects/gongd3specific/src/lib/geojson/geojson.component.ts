@@ -5,6 +5,8 @@ import * as topojson_client from 'topojson-client';
 import * as topojson_specification from 'topojson-specification'
 import * as geojson from 'geojson';
 
+// see
+// https://medium.com/geekculture/advanced-map-visualization-and-cartography-with-d3-js-geojson-topojson-2de786ece0c3
 
 import { TopographyService } from '../topography-service'
 
@@ -16,9 +18,9 @@ import { TopographyService } from '../topography-service'
 export class GeojsonComponent implements OnInit {
 
   svg: any;
-  projection: any;
-  topoFeatureStates: any;
-  path: any;
+  projection!: d3.GeoIdentityTransform;
+  topoFeatureStates!: geojson.FeatureCollection;
+  path!: d3.GeoPath;
 
   constructor(
     private topographyService: TopographyService,
@@ -32,18 +34,18 @@ export class GeojsonComponent implements OnInit {
   }
 
   initialMap(): void {
-    this.topographyService.getTopographyData().subscribe((topography: any) => {
+    this.topographyService.getTopographyData().subscribe((topography: topojson_specification.Topology) => {
       this.draw(topography);
     });
   }
 
-  draw(topography: any): void {
+  draw(topography: topojson_specification.Topology): void {
     const { width, height } = this.getMapContainerWidthAndHeight();
 
     this.topoFeatureStates = topojson_client.feature(
       topography,
-      topography.objects.states
-    );
+      topography.objects['states']
+    ) as geojson.FeatureCollection<geojson.Geometry, geojson.GeoJsonProperties>
     this.projection = d3
       .geoIdentity()
       .fitSize([width, height], this.topoFeatureStates);
@@ -64,11 +66,11 @@ export class GeojsonComponent implements OnInit {
     d3.select(window).on('resize', this.resizeMap);
   }
 
-  renderNationFeaturesWithShadow(topography: any): void {
+  renderNationFeaturesWithShadow(topography: topojson_specification.Topology): void {
     const defs = this.svg.select('defs');
     defs
       .append('path')
-      .datum(topojson_client.feature(topography, topography.objects.nation))
+      .datum(topojson_client.feature(topography, topography.objects['nation']))
       .attr('id', 'nation')
       .attr('d', this.path);
 
@@ -78,33 +80,34 @@ export class GeojsonComponent implements OnInit {
       .attr('fill-opacity', 0.2)
       .attr('filter', 'url(#blur)');
 
-    this.svg.append('use').attr('xlink:href', '#nation').attr('fill', '#fff');
+    // this.svg.append('use').attr('xlink:href', '#nation').attr('fill', '#fff');
 
     // extra touch (counties in grid)
-    this.svg
-      .append('path')
-      .attr('fill', 'none')
-      .attr('stroke', '#777')
-      .attr('stroke-width', 0.35)
-      .attr(
-        'd',
-        this.path(
-          topojson_client.mesh(
-            topography,
-            topography.objects.counties,
-            (a: any, b: any) => {
-              // tslint:disable-next-line:no-bitwise
-              return ((a.id / 1000) | 0) === ((b.id / 1000) | 0);
-            }
-          )
-        )
-      );
+    // this.svg
+    //   .append('path')
+    //   .attr('fill', 'none')
+    //   .attr('stroke', '#777')
+    //   .attr('stroke-width', 0.35)
+    //   .attr(
+    //     'd',
+    //     this.path(
+    //       topojson_client.mesh(
+    //         topography,
+    //         topography.objects['counties'] as any,
+    //         (a: any, b: any) => {
+    //           // tslint:disable-next-line:no-bitwise
+    //           return ((a.id / 1000) | 0) === ((b.id / 1000) | 0);
+    //         }
+    //       )
+    //     )
+    //   );
     // end extra touch
   }
 
   renderCountiesFeatures(topography: topojson_specification.Topology): void {
 
-    let mapFeatures: geojson.FeatureCollection<geojson.Geometry, geojson.GeoJsonProperties> = topojson_client.feature(topography, topography.objects['plz5stellig']) as
+    let mapFeatures: geojson.FeatureCollection<geojson.Geometry, geojson.GeoJsonProperties> =
+      topojson_client.feature(topography, topography.objects['counties']) as
       geojson.FeatureCollection<geojson.Geometry, geojson.GeoJsonProperties>
 
     this.svg
@@ -124,8 +127,11 @@ export class GeojsonComponent implements OnInit {
 
   renderStateFeaures(topography: topojson_specification.Topology): void {
 
-    let mapFeatures: geojson.FeatureCollection<geojson.Geometry, geojson.GeoJsonProperties> = topojson_client.feature(topography, topography.objects['states']) as
+    let mapFeatures: geojson.FeatureCollection<geojson.Geometry, geojson.GeoJsonProperties> =
+      topojson_client.feature(topography, topography.objects['states']) as
       geojson.FeatureCollection<geojson.Geometry, geojson.GeoJsonProperties>
+
+    console.log("Let's inspect the svg")
 
     this.svg
       .append('g')
@@ -142,6 +148,8 @@ export class GeojsonComponent implements OnInit {
         return d.id;
       })
       .attr('d', this.path);
+
+    console.log("Let's inspect the svg")
   }
 
   resizeMap = () => {

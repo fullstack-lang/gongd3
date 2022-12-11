@@ -2,6 +2,8 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
+import * as topojson_specification from 'topojson-specification'
+
 @Injectable({
     providedIn: 'root',
 })
