@@ -12,7 +12,7 @@ export class TopographyService {
 
     getTopographyData(): Observable<any> {
         const topoDataURL =
-            'https://cdn.jsdelivr.net/npm/us-atlas@3/counties-albers-10m.json';
+            'assets/counties-albers-10m.json';
 
         return this.http.get(topoDataURL);
     }

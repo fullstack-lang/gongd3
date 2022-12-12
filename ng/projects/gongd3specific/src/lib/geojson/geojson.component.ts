@@ -58,8 +58,8 @@ export class GeojsonComponent implements OnInit {
       .attr('width', width + 50)
       .attr('height', height);
 
-    // this.renderNationFeaturesWithShadow(topography);
-    this.renderCountiesFeatures(topography);
+    this.renderNationFeaturesWithShadow(topography);
+    // this.renderCountiesFeatures(topography);
     // this.renderStateFeaures(topography);
     // this.renderStatesFeatures2(topography);
 
@@ -80,21 +80,47 @@ export class GeojsonComponent implements OnInit {
       .attr('xlink:href', '#nation')
       .attr('fill-opacity', 0.2)
     // .attr('filter', 'url(#blur)'); // bring shadows
-  }
 
-  renderStatesFeatures2(topography: topojson_specification.Topology): void {
-    const defs = this.svg.select('defs');
-    defs
-      .append('path')
-      .datum(topojson_client.feature(topography, topography.objects['states']))
-      .attr('id', 'states')
-      .attr('d', this.path);
-
+    // extra touch (counties in grid)
     this.svg
-      .append('use')
-      .attr('xlink:href', '#states')
-      .attr('fill-opacity', 0.2)
-    // .attr('filter', 'url(#blur)'); // bring shadows
+      .append('path')
+      .attr('fill', 'none')
+      .attr('stroke', '#777')
+      .attr('stroke-width', 0.35)
+      .attr(
+        'd',
+        this.path(
+          topojson_client.mesh(
+            topography,
+            topography.objects['states'] as any,
+            (a: any, b: any) => {
+              // tslint:disable-next-line:no-bitwise
+              return ((a.id / 1000) | 0) === ((b.id / 1000) | 0);
+            }
+          )
+        )
+      );
+
+    // extra touch (counties in grid)
+    this.svg
+      .append('path')
+      .attr('fill', 'none')
+      .attr('stroke', '#777')
+      .attr('stroke-width', 0.35)
+      .attr(
+        'd',
+        this.path(
+          topojson_client.mesh(
+            topography,
+            topography.objects['counties'] as any,
+            (a: any, b: any) => {
+              // tslint:disable-next-line:no-bitwise
+              return ((a.id / 1000) | 0) === ((b.id / 1000) | 0);
+            }
+          )
+        )
+      );
+    // end extra touch
   }
 
   renderCountiesFeatures(topography: topojson_specification.Topology): void {
