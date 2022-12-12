@@ -90,10 +90,7 @@ export class GeojsonComponent implements OnInit {
       let mesh = topojson_client.mesh(
         topography,
         topography.objects['states'] as any,
-        (a: any, b: any) => {
-          // tslint:disable-next-line:no-bitwise
-          return ((a.id / 1000) | 0) === ((b.id / 1000) | 0);
-        }
+        this.compareIds
       )
       let path = this.path(mesh)
 
@@ -121,10 +118,7 @@ export class GeojsonComponent implements OnInit {
             topojson_client.mesh(
               topography,
               topography.objects['counties'] as any,
-              (a: any, b: any) => {
-                // tslint:disable-next-line:no-bitwise
-                return ((a.id / 1000) | 0) === ((b.id / 1000) | 0);
-              }
+              this.compareIds
             )
           )
         );
@@ -135,11 +129,23 @@ export class GeojsonComponent implements OnInit {
   // This function takes in two arguments, a and b, which are of type any. 
   // The function uses a bitwise operator (the | symbol) to divide the id property of 
   // both a and b by 1000, and then uses the bitwise OR operator to return the result
-  // of this operation as an integer. Finally, the function uses the === operator to check
+  // of this operation as an integer.
+  //
+  // Finally, the function uses the === operator to check
   // if the result for a is equal to the result for b, and returns this value.
-  toDefine(a: any, b: any): boolean {
+  compareIds(a: topojson_specification.GeometryObjectA, b: topojson_specification.GeometryObjectA): boolean {
+    let a_id = (a.id! as number) / 1000
+    let b_id = b.id! as number
+
+    let a_id_red = a_id | 0
+    let b_id_red = (b_id / 1000) | 0
+
+    if (a_id_red != 0) {
+      console.log("a_id != 0 :" + a_id_red)
+    }
+
     // tslint:disable-next-line:no-bitwise
-    return ((a.id / 1000) | 0) === ((b.id / 1000) | 0);
+    return a_id_red === b_id_red
   }
 
   renderCountiesFeatures(topography: topojson_specification.Topology): void {
