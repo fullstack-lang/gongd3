@@ -1,6 +1,7 @@
 import { Component, ElementRef, OnInit } from '@angular/core';
 
 import * as d3 from 'd3';
+import * as d3_selection from 'd3-selection'
 import * as topojson_client from 'topojson-client';
 import * as topojson_specification from 'topojson-specification'
 import * as geojson from 'geojson';
@@ -17,10 +18,13 @@ import { TopographyService } from '../topography-service'
 })
 export class GeojsonComponent implements OnInit {
 
-  svg: any;
+  svg!: d3_selection.Selection<d3.BaseType, unknown, HTMLElement, any>
   projection!: d3.GeoIdentityTransform;
   topoFeatureStates!: geojson.FeatureCollection;
   path!: d3.GeoPath;
+
+  drawStateLines: boolean = true
+  drawCountiesLines: boolean = false
 
   constructor(
     private topographyService: TopographyService,
@@ -82,45 +86,60 @@ export class GeojsonComponent implements OnInit {
     // .attr('filter', 'url(#blur)'); // bring shadows
 
     // extra touch (counties in grid)
-    this.svg
-      .append('path')
-      .attr('fill', 'none')
-      .attr('stroke', '#777')
-      .attr('stroke-width', 0.35)
-      .attr(
-        'd',
-        this.path(
-          topojson_client.mesh(
-            topography,
-            topography.objects['states'] as any,
-            (a: any, b: any) => {
-              // tslint:disable-next-line:no-bitwise
-              return ((a.id / 1000) | 0) === ((b.id / 1000) | 0);
-            }
-          )
-        )
-      );
+    if (this.drawStateLines) {
+      let mesh = topojson_client.mesh(
+        topography,
+        topography.objects['states'] as any,
+        (a: any, b: any) => {
+          // tslint:disable-next-line:no-bitwise
+          return ((a.id / 1000) | 0) === ((b.id / 1000) | 0);
+        }
+      )
+      let path = this.path(mesh)
+
+      this.svg
+        .append('path')
+        .attr('fill', 'none')
+        .attr('stroke', '#777')
+        .attr('stroke-width', 0.35)
+        .attr(
+          'd',
+          path
+        );
+    }
 
     // extra touch (counties in grid)
-    this.svg
-      .append('path')
-      .attr('fill', 'none')
-      .attr('stroke', '#777')
-      .attr('stroke-width', 0.35)
-      .attr(
-        'd',
-        this.path(
-          topojson_client.mesh(
-            topography,
-            topography.objects['counties'] as any,
-            (a: any, b: any) => {
-              // tslint:disable-next-line:no-bitwise
-              return ((a.id / 1000) | 0) === ((b.id / 1000) | 0);
-            }
+    if (this.drawCountiesLines) {
+      this.svg
+        .append('path')
+        .attr('fill', 'none')
+        .attr('stroke', '#777')
+        .attr('stroke-width', 0.35)
+        .attr(
+          'd',
+          this.path(
+            topojson_client.mesh(
+              topography,
+              topography.objects['counties'] as any,
+              (a: any, b: any) => {
+                // tslint:disable-next-line:no-bitwise
+                return ((a.id / 1000) | 0) === ((b.id / 1000) | 0);
+              }
+            )
           )
-        )
-      );
+        );
+    }
     // end extra touch
+  }
+
+  // This function takes in two arguments, a and b, which are of type any. 
+  // The function uses a bitwise operator (the | symbol) to divide the id property of 
+  // both a and b by 1000, and then uses the bitwise OR operator to return the result
+  // of this operation as an integer. Finally, the function uses the === operator to check
+  // if the result for a is equal to the result for b, and returns this value.
+  toDefine(a: any, b: any): boolean {
+    // tslint:disable-next-line:no-bitwise
+    return ((a.id / 1000) | 0) === ((b.id / 1000) | 0);
   }
 
   renderCountiesFeatures(topography: topojson_specification.Topology): void {
@@ -152,6 +171,7 @@ export class GeojsonComponent implements OnInit {
 
     console.log("Let's inspect the svg")
 
+    let pathString = this.path.toString()
     this.svg
       .append('g')
       .attr('class', 'state')
@@ -160,13 +180,13 @@ export class GeojsonComponent implements OnInit {
       .attr('stroke-width', '0.7')
       .selectAll('path.state')
       .data(
-        mapFeatures
+        mapFeatures as any
       )
       .join('path')
       .attr('id', (d: any) => {
         return d.id;
       })
-      .attr('d', this.path);
+      .attr('d', this.path.toString());
 
     console.log("Let's inspect the svg")
   }
@@ -180,7 +200,7 @@ export class GeojsonComponent implements OnInit {
     this.projection.fitSize([width, height], this.topoFeatureStates);
 
     // resize the map
-    this.svg.selectAll('path').attr('d', this.path);
+    this.svg.selectAll('path').attr('d', this.path.toString());
   };
 
   getMapContainerWidthAndHeight = (): { width: number; height: number } => {

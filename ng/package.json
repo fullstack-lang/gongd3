@@ -47,6 +47,7 @@
     "@angular/cli": "~14.2.5",
     "@angular/compiler-cli": "^14.2.0",
     "@types/d3": "^7.4.0",
+    "@types/d3-selection": "^3.0.3",
     "@types/topojson": "^3.2.3",
     "ng-packagr": "^14.2.0",
     "topojson-client": "^3.1.0",
