@@ -10,6 +10,10 @@ import * as geojson from 'geojson';
 // https://medium.com/geekculture/advanced-map-visualization-and-cartography-with-d3-js-geojson-topojson-2de786ece0c3
 
 import { TopographyService } from '../topography-service'
+import { registerLocaleData } from '@angular/common';
+
+const us_map = 'assets/counties-albers-10m.json'
+const fr_map = 'assets/fr-departments.json'
 
 @Component({
   selector: 'lib-geojson',
@@ -38,18 +42,31 @@ export class GeojsonComponent implements OnInit {
   }
 
   initialMap(): void {
-    this.topographyService.getTopographyData().subscribe((topography: topojson_specification.Topology) => {
-      this.draw(topography);
+    let source = fr_map
+
+    this.topographyService.getTopographyData(source).subscribe((topography: topojson_specification.Topology) => {
+      this.draw(source, topography);
     });
   }
 
-  draw(topography: topojson_specification.Topology): void {
+  draw(source: string, topography: topojson_specification.Topology): void {
     const { width, height } = this.getMapContainerWidthAndHeight();
 
-    this.topoFeatureStates = topojson_client.feature(
-      topography,
-      topography.objects['states']
-    ) as geojson.FeatureCollection<geojson.Geometry, geojson.GeoJsonProperties>
+
+    if (source == us_map) {
+      this.topoFeatureStates = topojson_client.feature(
+        topography,
+        topography.objects['states']
+      ) as geojson.FeatureCollection<geojson.Geometry, geojson.GeoJsonProperties>
+    }
+    if (source == fr_map) {
+      this.topoFeatureStates = topojson_client.feature(
+        topography,
+        topography.objects['FRA_adm2']
+      ) as geojson.FeatureCollection<geojson.Geometry, geojson.GeoJsonProperties>
+    }
+
+
     this.projection = d3
       .geoIdentity()
       .fitSize([width, height], this.topoFeatureStates);
@@ -62,13 +79,32 @@ export class GeojsonComponent implements OnInit {
       .attr('width', width + 50)
       .attr('height', height);
 
-    this.renderNationFeaturesWithShadow(topography);
-    // this.renderCountiesFeatures(topography);
-    // this.renderStateFeaures(topography);
-    // this.renderStatesFeatures2(topography);
+    if (source == us_map) {
+      this.renderNationFeaturesWithShadow(topography);
+      // this.renderCountiesFeatures(topography);
+      // this.renderStateFeaures(topography);
+      // this.renderStatesFeatures2(topography);
+    }
+    if (source == fr_map) {
+      this.renderFrance(topography)
+    }
 
     // resize event
     d3.select(window).on('resize', this.resizeMap);
+  }
+
+  renderFrance(topography: topojson_specification.Topology): void {
+    const defs = this.svg.select('defs');
+    defs
+      .append('path')
+      .datum(topojson_client.feature(topography, topography.objects['FRA_adm2']))
+      .attr('id', 'FRA_adm2')
+      .attr('d', this.path);
+
+    this.svg
+      .append('use')
+      .attr('xlink:href', '#FRA_adm2')
+      .attr('fill-opacity', 0.2)
   }
 
   renderNationFeaturesWithShadow(topography: topojson_specification.Topology): void {

@@ -10,10 +10,10 @@ import * as topojson_specification from 'topojson-specification'
 export class TopographyService {
     constructor(private http: HttpClient) { }
 
-    getTopographyData(): Observable<any> {
-        const topoDataURL =
-            'assets/counties-albers-10m.json';
+    getTopographyData(source : string): Observable<any> {
 
-        return this.http.get(topoDataURL);
+        console.log("Topography service")
+
+        return this.http.get(source);
     }
 }

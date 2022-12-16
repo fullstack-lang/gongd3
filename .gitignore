@@ -2,3 +2,8 @@ go/cmd/gongd3/gongd3
 go/cmd/gongd3/test.db
 go/cmd/gongd3/gongd3.exe
 go/cmd/gongd3/__debug_bin.exe
+ng/src/assets/geojson.zip
+ng/src/assets/FR_departements.geojson
+ng/src/assets/FR_metropole.geojson
+ng/src/assets/FR_regions-avant-redecoupage-2015.geojson
+ng/src/assets/FR_regions.geojson
