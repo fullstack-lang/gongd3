@@ -25,7 +25,7 @@ export class GeojsonComponent implements OnInit {
   svg!: d3_selection.Selection<d3.BaseType, unknown, HTMLElement, any>
   projection!: d3.GeoIdentityTransform;
   topoFeatureStates!: geojson.FeatureCollection;
-  path!: d3.GeoPath;
+  geoPathGenerator!: d3.GeoPath;
 
   drawStateLines: boolean = true
   drawCountiesLines: boolean = false
@@ -71,7 +71,7 @@ export class GeojsonComponent implements OnInit {
       .geoIdentity()
       .fitSize([width, height], this.topoFeatureStates);
 
-    this.path = d3.geoPath(this.projection);
+    this.geoPathGenerator = d3.geoPath(this.projection);
 
     // render svg
     this.svg = d3
@@ -86,25 +86,42 @@ export class GeojsonComponent implements OnInit {
       // this.renderStatesFeatures2(topography);
     }
     if (source == fr_map) {
-      this.renderFrance(topography)
+      this.renderFrance(topography, width, height)
     }
 
     // resize event
     d3.select(window).on('resize', this.resizeMap);
   }
 
-  renderFrance(topography: topojson_specification.Topology): void {
+  renderFrance(topography: topojson_specification.Topology, width: number, height: number): void {
     const defs = this.svg.select('defs');
+
+    var projection = d3.geoConicConformal() // Lambert-93
+      .center([2.716666667, 45.983333333]) // Center on France carte Lambert93_0
+      .parallels([42.38333333, 49.58333333])
+      .rotate([0, 0]) // [0,0]
+      .center([2, 47]) //[0,47]
+      .scale(3000) //original
+      .translate([width / 2, height / 2]);
+
+    let featureCollection = topojson_client.feature(topography, topography.objects['FRA_adm2'])
+
+    // Sets the current projection to the specified projection
+    this.geoPathGenerator = d3.geoPath().projection(projection)
+
     defs
       .append('path')
-      .datum(topojson_client.feature(topography, topography.objects['FRA_adm2']))
+      .datum(featureCollection)
       .attr('id', 'FRA_adm2')
-      .attr('d', this.path);
+      .attr('d', this.geoPathGenerator);
 
     this.svg
       .append('use')
       .attr('xlink:href', '#FRA_adm2')
       .attr('fill-opacity', 0.2)
+      .attr("fill", "#e6f7ff")        //color of country: gris, #b8b8b8 bleu, #ccffff #80d4ff
+      .style("stroke", "#80d4ff")            //original, border color #4da6ff)
+      .style("stroke-width", 0.5) //border size
   }
 
   renderNationFeaturesWithShadow(topography: topojson_specification.Topology): void {
@@ -113,7 +130,7 @@ export class GeojsonComponent implements OnInit {
       .append('path')
       .datum(topojson_client.feature(topography, topography.objects['nation']))
       .attr('id', 'nation')
-      .attr('d', this.path);
+      .attr('d', this.geoPathGenerator);
 
     this.svg
       .append('use')
@@ -128,7 +145,7 @@ export class GeojsonComponent implements OnInit {
         topography.objects['states'] as any,
         this.compareIds
       )
-      let path = this.path(mesh)
+      let path = this.geoPathGenerator(mesh)
 
       this.svg
         .append('path')
@@ -150,7 +167,7 @@ export class GeojsonComponent implements OnInit {
         .attr('stroke-width', 0.35)
         .attr(
           'd',
-          this.path(
+          this.geoPathGenerator(
             topojson_client.mesh(
               topography,
               topography.objects['counties'] as any,
@@ -202,7 +219,7 @@ export class GeojsonComponent implements OnInit {
       .attr('id', (d: any) => {
         return d.id;
       })
-      .attr('d', this.path);
+      .attr('d', this.geoPathGenerator);
   }
 
   renderStateFeaures(topography: topojson_specification.Topology): void {
@@ -213,7 +230,7 @@ export class GeojsonComponent implements OnInit {
 
     console.log("Let's inspect the svg")
 
-    let pathString = this.path.toString()
+    let pathString = this.geoPathGenerator.toString()
     this.svg
       .append('g')
       .attr('class', 'state')
@@ -228,7 +245,7 @@ export class GeojsonComponent implements OnInit {
       .attr('id', (d: any) => {
         return d.id;
       })
-      .attr('d', this.path.toString());
+      .attr('d', this.geoPathGenerator.toString());
 
     console.log("Let's inspect the svg")
   }
@@ -242,7 +259,7 @@ export class GeojsonComponent implements OnInit {
     this.projection.fitSize([width, height], this.topoFeatureStates);
 
     // resize the map
-    this.svg.selectAll('path').attr('d', this.path.toString());
+    this.svg.selectAll('path').attr('d', this.geoPathGenerator.toString());
   };
 
   getMapContainerWidthAndHeight = (): { width: number; height: number } => {
