@@ -1,7 +1,9 @@
 package models
 
 import (
+	"errors"
 	"go/ast"
+	"go/doc/comment"
 	"go/parser"
 	"go/token"
 	"log"
@@ -15,11 +17,15 @@ var dummy_strconv_import strconv.NumError
 
 // ParseAstFile Parse pathToFile and stages all instances
 // declared in the file
-func ParseAstFile(pathToFile string) {
+func ParseAstFile(pathToFile string) error {
+
+	// map to store renaming docLink
+	// to be removed after fix of [issue](https://github.com/golang/go/issues/57559)
+	Stage.Map_DocLink_Renaming = make(map[string]string, 0)
 
 	fileOfInterest, err := filepath.Abs(pathToFile)
 	if err != nil {
-		log.Panic("Path does not exist %s ;" + fileOfInterest)
+		return errors.New("Path does not exist %s ;" + fileOfInterest)
 	}
 
 	fset := token.NewFileSet()
@@ -28,7 +34,18 @@ func ParseAstFile(pathToFile string) {
 	log.Printf("Parser took %s", time.Since(startParser))
 
 	if errParser != nil {
-		log.Panic("Unable to parser ", errParser.Error())
+		return errors.New("Unable to parser " + errParser.Error())
+	}
+
+	// if there is a meta package import, it is the third import
+	if len(inFile.Imports) > 3 {
+		log.Fatalln("Too many imports in file", fileOfInterest)
+	}
+	stage := &Stage
+	_ = stage
+	if len(inFile.Imports) == 3 {
+		Stage.MetaPackageImportAlias = inFile.Imports[2].Name.Name
+		Stage.MetaPackageImportPath = inFile.Imports[2].Path.Value
 	}
 
 	// astCoordinate := "File "
@@ -73,10 +90,16 @@ func ParseAstFile(pathToFile string) {
 							}
 						}
 					case *ast.AssignStmt:
+						// Create an ast.CommentMap from the ast.File's comments.
+						// This helps keeping the association between comments
+						// and AST nodes.
+						cmap := ast.NewCommentMap(fset, inFile, inFile.Comments)
 						astCoordinate := "\tAssignStmt: "
 						// log.Println(// astCoordinate)
 						assignStmt := stmt
-						instance, id, gongstruct, fieldName := UnmarshallGongstructStaging(assignStmt, astCoordinate)
+						instance, id, gongstruct, fieldName :=
+							UnmarshallGongstructStaging(
+								&cmap, assignStmt, astCoordinate)
 						_ = instance
 						_ = id
 						_ = gongstruct
@@ -100,11 +123,118 @@ func ParseAstFile(pathToFile string) {
 					if path := importSpec.Path; path != nil {
 						// log.Println("\t\tAST Path: ", path.Value)
 					}
+				case *ast.ValueSpec:
+					ident := spec.Names[0]
+					_ = ident
+					if !strings.HasPrefix(ident.Name, "map_DocLink_Identifier") {
+						continue
+					}
+					switch compLit := spec.Values[0].(type) {
+					case *ast.CompositeLit:
+						var key string
+						_ = key
+						var value string
+						_ = value
+						for _, elt := range compLit.Elts {
+
+							// each elt is an expression for struct or for field such as
+							// for struct
+							//
+							//         "dummy.Dummy": &(dummy.Dummy{})
+							//
+							// or, for field
+							//
+							//          "dummy.Dummy.Name": (dummy.Dummy{}).Name,
+							//
+							// first node in the AST is a key value expression
+							var ok bool
+							var kve *ast.KeyValueExpr
+							if kve, ok = elt.(*ast.KeyValueExpr); !ok {
+								log.Fatal("Expression should be key value expression" +
+									fset.Position(kve.Pos()).String())
+							}
+
+							switch bl := kve.Key.(type) {
+							case *ast.BasicLit:
+								key = bl.Value // "\"dumm.Dummy\"" is the value
+
+								// one remove the ambracing double quotes
+								key = strings.TrimPrefix(key, "\"")
+								key = strings.TrimSuffix(key, "\"")
+							}
+
+							var isFieldEntry bool
+							var fieldName string
+							var ue *ast.UnaryExpr
+							if ue, ok = kve.Value.(*ast.UnaryExpr); !ok {
+								isFieldEntry = true
+							}
+
+							var se2 *ast.SelectorExpr
+							if isFieldEntry {
+								if se2, ok = kve.Value.(*ast.SelectorExpr); !ok {
+									log.Fatal("Expression should be a selector expression" +
+										fset.Position(kve.Pos()).String())
+								}
+								fieldName = se2.Sel.Name
+							}
+
+							var pe *ast.ParenExpr
+							if !isFieldEntry {
+								if pe, ok = ue.X.(*ast.ParenExpr); !ok {
+									log.Fatal("Expression should be parenthese expression" +
+										fset.Position(ue.Pos()).String())
+								}
+							} else {
+								if pe, ok = se2.X.(*ast.ParenExpr); !ok {
+									log.Fatal("Expression should be parenthese expression" +
+										fset.Position(ue.Pos()).String())
+								}
+							}
+
+							// expect a Composite Litteral with no Element <type>{}
+							var cl *ast.CompositeLit
+							if cl, ok = pe.X.(*ast.CompositeLit); !ok {
+								log.Fatal("Expression should be a composite lit" +
+									fset.Position(pe.Pos()).String())
+							}
+
+							var se *ast.SelectorExpr
+							if se, ok = cl.Type.(*ast.SelectorExpr); !ok {
+								log.Fatal("Expression should be a selector" +
+									fset.Position(cl.Pos()).String())
+							}
+
+							var id *ast.Ident
+							if id, ok = se.X.(*ast.Ident); !ok {
+								log.Fatal("Expression should be an ident" +
+									fset.Position(se.Pos()).String())
+							}
+							docLink := id.Name + "." + se.Sel.Name
+
+							if isFieldEntry {
+								docLink += "." + fieldName
+							}
+
+							// if map_DocLink_Identifier has the same ident, this means
+							// that no renaming has occured since the last processing of the
+							// file. But it is neccessary to keep it in memory for the
+							// marshalling
+							if docLink == key {
+								// continue
+							}
+
+							// otherwise, one stores the new ident (after renaming) in the
+							// renaming map
+							Stage.Map_DocLink_Renaming[key] = docLink
+						}
+					}
 				}
 			}
 		}
 
 	}
+	return nil
 }
 
 var __gong__map_Indentifiers_gongstructName = make(map[string]string)
@@ -113,20 +243,94 @@ var __gong__map_Indentifiers_gongstructName = make(map[string]string)
 var __gong__map_GongBasicField = make(map[string]*GongBasicField)
 var __gong__map_GongEnum = make(map[string]*GongEnum)
 var __gong__map_GongEnumValue = make(map[string]*GongEnumValue)
+var __gong__map_GongLink = make(map[string]*GongLink)
 var __gong__map_GongNote = make(map[string]*GongNote)
 var __gong__map_GongStruct = make(map[string]*GongStruct)
 var __gong__map_GongTimeField = make(map[string]*GongTimeField)
+var __gong__map_Meta = make(map[string]*Meta)
+var __gong__map_MetaReference = make(map[string]*MetaReference)
 var __gong__map_ModelPkg = make(map[string]*ModelPkg)
 var __gong__map_PointerToGongStructField = make(map[string]*PointerToGongStructField)
 var __gong__map_SliceOfPointerToGongStructField = make(map[string]*SliceOfPointerToGongStructField)
 
+// Parser needs to be configured for having the [Name1.Name2] or [pkg.Name1] ...
+// to be recognized as a proper identifier.
+// While this was introduced in go 1.19, it is not yet implemented in
+// gopls (see [issue](https://github.com/golang/go/issues/57559)
+func lookupPackage(name string) (importPath string, ok bool) {
+	if name == Stage.MetaPackageImportAlias {
+		return Stage.MetaPackageImportAlias, true
+	}
+	return comment.DefaultLookupPackage(name)
+}
+func lookupSym(recv, name string) (ok bool) {
+	if recv == "" {
+		return true
+	}
+	return false
+}
+
 // UnmarshallGoStaging unmarshall a go assign statement
-func UnmarshallGongstructStaging(assignStmt *ast.AssignStmt, astCoordinate_ string) (
+func UnmarshallGongstructStaging(cmap *ast.CommentMap, assignStmt *ast.AssignStmt, astCoordinate_ string) (
 	instance any,
 	identifier string,
 	gongstructName string,
 	fieldName string) {
+
+	// used for debug purposes
 	astCoordinate := "\tAssignStmt: "
+
+	//
+	// First parse all comment groups in the assignement
+	// if a comment "//gong:ident [DocLink]" is met and is followed by a string assignement.
+	// modify the following AST assignement to assigns the DocLink text to the string value
+	//
+
+	// get the comment group of the assigStmt
+	commentGroups := (*cmap)[assignStmt]
+	// get the the prefix
+	var hasGongIdentDirective bool
+	var commentText string
+	var docLinkText string
+	for _, commentGroup := range commentGroups {
+		for _, comment := range commentGroup.List {
+			if strings.HasPrefix(comment.Text, "//gong:ident") {
+				hasGongIdentDirective = true
+				commentText = comment.Text
+			}
+		}
+	}
+	if hasGongIdentDirective {
+		// parser configured to find doclinks
+		var docLinkFinder comment.Parser
+		docLinkFinder.LookupPackage = lookupPackage
+		docLinkFinder.LookupSym = lookupSym
+		doc := docLinkFinder.Parse(commentText)
+
+		for _, block := range doc.Content {
+			switch paragraph := block.(type) {
+			case *comment.Paragraph:
+				_ = paragraph
+				for _, text := range paragraph.Text {
+					switch docLink := text.(type) {
+					case *comment.DocLink:
+						if docLink.Recv == "" {
+							docLinkText = docLink.ImportPath + "." + docLink.Name
+						} else {
+							docLinkText = docLink.ImportPath + "." + docLink.Recv + "." + docLink.Name
+						}
+
+						// we check wether the doc link has been renamed
+						// to be removed after fix of [issue](https://github.com/golang/go/issues/57559)
+						if renamed, ok := (Stage.Map_DocLink_Renaming)[docLinkText]; ok {
+							docLinkText = renamed
+						}
+					}
+				}
+			}
+		}
+	}
+
 	for rank, expr := range assignStmt.Lhs {
 		if rank > 0 {
 			continue
@@ -235,6 +439,10 @@ func UnmarshallGongstructStaging(assignStmt *ast.AssignStmt, astCoordinate_ stri
 										instanceGongEnumValue := (&GongEnumValue{Name: instanceName}).Stage()
 										instance = any(instanceGongEnumValue)
 										__gong__map_GongEnumValue[identifier] = instanceGongEnumValue
+									case "GongLink":
+										instanceGongLink := (&GongLink{Name: instanceName}).Stage()
+										instance = any(instanceGongLink)
+										__gong__map_GongLink[identifier] = instanceGongLink
 									case "GongNote":
 										instanceGongNote := (&GongNote{Name: instanceName}).Stage()
 										instance = any(instanceGongNote)
@@ -247,6 +455,14 @@ func UnmarshallGongstructStaging(assignStmt *ast.AssignStmt, astCoordinate_ stri
 										instanceGongTimeField := (&GongTimeField{Name: instanceName}).Stage()
 										instance = any(instanceGongTimeField)
 										__gong__map_GongTimeField[identifier] = instanceGongTimeField
+									case "Meta":
+										instanceMeta := (&Meta{Name: instanceName}).Stage()
+										instance = any(instanceMeta)
+										__gong__map_Meta[identifier] = instanceMeta
+									case "MetaReference":
+										instanceMetaReference := (&MetaReference{Name: instanceName}).Stage()
+										instance = any(instanceMetaReference)
+										__gong__map_MetaReference[identifier] = instanceMetaReference
 									case "ModelPkg":
 										instanceModelPkg := (&ModelPkg{Name: instanceName}).Stage()
 										instance = any(instanceModelPkg)
@@ -307,6 +523,10 @@ func UnmarshallGongstructStaging(assignStmt *ast.AssignStmt, astCoordinate_ stri
 							switch fieldName {
 							// insertion point for date assign code
 							}
+						case "GongLink":
+							switch fieldName {
+							// insertion point for date assign code
+							}
 						case "GongNote":
 							switch fieldName {
 							// insertion point for date assign code
@@ -316,6 +536,14 @@ func UnmarshallGongstructStaging(assignStmt *ast.AssignStmt, astCoordinate_ stri
 							// insertion point for date assign code
 							}
 						case "GongTimeField":
+							switch fieldName {
+							// insertion point for date assign code
+							}
+						case "Meta":
+							switch fieldName {
+							// insertion point for date assign code
+							}
+						case "MetaReference":
 							switch fieldName {
 							// insertion point for date assign code
 							}
@@ -374,9 +602,19 @@ func UnmarshallGongstructStaging(assignStmt *ast.AssignStmt, astCoordinate_ stri
 						switch fieldName {
 						// insertion point for slice of pointers assign code
 						}
+					case "GongLink":
+						switch fieldName {
+						// insertion point for slice of pointers assign code
+						}
 					case "GongNote":
 						switch fieldName {
 						// insertion point for slice of pointers assign code
+						case "Links":
+							// remove first and last char
+							targetIdentifier := ident.Name
+							target := __gong__map_GongLink[targetIdentifier]
+							__gong__map_GongNote[identifier].Links =
+								append(__gong__map_GongNote[identifier].Links, target)
 						}
 					case "GongStruct":
 						switch fieldName {
@@ -407,6 +645,20 @@ func UnmarshallGongstructStaging(assignStmt *ast.AssignStmt, astCoordinate_ stri
 								append(__gong__map_GongStruct[identifier].SliceOfPointerToGongStructFields, target)
 						}
 					case "GongTimeField":
+						switch fieldName {
+						// insertion point for slice of pointers assign code
+						}
+					case "Meta":
+						switch fieldName {
+						// insertion point for slice of pointers assign code
+						case "MetaReferences":
+							// remove first and last char
+							targetIdentifier := ident.Name
+							target := __gong__map_MetaReference[targetIdentifier]
+							__gong__map_Meta[identifier].MetaReferences =
+								append(__gong__map_Meta[identifier].MetaReferences, target)
+						}
+					case "MetaReference":
 						switch fieldName {
 						// insertion point for slice of pointers assign code
 						}
@@ -449,6 +701,11 @@ func UnmarshallGongstructStaging(assignStmt *ast.AssignStmt, astCoordinate_ stri
 			gongstructName, ok = __gong__map_Indentifiers_gongstructName[identifier]
 			if !ok {
 				log.Fatalln("gongstructName not found for identifier", identifier)
+			}
+
+			// substitute the RHS part of the assignment if a //gong:ident directive is met
+			if hasGongIdentDirective {
+				basicLit.Value = "[" + docLinkText + "]"
 			}
 
 			switch gongstructName {
@@ -500,6 +757,18 @@ func UnmarshallGongstructStaging(assignStmt *ast.AssignStmt, astCoordinate_ stri
 					fielValue := basicLit.Value[1 : len(basicLit.Value)-1]
 					__gong__map_GongEnumValue[identifier].Value = fielValue
 				}
+			case "GongLink":
+				switch fieldName {
+				// insertion point for field dependant code
+				case "Name":
+					// remove first and last char
+					fielValue := basicLit.Value[1 : len(basicLit.Value)-1]
+					__gong__map_GongLink[identifier].Name = fielValue
+				case "ImportPath":
+					// remove first and last char
+					fielValue := basicLit.Value[1 : len(basicLit.Value)-1]
+					__gong__map_GongLink[identifier].ImportPath = fielValue
+				}
 			case "GongNote":
 				switch fieldName {
 				// insertion point for field dependant code
@@ -538,6 +807,26 @@ func UnmarshallGongstructStaging(assignStmt *ast.AssignStmt, astCoordinate_ stri
 					// remove first and last char
 					fielValue := basicLit.Value[1 : len(basicLit.Value)-1]
 					__gong__map_GongTimeField[identifier].CompositeStructName = fielValue
+				}
+			case "Meta":
+				switch fieldName {
+				// insertion point for field dependant code
+				case "Name":
+					// remove first and last char
+					fielValue := basicLit.Value[1 : len(basicLit.Value)-1]
+					__gong__map_Meta[identifier].Name = fielValue
+				case "Text":
+					// remove first and last char
+					fielValue := basicLit.Value[1 : len(basicLit.Value)-1]
+					__gong__map_Meta[identifier].Text = fielValue
+				}
+			case "MetaReference":
+				switch fieldName {
+				// insertion point for field dependant code
+				case "Name":
+					// remove first and last char
+					fielValue := basicLit.Value[1 : len(basicLit.Value)-1]
+					__gong__map_MetaReference[identifier].Name = fielValue
 				}
 			case "ModelPkg":
 				switch fieldName {
@@ -609,12 +898,23 @@ func UnmarshallGongstructStaging(assignStmt *ast.AssignStmt, astCoordinate_ stri
 				case "GongEnum":
 					targetIdentifier := ident.Name
 					__gong__map_GongBasicField[identifier].GongEnum = __gong__map_GongEnum[targetIdentifier]
+				case "IsDocLink":
+					// convert string to boolean
+					fielValue, err := strconv.ParseBool(ident.Name)
+					if err != nil {
+						log.Fatalln(err)
+					}
+					__gong__map_GongBasicField[identifier].IsDocLink = fielValue
 				}
 			case "GongEnum":
 				switch fieldName {
 				// insertion point for field dependant code
 				}
 			case "GongEnumValue":
+				switch fieldName {
+				// insertion point for field dependant code
+				}
+			case "GongLink":
 				switch fieldName {
 				// insertion point for field dependant code
 				}
@@ -627,6 +927,14 @@ func UnmarshallGongstructStaging(assignStmt *ast.AssignStmt, astCoordinate_ stri
 				// insertion point for field dependant code
 				}
 			case "GongTimeField":
+				switch fieldName {
+				// insertion point for field dependant code
+				}
+			case "Meta":
+				switch fieldName {
+				// insertion point for field dependant code
+				}
+			case "MetaReference":
 				switch fieldName {
 				// insertion point for field dependant code
 				}
@@ -695,6 +1003,10 @@ func UnmarshallGongstructStaging(assignStmt *ast.AssignStmt, astCoordinate_ stri
 					switch fieldName {
 					// insertion point for enum assign code
 					}
+				case "GongLink":
+					switch fieldName {
+					// insertion point for enum assign code
+					}
 				case "GongNote":
 					switch fieldName {
 					// insertion point for enum assign code
@@ -704,6 +1016,14 @@ func UnmarshallGongstructStaging(assignStmt *ast.AssignStmt, astCoordinate_ stri
 					// insertion point for enum assign code
 					}
 				case "GongTimeField":
+					switch fieldName {
+					// insertion point for enum assign code
+					}
+				case "Meta":
+					switch fieldName {
+					// insertion point for enum assign code
+					}
+				case "MetaReference":
 					switch fieldName {
 					// insertion point for enum assign code
 					}

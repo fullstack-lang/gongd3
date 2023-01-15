@@ -4,16 +4,13 @@ package models
 import (
 	"errors"
 	"fmt"
-	"log"
-	"os"
-	"path"
-	"regexp"
-	"sort"
-	"strings"
 )
 
 // errUnkownEnum is returns when a value cannot match enum values
 var errUnkownEnum = errors.New("unkown enum")
+
+// needed to avoid when fmt package is not needed by generated code
+var __dummy__fmt_variable fmt.Scanner
 
 // swagger:ignore
 type __void any
@@ -56,6 +53,14 @@ type StageStruct struct { // insertion point for definition of arrays registerin
 	OnAfterGongEnumValueDeleteCallback OnAfterDeleteInterface[GongEnumValue]
 	OnAfterGongEnumValueReadCallback   OnAfterReadInterface[GongEnumValue]
 
+	GongLinks           map[*GongLink]any
+	GongLinks_mapString map[string]*GongLink
+
+	OnAfterGongLinkCreateCallback OnAfterCreateInterface[GongLink]
+	OnAfterGongLinkUpdateCallback OnAfterUpdateInterface[GongLink]
+	OnAfterGongLinkDeleteCallback OnAfterDeleteInterface[GongLink]
+	OnAfterGongLinkReadCallback   OnAfterReadInterface[GongLink]
+
 	GongNotes           map[*GongNote]any
 	GongNotes_mapString map[string]*GongNote
 
@@ -79,6 +84,22 @@ type StageStruct struct { // insertion point for definition of arrays registerin
 	OnAfterGongTimeFieldUpdateCallback OnAfterUpdateInterface[GongTimeField]
 	OnAfterGongTimeFieldDeleteCallback OnAfterDeleteInterface[GongTimeField]
 	OnAfterGongTimeFieldReadCallback   OnAfterReadInterface[GongTimeField]
+
+	Metas           map[*Meta]any
+	Metas_mapString map[string]*Meta
+
+	OnAfterMetaCreateCallback OnAfterCreateInterface[Meta]
+	OnAfterMetaUpdateCallback OnAfterUpdateInterface[Meta]
+	OnAfterMetaDeleteCallback OnAfterDeleteInterface[Meta]
+	OnAfterMetaReadCallback   OnAfterReadInterface[Meta]
+
+	MetaReferences           map[*MetaReference]any
+	MetaReferences_mapString map[string]*MetaReference
+
+	OnAfterMetaReferenceCreateCallback OnAfterCreateInterface[MetaReference]
+	OnAfterMetaReferenceUpdateCallback OnAfterUpdateInterface[MetaReference]
+	OnAfterMetaReferenceDeleteCallback OnAfterDeleteInterface[MetaReference]
+	OnAfterMetaReferenceReadCallback   OnAfterReadInterface[MetaReference]
 
 	ModelPkgs           map[*ModelPkg]any
 	ModelPkgs_mapString map[string]*ModelPkg
@@ -117,6 +138,11 @@ type StageStruct struct { // insertion point for definition of arrays registerin
 
 	// store the number of instance per gongstruct
 	Map_GongStructName_InstancesNb map[string]int
+
+	// store meta package import
+	MetaPackageImportPath  string
+	MetaPackageImportAlias string
+	Map_DocLink_Renaming   map[string]string
 }
 
 type OnInitCommitInterface interface {
@@ -160,12 +186,18 @@ type BackRepoInterface interface {
 	CheckoutGongEnum(gongenum *GongEnum)
 	CommitGongEnumValue(gongenumvalue *GongEnumValue)
 	CheckoutGongEnumValue(gongenumvalue *GongEnumValue)
+	CommitGongLink(gonglink *GongLink)
+	CheckoutGongLink(gonglink *GongLink)
 	CommitGongNote(gongnote *GongNote)
 	CheckoutGongNote(gongnote *GongNote)
 	CommitGongStruct(gongstruct *GongStruct)
 	CheckoutGongStruct(gongstruct *GongStruct)
 	CommitGongTimeField(gongtimefield *GongTimeField)
 	CheckoutGongTimeField(gongtimefield *GongTimeField)
+	CommitMeta(meta *Meta)
+	CheckoutMeta(meta *Meta)
+	CommitMetaReference(metareference *MetaReference)
+	CheckoutMetaReference(metareference *MetaReference)
 	CommitModelPkg(modelpkg *ModelPkg)
 	CheckoutModelPkg(modelpkg *ModelPkg)
 	CommitPointerToGongStructField(pointertogongstructfield *PointerToGongStructField)
@@ -187,6 +219,9 @@ var Stage StageStruct = StageStruct{ // insertion point for array initiatialisat
 	GongEnumValues:           make(map[*GongEnumValue]any),
 	GongEnumValues_mapString: make(map[string]*GongEnumValue),
 
+	GongLinks:           make(map[*GongLink]any),
+	GongLinks_mapString: make(map[string]*GongLink),
+
 	GongNotes:           make(map[*GongNote]any),
 	GongNotes_mapString: make(map[string]*GongNote),
 
@@ -195,6 +230,12 @@ var Stage StageStruct = StageStruct{ // insertion point for array initiatialisat
 
 	GongTimeFields:           make(map[*GongTimeField]any),
 	GongTimeFields_mapString: make(map[string]*GongTimeField),
+
+	Metas:           make(map[*Meta]any),
+	Metas_mapString: make(map[string]*Meta),
+
+	MetaReferences:           make(map[*MetaReference]any),
+	MetaReferences_mapString: make(map[string]*MetaReference),
 
 	ModelPkgs:           make(map[*ModelPkg]any),
 	ModelPkgs_mapString: make(map[string]*ModelPkg),
@@ -218,9 +259,12 @@ func (stage *StageStruct) Commit() {
 	stage.Map_GongStructName_InstancesNb["GongBasicField"] = len(stage.GongBasicFields)
 	stage.Map_GongStructName_InstancesNb["GongEnum"] = len(stage.GongEnums)
 	stage.Map_GongStructName_InstancesNb["GongEnumValue"] = len(stage.GongEnumValues)
+	stage.Map_GongStructName_InstancesNb["GongLink"] = len(stage.GongLinks)
 	stage.Map_GongStructName_InstancesNb["GongNote"] = len(stage.GongNotes)
 	stage.Map_GongStructName_InstancesNb["GongStruct"] = len(stage.GongStructs)
 	stage.Map_GongStructName_InstancesNb["GongTimeField"] = len(stage.GongTimeFields)
+	stage.Map_GongStructName_InstancesNb["Meta"] = len(stage.Metas)
+	stage.Map_GongStructName_InstancesNb["MetaReference"] = len(stage.MetaReferences)
 	stage.Map_GongStructName_InstancesNb["ModelPkg"] = len(stage.ModelPkgs)
 	stage.Map_GongStructName_InstancesNb["PointerToGongStructField"] = len(stage.PointerToGongStructFields)
 	stage.Map_GongStructName_InstancesNb["SliceOfPointerToGongStructField"] = len(stage.SliceOfPointerToGongStructFields)
@@ -236,9 +280,12 @@ func (stage *StageStruct) Checkout() {
 	stage.Map_GongStructName_InstancesNb["GongBasicField"] = len(stage.GongBasicFields)
 	stage.Map_GongStructName_InstancesNb["GongEnum"] = len(stage.GongEnums)
 	stage.Map_GongStructName_InstancesNb["GongEnumValue"] = len(stage.GongEnumValues)
+	stage.Map_GongStructName_InstancesNb["GongLink"] = len(stage.GongLinks)
 	stage.Map_GongStructName_InstancesNb["GongNote"] = len(stage.GongNotes)
 	stage.Map_GongStructName_InstancesNb["GongStruct"] = len(stage.GongStructs)
 	stage.Map_GongStructName_InstancesNb["GongTimeField"] = len(stage.GongTimeFields)
+	stage.Map_GongStructName_InstancesNb["Meta"] = len(stage.Metas)
+	stage.Map_GongStructName_InstancesNb["MetaReference"] = len(stage.MetaReferences)
 	stage.Map_GongStructName_InstancesNb["ModelPkg"] = len(stage.ModelPkgs)
 	stage.Map_GongStructName_InstancesNb["PointerToGongStructField"] = len(stage.PointerToGongStructFields)
 	stage.Map_GongStructName_InstancesNb["SliceOfPointerToGongStructField"] = len(stage.SliceOfPointerToGongStructFields)
@@ -559,6 +606,101 @@ func (gongenumvalue *GongEnumValue) GetName() (res string) {
 	return gongenumvalue.Name
 }
 
+// Stage puts gonglink to the model stage
+func (gonglink *GongLink) Stage() *GongLink {
+	Stage.GongLinks[gonglink] = __member
+	Stage.GongLinks_mapString[gonglink.Name] = gonglink
+
+	return gonglink
+}
+
+// Unstage removes gonglink off the model stage
+func (gonglink *GongLink) Unstage() *GongLink {
+	delete(Stage.GongLinks, gonglink)
+	delete(Stage.GongLinks_mapString, gonglink.Name)
+	return gonglink
+}
+
+// commit gonglink to the back repo (if it is already staged)
+func (gonglink *GongLink) Commit() *GongLink {
+	if _, ok := Stage.GongLinks[gonglink]; ok {
+		if Stage.BackRepo != nil {
+			Stage.BackRepo.CommitGongLink(gonglink)
+		}
+	}
+	return gonglink
+}
+
+// Checkout gonglink to the back repo (if it is already staged)
+func (gonglink *GongLink) Checkout() *GongLink {
+	if _, ok := Stage.GongLinks[gonglink]; ok {
+		if Stage.BackRepo != nil {
+			Stage.BackRepo.CheckoutGongLink(gonglink)
+		}
+	}
+	return gonglink
+}
+
+//
+// Legacy, to be deleted
+//
+
+// StageCopy appends a copy of gonglink to the model stage
+func (gonglink *GongLink) StageCopy() *GongLink {
+	_gonglink := new(GongLink)
+	*_gonglink = *gonglink
+	_gonglink.Stage()
+	return _gonglink
+}
+
+// StageAndCommit appends gonglink to the model stage and commit to the orm repo
+func (gonglink *GongLink) StageAndCommit() *GongLink {
+	gonglink.Stage()
+	if Stage.AllModelsStructCreateCallback != nil {
+		Stage.AllModelsStructCreateCallback.CreateORMGongLink(gonglink)
+	}
+	return gonglink
+}
+
+// DeleteStageAndCommit appends gonglink to the model stage and commit to the orm repo
+func (gonglink *GongLink) DeleteStageAndCommit() *GongLink {
+	gonglink.Unstage()
+	DeleteORMGongLink(gonglink)
+	return gonglink
+}
+
+// StageCopyAndCommit appends a copy of gonglink to the model stage and commit to the orm repo
+func (gonglink *GongLink) StageCopyAndCommit() *GongLink {
+	_gonglink := new(GongLink)
+	*_gonglink = *gonglink
+	_gonglink.Stage()
+	if Stage.AllModelsStructCreateCallback != nil {
+		Stage.AllModelsStructCreateCallback.CreateORMGongLink(gonglink)
+	}
+	return _gonglink
+}
+
+// CreateORMGongLink enables dynamic staging of a GongLink instance
+func CreateORMGongLink(gonglink *GongLink) {
+	gonglink.Stage()
+	if Stage.AllModelsStructCreateCallback != nil {
+		Stage.AllModelsStructCreateCallback.CreateORMGongLink(gonglink)
+	}
+}
+
+// DeleteORMGongLink enables dynamic staging of a GongLink instance
+func DeleteORMGongLink(gonglink *GongLink) {
+	gonglink.Unstage()
+	if Stage.AllModelsStructDeleteCallback != nil {
+		Stage.AllModelsStructDeleteCallback.DeleteORMGongLink(gonglink)
+	}
+}
+
+// for satisfaction of GongStruct interface
+func (gonglink *GongLink) GetName() (res string) {
+	return gonglink.Name
+}
+
 // Stage puts gongnote to the model stage
 func (gongnote *GongNote) Stage() *GongNote {
 	Stage.GongNotes[gongnote] = __member
@@ -842,6 +984,196 @@ func DeleteORMGongTimeField(gongtimefield *GongTimeField) {
 // for satisfaction of GongStruct interface
 func (gongtimefield *GongTimeField) GetName() (res string) {
 	return gongtimefield.Name
+}
+
+// Stage puts meta to the model stage
+func (meta *Meta) Stage() *Meta {
+	Stage.Metas[meta] = __member
+	Stage.Metas_mapString[meta.Name] = meta
+
+	return meta
+}
+
+// Unstage removes meta off the model stage
+func (meta *Meta) Unstage() *Meta {
+	delete(Stage.Metas, meta)
+	delete(Stage.Metas_mapString, meta.Name)
+	return meta
+}
+
+// commit meta to the back repo (if it is already staged)
+func (meta *Meta) Commit() *Meta {
+	if _, ok := Stage.Metas[meta]; ok {
+		if Stage.BackRepo != nil {
+			Stage.BackRepo.CommitMeta(meta)
+		}
+	}
+	return meta
+}
+
+// Checkout meta to the back repo (if it is already staged)
+func (meta *Meta) Checkout() *Meta {
+	if _, ok := Stage.Metas[meta]; ok {
+		if Stage.BackRepo != nil {
+			Stage.BackRepo.CheckoutMeta(meta)
+		}
+	}
+	return meta
+}
+
+//
+// Legacy, to be deleted
+//
+
+// StageCopy appends a copy of meta to the model stage
+func (meta *Meta) StageCopy() *Meta {
+	_meta := new(Meta)
+	*_meta = *meta
+	_meta.Stage()
+	return _meta
+}
+
+// StageAndCommit appends meta to the model stage and commit to the orm repo
+func (meta *Meta) StageAndCommit() *Meta {
+	meta.Stage()
+	if Stage.AllModelsStructCreateCallback != nil {
+		Stage.AllModelsStructCreateCallback.CreateORMMeta(meta)
+	}
+	return meta
+}
+
+// DeleteStageAndCommit appends meta to the model stage and commit to the orm repo
+func (meta *Meta) DeleteStageAndCommit() *Meta {
+	meta.Unstage()
+	DeleteORMMeta(meta)
+	return meta
+}
+
+// StageCopyAndCommit appends a copy of meta to the model stage and commit to the orm repo
+func (meta *Meta) StageCopyAndCommit() *Meta {
+	_meta := new(Meta)
+	*_meta = *meta
+	_meta.Stage()
+	if Stage.AllModelsStructCreateCallback != nil {
+		Stage.AllModelsStructCreateCallback.CreateORMMeta(meta)
+	}
+	return _meta
+}
+
+// CreateORMMeta enables dynamic staging of a Meta instance
+func CreateORMMeta(meta *Meta) {
+	meta.Stage()
+	if Stage.AllModelsStructCreateCallback != nil {
+		Stage.AllModelsStructCreateCallback.CreateORMMeta(meta)
+	}
+}
+
+// DeleteORMMeta enables dynamic staging of a Meta instance
+func DeleteORMMeta(meta *Meta) {
+	meta.Unstage()
+	if Stage.AllModelsStructDeleteCallback != nil {
+		Stage.AllModelsStructDeleteCallback.DeleteORMMeta(meta)
+	}
+}
+
+// for satisfaction of GongStruct interface
+func (meta *Meta) GetName() (res string) {
+	return meta.Name
+}
+
+// Stage puts metareference to the model stage
+func (metareference *MetaReference) Stage() *MetaReference {
+	Stage.MetaReferences[metareference] = __member
+	Stage.MetaReferences_mapString[metareference.Name] = metareference
+
+	return metareference
+}
+
+// Unstage removes metareference off the model stage
+func (metareference *MetaReference) Unstage() *MetaReference {
+	delete(Stage.MetaReferences, metareference)
+	delete(Stage.MetaReferences_mapString, metareference.Name)
+	return metareference
+}
+
+// commit metareference to the back repo (if it is already staged)
+func (metareference *MetaReference) Commit() *MetaReference {
+	if _, ok := Stage.MetaReferences[metareference]; ok {
+		if Stage.BackRepo != nil {
+			Stage.BackRepo.CommitMetaReference(metareference)
+		}
+	}
+	return metareference
+}
+
+// Checkout metareference to the back repo (if it is already staged)
+func (metareference *MetaReference) Checkout() *MetaReference {
+	if _, ok := Stage.MetaReferences[metareference]; ok {
+		if Stage.BackRepo != nil {
+			Stage.BackRepo.CheckoutMetaReference(metareference)
+		}
+	}
+	return metareference
+}
+
+//
+// Legacy, to be deleted
+//
+
+// StageCopy appends a copy of metareference to the model stage
+func (metareference *MetaReference) StageCopy() *MetaReference {
+	_metareference := new(MetaReference)
+	*_metareference = *metareference
+	_metareference.Stage()
+	return _metareference
+}
+
+// StageAndCommit appends metareference to the model stage and commit to the orm repo
+func (metareference *MetaReference) StageAndCommit() *MetaReference {
+	metareference.Stage()
+	if Stage.AllModelsStructCreateCallback != nil {
+		Stage.AllModelsStructCreateCallback.CreateORMMetaReference(metareference)
+	}
+	return metareference
+}
+
+// DeleteStageAndCommit appends metareference to the model stage and commit to the orm repo
+func (metareference *MetaReference) DeleteStageAndCommit() *MetaReference {
+	metareference.Unstage()
+	DeleteORMMetaReference(metareference)
+	return metareference
+}
+
+// StageCopyAndCommit appends a copy of metareference to the model stage and commit to the orm repo
+func (metareference *MetaReference) StageCopyAndCommit() *MetaReference {
+	_metareference := new(MetaReference)
+	*_metareference = *metareference
+	_metareference.Stage()
+	if Stage.AllModelsStructCreateCallback != nil {
+		Stage.AllModelsStructCreateCallback.CreateORMMetaReference(metareference)
+	}
+	return _metareference
+}
+
+// CreateORMMetaReference enables dynamic staging of a MetaReference instance
+func CreateORMMetaReference(metareference *MetaReference) {
+	metareference.Stage()
+	if Stage.AllModelsStructCreateCallback != nil {
+		Stage.AllModelsStructCreateCallback.CreateORMMetaReference(metareference)
+	}
+}
+
+// DeleteORMMetaReference enables dynamic staging of a MetaReference instance
+func DeleteORMMetaReference(metareference *MetaReference) {
+	metareference.Unstage()
+	if Stage.AllModelsStructDeleteCallback != nil {
+		Stage.AllModelsStructDeleteCallback.DeleteORMMetaReference(metareference)
+	}
+}
+
+// for satisfaction of GongStruct interface
+func (metareference *MetaReference) GetName() (res string) {
+	return metareference.Name
 }
 
 // Stage puts modelpkg to the model stage
@@ -1134,9 +1466,12 @@ type AllModelsStructCreateInterface interface { // insertion point for Callbacks
 	CreateORMGongBasicField(GongBasicField *GongBasicField)
 	CreateORMGongEnum(GongEnum *GongEnum)
 	CreateORMGongEnumValue(GongEnumValue *GongEnumValue)
+	CreateORMGongLink(GongLink *GongLink)
 	CreateORMGongNote(GongNote *GongNote)
 	CreateORMGongStruct(GongStruct *GongStruct)
 	CreateORMGongTimeField(GongTimeField *GongTimeField)
+	CreateORMMeta(Meta *Meta)
+	CreateORMMetaReference(MetaReference *MetaReference)
 	CreateORMModelPkg(ModelPkg *ModelPkg)
 	CreateORMPointerToGongStructField(PointerToGongStructField *PointerToGongStructField)
 	CreateORMSliceOfPointerToGongStructField(SliceOfPointerToGongStructField *SliceOfPointerToGongStructField)
@@ -1146,9 +1481,12 @@ type AllModelsStructDeleteInterface interface { // insertion point for Callbacks
 	DeleteORMGongBasicField(GongBasicField *GongBasicField)
 	DeleteORMGongEnum(GongEnum *GongEnum)
 	DeleteORMGongEnumValue(GongEnumValue *GongEnumValue)
+	DeleteORMGongLink(GongLink *GongLink)
 	DeleteORMGongNote(GongNote *GongNote)
 	DeleteORMGongStruct(GongStruct *GongStruct)
 	DeleteORMGongTimeField(GongTimeField *GongTimeField)
+	DeleteORMMeta(Meta *Meta)
+	DeleteORMMetaReference(MetaReference *MetaReference)
 	DeleteORMModelPkg(ModelPkg *ModelPkg)
 	DeleteORMPointerToGongStructField(PointerToGongStructField *PointerToGongStructField)
 	DeleteORMSliceOfPointerToGongStructField(SliceOfPointerToGongStructField *SliceOfPointerToGongStructField)
@@ -1164,6 +1502,9 @@ func (stage *StageStruct) Reset() { // insertion point for array reset
 	stage.GongEnumValues = make(map[*GongEnumValue]any)
 	stage.GongEnumValues_mapString = make(map[string]*GongEnumValue)
 
+	stage.GongLinks = make(map[*GongLink]any)
+	stage.GongLinks_mapString = make(map[string]*GongLink)
+
 	stage.GongNotes = make(map[*GongNote]any)
 	stage.GongNotes_mapString = make(map[string]*GongNote)
 
@@ -1172,6 +1513,12 @@ func (stage *StageStruct) Reset() { // insertion point for array reset
 
 	stage.GongTimeFields = make(map[*GongTimeField]any)
 	stage.GongTimeFields_mapString = make(map[string]*GongTimeField)
+
+	stage.Metas = make(map[*Meta]any)
+	stage.Metas_mapString = make(map[string]*Meta)
+
+	stage.MetaReferences = make(map[*MetaReference]any)
+	stage.MetaReferences_mapString = make(map[string]*MetaReference)
 
 	stage.ModelPkgs = make(map[*ModelPkg]any)
 	stage.ModelPkgs_mapString = make(map[string]*ModelPkg)
@@ -1194,6 +1541,9 @@ func (stage *StageStruct) Nil() { // insertion point for array nil
 	stage.GongEnumValues = nil
 	stage.GongEnumValues_mapString = nil
 
+	stage.GongLinks = nil
+	stage.GongLinks_mapString = nil
+
 	stage.GongNotes = nil
 	stage.GongNotes_mapString = nil
 
@@ -1202,6 +1552,12 @@ func (stage *StageStruct) Nil() { // insertion point for array nil
 
 	stage.GongTimeFields = nil
 	stage.GongTimeFields_mapString = nil
+
+	stage.Metas = nil
+	stage.Metas_mapString = nil
+
+	stage.MetaReferences = nil
+	stage.MetaReferences_mapString = nil
 
 	stage.ModelPkgs = nil
 	stage.ModelPkgs_mapString = nil
@@ -1212,634 +1568,6 @@ func (stage *StageStruct) Nil() { // insertion point for array nil
 	stage.SliceOfPointerToGongStructFields = nil
 	stage.SliceOfPointerToGongStructFields_mapString = nil
 
-}
-
-const marshallRes = `package {{PackageName}}
-
-import (
-	"time"
-
-	"{{ModelsPackageName}}"
-)
-
-// generated in order to avoid error in the package import
-// if there are no elements in the stage to marshall
-var ___dummy__Stage models.StageStruct
-
-func init() {
-	var __Dummy_time_variable time.Time
-	_ = __Dummy_time_variable
-	InjectionGateway["{{databaseName}}"] = {{databaseName}}Injection
-}
-
-// {{databaseName}}Injection will stage objects of database "{{databaseName}}"
-func {{databaseName}}Injection() {
-
-	// Declaration of instances to stage{{Identifiers}}
-
-	// Setup of values{{ValueInitializers}}
-
-	// Setup of pointers{{PointersInitializers}}
-}
-
-`
-
-const IdentifiersDecls = `
-	{{Identifier}} := (&models.{{GeneratedStructName}}{Name: ` + "`" + `{{GeneratedFieldNameValue}}` + "`" + `}).Stage()`
-
-const StringInitStatement = `
-	{{Identifier}}.{{GeneratedFieldName}} = ` + "`" + `{{GeneratedFieldNameValue}}` + "`"
-
-const StringEnumInitStatement = `
-	{{Identifier}}.{{GeneratedFieldName}} = {{GeneratedFieldNameValue}}`
-
-const NumberInitStatement = `
-	{{Identifier}}.{{GeneratedFieldName}} = {{GeneratedFieldNameValue}}`
-
-const PointerFieldInitStatement = `
-	{{Identifier}}.{{GeneratedFieldName}} = {{GeneratedFieldNameValue}}`
-
-const SliceOfPointersFieldInitStatement = `
-	{{Identifier}}.{{GeneratedFieldName}} = append({{Identifier}}.{{GeneratedFieldName}}, {{GeneratedFieldNameValue}})`
-
-const TimeInitStatement = `
-	{{Identifier}}.{{GeneratedFieldName}}, _ = time.Parse("2006-01-02 15:04:05.999999999 -0700 MST", "{{GeneratedFieldNameValue}}")`
-
-// Marshall marshall the stage content into the file as an instanciation into a stage
-func (stage *StageStruct) Marshall(file *os.File, modelsPackageName, packageName string) {
-
-	name := file.Name()
-
-	if !strings.HasSuffix(name, ".go") {
-		log.Fatalln(name + " is not a go filename")
-	}
-
-	log.Println("filename of marshall output  is " + name)
-
-	res := marshallRes
-	res = strings.ReplaceAll(res, "{{databaseName}}", strings.ReplaceAll(path.Base(name), ".go", ""))
-	res = strings.ReplaceAll(res, "{{PackageName}}", packageName)
-	res = strings.ReplaceAll(res, "{{ModelsPackageName}}", modelsPackageName)
-
-	// map of identifiers
-	// var StageMapDstructIds map[*Dstruct]string
-	identifiersDecl := ""
-	initializerStatements := ""
-	pointersInitializesStatements := ""
-
-	id := ""
-	decl := ""
-	setValueField := ""
-
-	// insertion initialization of objects to stage
-	map_GongBasicField_Identifiers := make(map[*GongBasicField]string)
-	_ = map_GongBasicField_Identifiers
-
-	gongbasicfieldOrdered := []*GongBasicField{}
-	for gongbasicfield := range stage.GongBasicFields {
-		gongbasicfieldOrdered = append(gongbasicfieldOrdered, gongbasicfield)
-	}
-	sort.Slice(gongbasicfieldOrdered[:], func(i, j int) bool {
-		return gongbasicfieldOrdered[i].Name < gongbasicfieldOrdered[j].Name
-	})
-	identifiersDecl += "\n\n	// Declarations of staged instances of GongBasicField"
-	for idx, gongbasicfield := range gongbasicfieldOrdered {
-
-		id = generatesIdentifier("GongBasicField", idx, gongbasicfield.Name)
-		map_GongBasicField_Identifiers[gongbasicfield] = id
-
-		decl = IdentifiersDecls
-		decl = strings.ReplaceAll(decl, "{{Identifier}}", id)
-		decl = strings.ReplaceAll(decl, "{{GeneratedStructName}}", "GongBasicField")
-		decl = strings.ReplaceAll(decl, "{{GeneratedFieldNameValue}}", gongbasicfield.Name)
-		identifiersDecl += decl
-
-		initializerStatements += "\n\n	// GongBasicField values setup"
-		// Initialisation of values
-		setValueField = StringInitStatement
-		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "Name")
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", string(gongbasicfield.Name))
-		initializerStatements += setValueField
-
-		setValueField = StringInitStatement
-		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "BasicKindName")
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", string(gongbasicfield.BasicKindName))
-		initializerStatements += setValueField
-
-		setValueField = StringInitStatement
-		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "DeclaredType")
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", string(gongbasicfield.DeclaredType))
-		initializerStatements += setValueField
-
-		setValueField = StringInitStatement
-		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "CompositeStructName")
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", string(gongbasicfield.CompositeStructName))
-		initializerStatements += setValueField
-
-		setValueField = NumberInitStatement
-		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "Index")
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", fmt.Sprintf("%d", gongbasicfield.Index))
-		initializerStatements += setValueField
-
-	}
-
-	map_GongEnum_Identifiers := make(map[*GongEnum]string)
-	_ = map_GongEnum_Identifiers
-
-	gongenumOrdered := []*GongEnum{}
-	for gongenum := range stage.GongEnums {
-		gongenumOrdered = append(gongenumOrdered, gongenum)
-	}
-	sort.Slice(gongenumOrdered[:], func(i, j int) bool {
-		return gongenumOrdered[i].Name < gongenumOrdered[j].Name
-	})
-	identifiersDecl += "\n\n	// Declarations of staged instances of GongEnum"
-	for idx, gongenum := range gongenumOrdered {
-
-		id = generatesIdentifier("GongEnum", idx, gongenum.Name)
-		map_GongEnum_Identifiers[gongenum] = id
-
-		decl = IdentifiersDecls
-		decl = strings.ReplaceAll(decl, "{{Identifier}}", id)
-		decl = strings.ReplaceAll(decl, "{{GeneratedStructName}}", "GongEnum")
-		decl = strings.ReplaceAll(decl, "{{GeneratedFieldNameValue}}", gongenum.Name)
-		identifiersDecl += decl
-
-		initializerStatements += "\n\n	// GongEnum values setup"
-		// Initialisation of values
-		setValueField = StringInitStatement
-		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "Name")
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", string(gongenum.Name))
-		initializerStatements += setValueField
-
-		setValueField = NumberInitStatement
-		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "Type")
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", "models."+gongenum.Type.ToCodeString())
-		initializerStatements += setValueField
-
-	}
-
-	map_GongEnumValue_Identifiers := make(map[*GongEnumValue]string)
-	_ = map_GongEnumValue_Identifiers
-
-	gongenumvalueOrdered := []*GongEnumValue{}
-	for gongenumvalue := range stage.GongEnumValues {
-		gongenumvalueOrdered = append(gongenumvalueOrdered, gongenumvalue)
-	}
-	sort.Slice(gongenumvalueOrdered[:], func(i, j int) bool {
-		return gongenumvalueOrdered[i].Name < gongenumvalueOrdered[j].Name
-	})
-	identifiersDecl += "\n\n	// Declarations of staged instances of GongEnumValue"
-	for idx, gongenumvalue := range gongenumvalueOrdered {
-
-		id = generatesIdentifier("GongEnumValue", idx, gongenumvalue.Name)
-		map_GongEnumValue_Identifiers[gongenumvalue] = id
-
-		decl = IdentifiersDecls
-		decl = strings.ReplaceAll(decl, "{{Identifier}}", id)
-		decl = strings.ReplaceAll(decl, "{{GeneratedStructName}}", "GongEnumValue")
-		decl = strings.ReplaceAll(decl, "{{GeneratedFieldNameValue}}", gongenumvalue.Name)
-		identifiersDecl += decl
-
-		initializerStatements += "\n\n	// GongEnumValue values setup"
-		// Initialisation of values
-		setValueField = StringInitStatement
-		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "Name")
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", string(gongenumvalue.Name))
-		initializerStatements += setValueField
-
-		setValueField = StringInitStatement
-		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "Value")
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", string(gongenumvalue.Value))
-		initializerStatements += setValueField
-
-	}
-
-	map_GongNote_Identifiers := make(map[*GongNote]string)
-	_ = map_GongNote_Identifiers
-
-	gongnoteOrdered := []*GongNote{}
-	for gongnote := range stage.GongNotes {
-		gongnoteOrdered = append(gongnoteOrdered, gongnote)
-	}
-	sort.Slice(gongnoteOrdered[:], func(i, j int) bool {
-		return gongnoteOrdered[i].Name < gongnoteOrdered[j].Name
-	})
-	identifiersDecl += "\n\n	// Declarations of staged instances of GongNote"
-	for idx, gongnote := range gongnoteOrdered {
-
-		id = generatesIdentifier("GongNote", idx, gongnote.Name)
-		map_GongNote_Identifiers[gongnote] = id
-
-		decl = IdentifiersDecls
-		decl = strings.ReplaceAll(decl, "{{Identifier}}", id)
-		decl = strings.ReplaceAll(decl, "{{GeneratedStructName}}", "GongNote")
-		decl = strings.ReplaceAll(decl, "{{GeneratedFieldNameValue}}", gongnote.Name)
-		identifiersDecl += decl
-
-		initializerStatements += "\n\n	// GongNote values setup"
-		// Initialisation of values
-		setValueField = StringInitStatement
-		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "Name")
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", string(gongnote.Name))
-		initializerStatements += setValueField
-
-		setValueField = StringInitStatement
-		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "Body")
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", string(gongnote.Body))
-		initializerStatements += setValueField
-
-	}
-
-	map_GongStruct_Identifiers := make(map[*GongStruct]string)
-	_ = map_GongStruct_Identifiers
-
-	gongstructOrdered := []*GongStruct{}
-	for gongstruct := range stage.GongStructs {
-		gongstructOrdered = append(gongstructOrdered, gongstruct)
-	}
-	sort.Slice(gongstructOrdered[:], func(i, j int) bool {
-		return gongstructOrdered[i].Name < gongstructOrdered[j].Name
-	})
-	identifiersDecl += "\n\n	// Declarations of staged instances of GongStruct"
-	for idx, gongstruct := range gongstructOrdered {
-
-		id = generatesIdentifier("GongStruct", idx, gongstruct.Name)
-		map_GongStruct_Identifiers[gongstruct] = id
-
-		decl = IdentifiersDecls
-		decl = strings.ReplaceAll(decl, "{{Identifier}}", id)
-		decl = strings.ReplaceAll(decl, "{{GeneratedStructName}}", "GongStruct")
-		decl = strings.ReplaceAll(decl, "{{GeneratedFieldNameValue}}", gongstruct.Name)
-		identifiersDecl += decl
-
-		initializerStatements += "\n\n	// GongStruct values setup"
-		// Initialisation of values
-		setValueField = StringInitStatement
-		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "Name")
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", string(gongstruct.Name))
-		initializerStatements += setValueField
-
-	}
-
-	map_GongTimeField_Identifiers := make(map[*GongTimeField]string)
-	_ = map_GongTimeField_Identifiers
-
-	gongtimefieldOrdered := []*GongTimeField{}
-	for gongtimefield := range stage.GongTimeFields {
-		gongtimefieldOrdered = append(gongtimefieldOrdered, gongtimefield)
-	}
-	sort.Slice(gongtimefieldOrdered[:], func(i, j int) bool {
-		return gongtimefieldOrdered[i].Name < gongtimefieldOrdered[j].Name
-	})
-	identifiersDecl += "\n\n	// Declarations of staged instances of GongTimeField"
-	for idx, gongtimefield := range gongtimefieldOrdered {
-
-		id = generatesIdentifier("GongTimeField", idx, gongtimefield.Name)
-		map_GongTimeField_Identifiers[gongtimefield] = id
-
-		decl = IdentifiersDecls
-		decl = strings.ReplaceAll(decl, "{{Identifier}}", id)
-		decl = strings.ReplaceAll(decl, "{{GeneratedStructName}}", "GongTimeField")
-		decl = strings.ReplaceAll(decl, "{{GeneratedFieldNameValue}}", gongtimefield.Name)
-		identifiersDecl += decl
-
-		initializerStatements += "\n\n	// GongTimeField values setup"
-		// Initialisation of values
-		setValueField = StringInitStatement
-		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "Name")
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", string(gongtimefield.Name))
-		initializerStatements += setValueField
-
-		setValueField = NumberInitStatement
-		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "Index")
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", fmt.Sprintf("%d", gongtimefield.Index))
-		initializerStatements += setValueField
-
-		setValueField = StringInitStatement
-		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "CompositeStructName")
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", string(gongtimefield.CompositeStructName))
-		initializerStatements += setValueField
-
-	}
-
-	map_ModelPkg_Identifiers := make(map[*ModelPkg]string)
-	_ = map_ModelPkg_Identifiers
-
-	modelpkgOrdered := []*ModelPkg{}
-	for modelpkg := range stage.ModelPkgs {
-		modelpkgOrdered = append(modelpkgOrdered, modelpkg)
-	}
-	sort.Slice(modelpkgOrdered[:], func(i, j int) bool {
-		return modelpkgOrdered[i].Name < modelpkgOrdered[j].Name
-	})
-	identifiersDecl += "\n\n	// Declarations of staged instances of ModelPkg"
-	for idx, modelpkg := range modelpkgOrdered {
-
-		id = generatesIdentifier("ModelPkg", idx, modelpkg.Name)
-		map_ModelPkg_Identifiers[modelpkg] = id
-
-		decl = IdentifiersDecls
-		decl = strings.ReplaceAll(decl, "{{Identifier}}", id)
-		decl = strings.ReplaceAll(decl, "{{GeneratedStructName}}", "ModelPkg")
-		decl = strings.ReplaceAll(decl, "{{GeneratedFieldNameValue}}", modelpkg.Name)
-		identifiersDecl += decl
-
-		initializerStatements += "\n\n	// ModelPkg values setup"
-		// Initialisation of values
-		setValueField = StringInitStatement
-		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "Name")
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", string(modelpkg.Name))
-		initializerStatements += setValueField
-
-		setValueField = StringInitStatement
-		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "PkgPath")
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", string(modelpkg.PkgPath))
-		initializerStatements += setValueField
-
-	}
-
-	map_PointerToGongStructField_Identifiers := make(map[*PointerToGongStructField]string)
-	_ = map_PointerToGongStructField_Identifiers
-
-	pointertogongstructfieldOrdered := []*PointerToGongStructField{}
-	for pointertogongstructfield := range stage.PointerToGongStructFields {
-		pointertogongstructfieldOrdered = append(pointertogongstructfieldOrdered, pointertogongstructfield)
-	}
-	sort.Slice(pointertogongstructfieldOrdered[:], func(i, j int) bool {
-		return pointertogongstructfieldOrdered[i].Name < pointertogongstructfieldOrdered[j].Name
-	})
-	identifiersDecl += "\n\n	// Declarations of staged instances of PointerToGongStructField"
-	for idx, pointertogongstructfield := range pointertogongstructfieldOrdered {
-
-		id = generatesIdentifier("PointerToGongStructField", idx, pointertogongstructfield.Name)
-		map_PointerToGongStructField_Identifiers[pointertogongstructfield] = id
-
-		decl = IdentifiersDecls
-		decl = strings.ReplaceAll(decl, "{{Identifier}}", id)
-		decl = strings.ReplaceAll(decl, "{{GeneratedStructName}}", "PointerToGongStructField")
-		decl = strings.ReplaceAll(decl, "{{GeneratedFieldNameValue}}", pointertogongstructfield.Name)
-		identifiersDecl += decl
-
-		initializerStatements += "\n\n	// PointerToGongStructField values setup"
-		// Initialisation of values
-		setValueField = StringInitStatement
-		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "Name")
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", string(pointertogongstructfield.Name))
-		initializerStatements += setValueField
-
-		setValueField = NumberInitStatement
-		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "Index")
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", fmt.Sprintf("%d", pointertogongstructfield.Index))
-		initializerStatements += setValueField
-
-		setValueField = StringInitStatement
-		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "CompositeStructName")
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", string(pointertogongstructfield.CompositeStructName))
-		initializerStatements += setValueField
-
-	}
-
-	map_SliceOfPointerToGongStructField_Identifiers := make(map[*SliceOfPointerToGongStructField]string)
-	_ = map_SliceOfPointerToGongStructField_Identifiers
-
-	sliceofpointertogongstructfieldOrdered := []*SliceOfPointerToGongStructField{}
-	for sliceofpointertogongstructfield := range stage.SliceOfPointerToGongStructFields {
-		sliceofpointertogongstructfieldOrdered = append(sliceofpointertogongstructfieldOrdered, sliceofpointertogongstructfield)
-	}
-	sort.Slice(sliceofpointertogongstructfieldOrdered[:], func(i, j int) bool {
-		return sliceofpointertogongstructfieldOrdered[i].Name < sliceofpointertogongstructfieldOrdered[j].Name
-	})
-	identifiersDecl += "\n\n	// Declarations of staged instances of SliceOfPointerToGongStructField"
-	for idx, sliceofpointertogongstructfield := range sliceofpointertogongstructfieldOrdered {
-
-		id = generatesIdentifier("SliceOfPointerToGongStructField", idx, sliceofpointertogongstructfield.Name)
-		map_SliceOfPointerToGongStructField_Identifiers[sliceofpointertogongstructfield] = id
-
-		decl = IdentifiersDecls
-		decl = strings.ReplaceAll(decl, "{{Identifier}}", id)
-		decl = strings.ReplaceAll(decl, "{{GeneratedStructName}}", "SliceOfPointerToGongStructField")
-		decl = strings.ReplaceAll(decl, "{{GeneratedFieldNameValue}}", sliceofpointertogongstructfield.Name)
-		identifiersDecl += decl
-
-		initializerStatements += "\n\n	// SliceOfPointerToGongStructField values setup"
-		// Initialisation of values
-		setValueField = StringInitStatement
-		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "Name")
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", string(sliceofpointertogongstructfield.Name))
-		initializerStatements += setValueField
-
-		setValueField = NumberInitStatement
-		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "Index")
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", fmt.Sprintf("%d", sliceofpointertogongstructfield.Index))
-		initializerStatements += setValueField
-
-		setValueField = StringInitStatement
-		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "CompositeStructName")
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", string(sliceofpointertogongstructfield.CompositeStructName))
-		initializerStatements += setValueField
-
-	}
-
-	// insertion initialization of objects to stage
-	for idx, gongbasicfield := range gongbasicfieldOrdered {
-		var setPointerField string
-		_ = setPointerField
-
-		id = generatesIdentifier("GongBasicField", idx, gongbasicfield.Name)
-		map_GongBasicField_Identifiers[gongbasicfield] = id
-
-		// Initialisation of values
-		if gongbasicfield.GongEnum != nil {
-			setPointerField = PointerFieldInitStatement
-			setPointerField = strings.ReplaceAll(setPointerField, "{{Identifier}}", id)
-			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldName}}", "GongEnum")
-			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldNameValue}}", map_GongEnum_Identifiers[gongbasicfield.GongEnum])
-			pointersInitializesStatements += setPointerField
-		}
-
-	}
-
-	for idx, gongenum := range gongenumOrdered {
-		var setPointerField string
-		_ = setPointerField
-
-		id = generatesIdentifier("GongEnum", idx, gongenum.Name)
-		map_GongEnum_Identifiers[gongenum] = id
-
-		// Initialisation of values
-		for _, _gongenumvalue := range gongenum.GongEnumValues {
-			setPointerField = SliceOfPointersFieldInitStatement
-			setPointerField = strings.ReplaceAll(setPointerField, "{{Identifier}}", id)
-			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldName}}", "GongEnumValues")
-			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldNameValue}}", map_GongEnumValue_Identifiers[_gongenumvalue])
-			pointersInitializesStatements += setPointerField
-		}
-
-	}
-
-	for idx, gongenumvalue := range gongenumvalueOrdered {
-		var setPointerField string
-		_ = setPointerField
-
-		id = generatesIdentifier("GongEnumValue", idx, gongenumvalue.Name)
-		map_GongEnumValue_Identifiers[gongenumvalue] = id
-
-		// Initialisation of values
-	}
-
-	for idx, gongnote := range gongnoteOrdered {
-		var setPointerField string
-		_ = setPointerField
-
-		id = generatesIdentifier("GongNote", idx, gongnote.Name)
-		map_GongNote_Identifiers[gongnote] = id
-
-		// Initialisation of values
-	}
-
-	for idx, gongstruct := range gongstructOrdered {
-		var setPointerField string
-		_ = setPointerField
-
-		id = generatesIdentifier("GongStruct", idx, gongstruct.Name)
-		map_GongStruct_Identifiers[gongstruct] = id
-
-		// Initialisation of values
-		for _, _gongbasicfield := range gongstruct.GongBasicFields {
-			setPointerField = SliceOfPointersFieldInitStatement
-			setPointerField = strings.ReplaceAll(setPointerField, "{{Identifier}}", id)
-			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldName}}", "GongBasicFields")
-			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldNameValue}}", map_GongBasicField_Identifiers[_gongbasicfield])
-			pointersInitializesStatements += setPointerField
-		}
-
-		for _, _gongtimefield := range gongstruct.GongTimeFields {
-			setPointerField = SliceOfPointersFieldInitStatement
-			setPointerField = strings.ReplaceAll(setPointerField, "{{Identifier}}", id)
-			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldName}}", "GongTimeFields")
-			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldNameValue}}", map_GongTimeField_Identifiers[_gongtimefield])
-			pointersInitializesStatements += setPointerField
-		}
-
-		for _, _pointertogongstructfield := range gongstruct.PointerToGongStructFields {
-			setPointerField = SliceOfPointersFieldInitStatement
-			setPointerField = strings.ReplaceAll(setPointerField, "{{Identifier}}", id)
-			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldName}}", "PointerToGongStructFields")
-			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldNameValue}}", map_PointerToGongStructField_Identifiers[_pointertogongstructfield])
-			pointersInitializesStatements += setPointerField
-		}
-
-		for _, _sliceofpointertogongstructfield := range gongstruct.SliceOfPointerToGongStructFields {
-			setPointerField = SliceOfPointersFieldInitStatement
-			setPointerField = strings.ReplaceAll(setPointerField, "{{Identifier}}", id)
-			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldName}}", "SliceOfPointerToGongStructFields")
-			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldNameValue}}", map_SliceOfPointerToGongStructField_Identifiers[_sliceofpointertogongstructfield])
-			pointersInitializesStatements += setPointerField
-		}
-
-	}
-
-	for idx, gongtimefield := range gongtimefieldOrdered {
-		var setPointerField string
-		_ = setPointerField
-
-		id = generatesIdentifier("GongTimeField", idx, gongtimefield.Name)
-		map_GongTimeField_Identifiers[gongtimefield] = id
-
-		// Initialisation of values
-	}
-
-	for idx, modelpkg := range modelpkgOrdered {
-		var setPointerField string
-		_ = setPointerField
-
-		id = generatesIdentifier("ModelPkg", idx, modelpkg.Name)
-		map_ModelPkg_Identifiers[modelpkg] = id
-
-		// Initialisation of values
-	}
-
-	for idx, pointertogongstructfield := range pointertogongstructfieldOrdered {
-		var setPointerField string
-		_ = setPointerField
-
-		id = generatesIdentifier("PointerToGongStructField", idx, pointertogongstructfield.Name)
-		map_PointerToGongStructField_Identifiers[pointertogongstructfield] = id
-
-		// Initialisation of values
-		if pointertogongstructfield.GongStruct != nil {
-			setPointerField = PointerFieldInitStatement
-			setPointerField = strings.ReplaceAll(setPointerField, "{{Identifier}}", id)
-			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldName}}", "GongStruct")
-			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldNameValue}}", map_GongStruct_Identifiers[pointertogongstructfield.GongStruct])
-			pointersInitializesStatements += setPointerField
-		}
-
-	}
-
-	for idx, sliceofpointertogongstructfield := range sliceofpointertogongstructfieldOrdered {
-		var setPointerField string
-		_ = setPointerField
-
-		id = generatesIdentifier("SliceOfPointerToGongStructField", idx, sliceofpointertogongstructfield.Name)
-		map_SliceOfPointerToGongStructField_Identifiers[sliceofpointertogongstructfield] = id
-
-		// Initialisation of values
-		if sliceofpointertogongstructfield.GongStruct != nil {
-			setPointerField = PointerFieldInitStatement
-			setPointerField = strings.ReplaceAll(setPointerField, "{{Identifier}}", id)
-			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldName}}", "GongStruct")
-			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldNameValue}}", map_GongStruct_Identifiers[sliceofpointertogongstructfield.GongStruct])
-			pointersInitializesStatements += setPointerField
-		}
-
-	}
-
-	res = strings.ReplaceAll(res, "{{Identifiers}}", identifiersDecl)
-	res = strings.ReplaceAll(res, "{{ValueInitializers}}", initializerStatements)
-	res = strings.ReplaceAll(res, "{{PointersInitializers}}", pointersInitializesStatements)
-
-	fmt.Fprintln(file, res)
-}
-
-// unique identifier per struct
-func generatesIdentifier(gongStructName string, idx int, instanceName string) (identifier string) {
-
-	identifier = instanceName
-	// Make a Regex to say we only want letters and numbers
-	reg, err := regexp.Compile("[^a-zA-Z0-9]+")
-	if err != nil {
-		log.Fatal(err)
-	}
-	processedString := reg.ReplaceAllString(instanceName, "_")
-
-	identifier = fmt.Sprintf("__%s__%06d_%s", gongStructName, idx, processedString)
-
-	return
 }
 
 // insertion point of functions that provide maps for reverse associations
@@ -1882,7 +1610,21 @@ func (stageStruct *StageStruct) CreateReverseMap_GongEnum_GongEnumValues() (res 
 
 // generate function for reverse association maps of GongEnumValue
 
+// generate function for reverse association maps of GongLink
+
 // generate function for reverse association maps of GongNote
+func (stageStruct *StageStruct) CreateReverseMap_GongNote_Links() (res map[*GongLink]*GongNote) {
+	res = make(map[*GongLink]*GongNote)
+
+	for gongnote := range stageStruct.GongNotes {
+		for _, gonglink_ := range gongnote.Links {
+			res[gonglink_] = gongnote
+		}
+	}
+
+	return
+}
+
 
 // generate function for reverse association maps of GongStruct
 func (stageStruct *StageStruct) CreateReverseMap_GongStruct_GongBasicFields() (res map[*GongBasicField]*GongStruct) {
@@ -1936,6 +1678,22 @@ func (stageStruct *StageStruct) CreateReverseMap_GongStruct_SliceOfPointerToGong
 
 // generate function for reverse association maps of GongTimeField
 
+// generate function for reverse association maps of Meta
+func (stageStruct *StageStruct) CreateReverseMap_Meta_MetaReferences() (res map[*MetaReference]*Meta) {
+	res = make(map[*MetaReference]*Meta)
+
+	for meta := range stageStruct.Metas {
+		for _, metareference_ := range meta.MetaReferences {
+			res[metareference_] = meta
+		}
+	}
+
+	return
+}
+
+
+// generate function for reverse association maps of MetaReference
+
 // generate function for reverse association maps of ModelPkg
 
 // generate function for reverse association maps of PointerToGongStructField
@@ -1988,7 +1746,7 @@ func (stageStruct *StageStruct) CreateReverseMap_SliceOfPointerToGongStructField
 // - full refactoring of Gongstruct identifiers / fields
 type Gongstruct interface {
 	// insertion point for generic types
-	GongBasicField | GongEnum | GongEnumValue | GongNote | GongStruct | GongTimeField | ModelPkg | PointerToGongStructField | SliceOfPointerToGongStructField
+	GongBasicField | GongEnum | GongEnumValue | GongLink | GongNote | GongStruct | GongTimeField | Meta | MetaReference | ModelPkg | PointerToGongStructField | SliceOfPointerToGongStructField
 }
 
 // Gongstruct is the type parameter for generated generic function that allows
@@ -1997,7 +1755,7 @@ type Gongstruct interface {
 // - full refactoring of Gongstruct identifiers / fields
 type PointerToGongstruct interface {
 	// insertion point for generic types
-	*GongBasicField | *GongEnum | *GongEnumValue | *GongNote | *GongStruct | *GongTimeField | *ModelPkg | *PointerToGongStructField | *SliceOfPointerToGongStructField
+	*GongBasicField | *GongEnum | *GongEnumValue | *GongLink | *GongNote | *GongStruct | *GongTimeField | *Meta | *MetaReference | *ModelPkg | *PointerToGongStructField | *SliceOfPointerToGongStructField
 	GetName() string
 }
 
@@ -2007,9 +1765,12 @@ type GongstructSet interface {
 		map[*GongBasicField]any |
 		map[*GongEnum]any |
 		map[*GongEnumValue]any |
+		map[*GongLink]any |
 		map[*GongNote]any |
 		map[*GongStruct]any |
 		map[*GongTimeField]any |
+		map[*Meta]any |
+		map[*MetaReference]any |
 		map[*ModelPkg]any |
 		map[*PointerToGongStructField]any |
 		map[*SliceOfPointerToGongStructField]any |
@@ -2022,9 +1783,12 @@ type GongstructMapString interface {
 		map[string]*GongBasicField |
 		map[string]*GongEnum |
 		map[string]*GongEnumValue |
+		map[string]*GongLink |
 		map[string]*GongNote |
 		map[string]*GongStruct |
 		map[string]*GongTimeField |
+		map[string]*Meta |
+		map[string]*MetaReference |
 		map[string]*ModelPkg |
 		map[string]*PointerToGongStructField |
 		map[string]*SliceOfPointerToGongStructField |
@@ -2044,12 +1808,18 @@ func GongGetSet[Type GongstructSet]() *Type {
 		return any(&Stage.GongEnums).(*Type)
 	case map[*GongEnumValue]any:
 		return any(&Stage.GongEnumValues).(*Type)
+	case map[*GongLink]any:
+		return any(&Stage.GongLinks).(*Type)
 	case map[*GongNote]any:
 		return any(&Stage.GongNotes).(*Type)
 	case map[*GongStruct]any:
 		return any(&Stage.GongStructs).(*Type)
 	case map[*GongTimeField]any:
 		return any(&Stage.GongTimeFields).(*Type)
+	case map[*Meta]any:
+		return any(&Stage.Metas).(*Type)
+	case map[*MetaReference]any:
+		return any(&Stage.MetaReferences).(*Type)
 	case map[*ModelPkg]any:
 		return any(&Stage.ModelPkgs).(*Type)
 	case map[*PointerToGongStructField]any:
@@ -2074,12 +1844,18 @@ func GongGetMap[Type GongstructMapString]() *Type {
 		return any(&Stage.GongEnums_mapString).(*Type)
 	case map[string]*GongEnumValue:
 		return any(&Stage.GongEnumValues_mapString).(*Type)
+	case map[string]*GongLink:
+		return any(&Stage.GongLinks_mapString).(*Type)
 	case map[string]*GongNote:
 		return any(&Stage.GongNotes_mapString).(*Type)
 	case map[string]*GongStruct:
 		return any(&Stage.GongStructs_mapString).(*Type)
 	case map[string]*GongTimeField:
 		return any(&Stage.GongTimeFields_mapString).(*Type)
+	case map[string]*Meta:
+		return any(&Stage.Metas_mapString).(*Type)
+	case map[string]*MetaReference:
+		return any(&Stage.MetaReferences_mapString).(*Type)
 	case map[string]*ModelPkg:
 		return any(&Stage.ModelPkgs_mapString).(*Type)
 	case map[string]*PointerToGongStructField:
@@ -2104,12 +1880,18 @@ func GetGongstructInstancesSet[Type Gongstruct]() *map[*Type]any {
 		return any(&Stage.GongEnums).(*map[*Type]any)
 	case GongEnumValue:
 		return any(&Stage.GongEnumValues).(*map[*Type]any)
+	case GongLink:
+		return any(&Stage.GongLinks).(*map[*Type]any)
 	case GongNote:
 		return any(&Stage.GongNotes).(*map[*Type]any)
 	case GongStruct:
 		return any(&Stage.GongStructs).(*map[*Type]any)
 	case GongTimeField:
 		return any(&Stage.GongTimeFields).(*map[*Type]any)
+	case Meta:
+		return any(&Stage.Metas).(*map[*Type]any)
+	case MetaReference:
+		return any(&Stage.MetaReferences).(*map[*Type]any)
 	case ModelPkg:
 		return any(&Stage.ModelPkgs).(*map[*Type]any)
 	case PointerToGongStructField:
@@ -2134,12 +1916,18 @@ func GetGongstructInstancesMap[Type Gongstruct]() *map[string]*Type {
 		return any(&Stage.GongEnums_mapString).(*map[string]*Type)
 	case GongEnumValue:
 		return any(&Stage.GongEnumValues_mapString).(*map[string]*Type)
+	case GongLink:
+		return any(&Stage.GongLinks_mapString).(*map[string]*Type)
 	case GongNote:
 		return any(&Stage.GongNotes_mapString).(*map[string]*Type)
 	case GongStruct:
 		return any(&Stage.GongStructs_mapString).(*map[string]*Type)
 	case GongTimeField:
 		return any(&Stage.GongTimeFields_mapString).(*map[string]*Type)
+	case Meta:
+		return any(&Stage.Metas_mapString).(*map[string]*Type)
+	case MetaReference:
+		return any(&Stage.MetaReferences_mapString).(*map[string]*Type)
 	case ModelPkg:
 		return any(&Stage.ModelPkgs_mapString).(*map[string]*Type)
 	case PointerToGongStructField:
@@ -2176,9 +1964,15 @@ func GetAssociationName[Type Gongstruct]() *Type {
 		return any(&GongEnumValue{
 			// Initialisation of associations
 		}).(*Type)
+	case GongLink:
+		return any(&GongLink{
+			// Initialisation of associations
+		}).(*Type)
 	case GongNote:
 		return any(&GongNote{
 			// Initialisation of associations
+			// field is initialized with an instance of GongLink with the name of the field
+			Links: []*GongLink{{Name: "Links"}},
 		}).(*Type)
 	case GongStruct:
 		return any(&GongStruct{
@@ -2194,6 +1988,16 @@ func GetAssociationName[Type Gongstruct]() *Type {
 		}).(*Type)
 	case GongTimeField:
 		return any(&GongTimeField{
+			// Initialisation of associations
+		}).(*Type)
+	case Meta:
+		return any(&Meta{
+			// Initialisation of associations
+			// field is initialized with an instance of MetaReference with the name of the field
+			MetaReferences: []*MetaReference{{Name: "MetaReferences"}},
+		}).(*Type)
+	case MetaReference:
+		return any(&MetaReference{
 			// Initialisation of associations
 		}).(*Type)
 	case ModelPkg:
@@ -2261,6 +2065,11 @@ func GetPointerReverseMap[Start, End Gongstruct](fieldname string) map[*End][]*S
 		switch fieldname {
 		// insertion point for per direct association field
 		}
+	// reverse maps of direct associations of GongLink
+	case GongLink:
+		switch fieldname {
+		// insertion point for per direct association field
+		}
 	// reverse maps of direct associations of GongNote
 	case GongNote:
 		switch fieldname {
@@ -2273,6 +2082,16 @@ func GetPointerReverseMap[Start, End Gongstruct](fieldname string) map[*End][]*S
 		}
 	// reverse maps of direct associations of GongTimeField
 	case GongTimeField:
+		switch fieldname {
+		// insertion point for per direct association field
+		}
+	// reverse maps of direct associations of Meta
+	case Meta:
+		switch fieldname {
+		// insertion point for per direct association field
+		}
+	// reverse maps of direct associations of MetaReference
+	case MetaReference:
 		switch fieldname {
 		// insertion point for per direct association field
 		}
@@ -2363,10 +2182,23 @@ func GetSliceOfPointersReverseMap[Start, End Gongstruct](fieldname string) map[*
 		switch fieldname {
 		// insertion point for per direct association field
 		}
+	// reverse maps of direct associations of GongLink
+	case GongLink:
+		switch fieldname {
+		// insertion point for per direct association field
+		}
 	// reverse maps of direct associations of GongNote
 	case GongNote:
 		switch fieldname {
 		// insertion point for per direct association field
+		case "Links":
+			res := make(map[*GongLink]*GongNote)
+			for gongnote := range Stage.GongNotes {
+				for _, gonglink_ := range gongnote.Links {
+					res[gonglink_] = gongnote
+				}
+			}
+			return any(res).(map[*End]*Start)
 		}
 	// reverse maps of direct associations of GongStruct
 	case GongStruct:
@@ -2410,6 +2242,24 @@ func GetSliceOfPointersReverseMap[Start, End Gongstruct](fieldname string) map[*
 		switch fieldname {
 		// insertion point for per direct association field
 		}
+	// reverse maps of direct associations of Meta
+	case Meta:
+		switch fieldname {
+		// insertion point for per direct association field
+		case "MetaReferences":
+			res := make(map[*MetaReference]*Meta)
+			for meta := range Stage.Metas {
+				for _, metareference_ := range meta.MetaReferences {
+					res[metareference_] = meta
+				}
+			}
+			return any(res).(map[*End]*Start)
+		}
+	// reverse maps of direct associations of MetaReference
+	case MetaReference:
+		switch fieldname {
+		// insertion point for per direct association field
+		}
 	// reverse maps of direct associations of ModelPkg
 	case ModelPkg:
 		switch fieldname {
@@ -2443,12 +2293,18 @@ func GetGongstructName[Type Gongstruct]() (res string) {
 		res = "GongEnum"
 	case GongEnumValue:
 		res = "GongEnumValue"
+	case GongLink:
+		res = "GongLink"
 	case GongNote:
 		res = "GongNote"
 	case GongStruct:
 		res = "GongStruct"
 	case GongTimeField:
 		res = "GongTimeField"
+	case Meta:
+		res = "Meta"
+	case MetaReference:
+		res = "MetaReference"
 	case ModelPkg:
 		res = "ModelPkg"
 	case PointerToGongStructField:
@@ -2467,17 +2323,23 @@ func GetFields[Type Gongstruct]() (res []string) {
 	switch any(ret).(type) {
 	// insertion point for generic get gongstruct name
 	case GongBasicField:
-		res = []string{"Name", "BasicKindName", "GongEnum", "DeclaredType", "CompositeStructName", "Index"}
+		res = []string{"Name", "BasicKindName", "GongEnum", "DeclaredType", "CompositeStructName", "Index", "IsDocLink"}
 	case GongEnum:
 		res = []string{"Name", "Type", "GongEnumValues"}
 	case GongEnumValue:
 		res = []string{"Name", "Value"}
+	case GongLink:
+		res = []string{"Name", "ImportPath"}
 	case GongNote:
-		res = []string{"Name", "Body"}
+		res = []string{"Name", "Body", "Links"}
 	case GongStruct:
 		res = []string{"Name", "GongBasicFields", "GongTimeFields", "PointerToGongStructFields", "SliceOfPointerToGongStructFields"}
 	case GongTimeField:
 		res = []string{"Name", "Index", "CompositeStructName"}
+	case Meta:
+		res = []string{"Name", "Text", "MetaReferences"}
+	case MetaReference:
+		res = []string{"Name"}
 	case ModelPkg:
 		res = []string{"Name", "PkgPath"}
 	case PointerToGongStructField:
@@ -2510,6 +2372,8 @@ func GetFieldStringValue[Type Gongstruct](instance Type, fieldName string) (res 
 			res = any(instance).(GongBasicField).CompositeStructName
 		case "Index":
 			res = fmt.Sprintf("%d", any(instance).(GongBasicField).Index)
+		case "IsDocLink":
+			res = fmt.Sprintf("%t", any(instance).(GongBasicField).IsDocLink)
 		}
 	case GongEnum:
 		switch fieldName {
@@ -2535,6 +2399,14 @@ func GetFieldStringValue[Type Gongstruct](instance Type, fieldName string) (res 
 		case "Value":
 			res = any(instance).(GongEnumValue).Value
 		}
+	case GongLink:
+		switch fieldName {
+		// string value of fields
+		case "Name":
+			res = any(instance).(GongLink).Name
+		case "ImportPath":
+			res = any(instance).(GongLink).ImportPath
+		}
 	case GongNote:
 		switch fieldName {
 		// string value of fields
@@ -2542,6 +2414,13 @@ func GetFieldStringValue[Type Gongstruct](instance Type, fieldName string) (res 
 			res = any(instance).(GongNote).Name
 		case "Body":
 			res = any(instance).(GongNote).Body
+		case "Links":
+			for idx, __instance__ := range any(instance).(GongNote).Links {
+				if idx > 0 {
+					res += "\n"
+				}
+				res += __instance__.Name
+			}
 		}
 	case GongStruct:
 		switch fieldName {
@@ -2587,6 +2466,27 @@ func GetFieldStringValue[Type Gongstruct](instance Type, fieldName string) (res 
 		case "CompositeStructName":
 			res = any(instance).(GongTimeField).CompositeStructName
 		}
+	case Meta:
+		switch fieldName {
+		// string value of fields
+		case "Name":
+			res = any(instance).(Meta).Name
+		case "Text":
+			res = any(instance).(Meta).Text
+		case "MetaReferences":
+			for idx, __instance__ := range any(instance).(Meta).MetaReferences {
+				if idx > 0 {
+					res += "\n"
+				}
+				res += __instance__.Name
+			}
+		}
+	case MetaReference:
+		switch fieldName {
+		// string value of fields
+		case "Name":
+			res = any(instance).(MetaReference).Name
+		}
 	case ModelPkg:
 		switch fieldName {
 		// string value of fields
@@ -2623,63 +2523,6 @@ func GetFieldStringValue[Type Gongstruct](instance Type, fieldName string) (res 
 		case "CompositeStructName":
 			res = any(instance).(SliceOfPointerToGongStructField).CompositeStructName
 		}
-	}
-	return
-}
-
-// insertion point of enum utility functions
-// Utility function for GongEnumType
-// if enum values are string, it is stored with the value
-// if enum values are int, they are stored with the code of the value
-func (gongenumtype GongEnumType) ToInt() (res int) {
-
-	// migration of former implementation of enum
-	switch gongenumtype {
-	// insertion code per enum code
-	case Int:
-		res = 0
-	case String:
-		res = 1
-	}
-	return
-}
-
-func (gongenumtype *GongEnumType) FromInt(input int) (err error) {
-
-	switch input {
-	// insertion code per enum code
-	case 0:
-		*gongenumtype = Int
-	case 1:
-		*gongenumtype = String
-	default:
-		return errUnkownEnum
-	}
-	return
-}
-
-func (gongenumtype *GongEnumType) FromCodeString(input string) (err error) {
-
-	switch input {
-	// insertion code per enum code
-	case "Int":
-		*gongenumtype = Int
-	case "String":
-		*gongenumtype = String
-	default:
-		return errUnkownEnum
-	}
-	return
-}
-
-func (gongenumtype *GongEnumType) ToCodeString() (res string) {
-
-	switch *gongenumtype {
-	// insertion code per enum code
-	case Int:
-		res = "Int"
-	case String:
-		res = "String"
 	}
 	return
 }

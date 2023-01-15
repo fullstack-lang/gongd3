@@ -3,8 +3,8 @@ module gongd3
 go 1.19
 
 require (
-	github.com/fullstack-lang/gong v0.0.0-20221208130639-edff45328d95
-	github.com/fullstack-lang/gongdoc v0.0.0-20221207154556-058d5942ebd5
+	github.com/fullstack-lang/gong v0.0.0-20230113142403-16f40ea2992b
+	github.com/fullstack-lang/gongdoc v0.0.0-20230113144132-036dabf1a5bb
 	github.com/gin-contrib/cors v1.4.0
 	github.com/gin-contrib/static v0.0.1
 	github.com/gin-gonic/gin v1.8.1
