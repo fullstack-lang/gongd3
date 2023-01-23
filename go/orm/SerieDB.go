@@ -299,8 +299,7 @@ func (backRepoSerie *BackRepoSerieStruct) CommitPhaseTwoInstance(backRepo *BackR
 // BackRepoSerie.CheckoutPhaseOne Checkouts all BackRepo instances to the Stage
 //
 // Phase One will result in having instances on the stage aligned with the back repo
-// pointers are not initialized yet (this is for pahse two)
-//
+// pointers are not initialized yet (this is for phase two)
 func (backRepoSerie *BackRepoSerieStruct) CheckoutPhaseOne() (Error error) {
 
 	serieDBArray := make([]SerieDB, 0)
@@ -358,6 +357,9 @@ func (backRepoSerie *BackRepoSerieStruct) CheckoutPhaseOneInstance(serieDB *Seri
 		serie.Stage()
 	}
 	serieDB.CopyBasicFieldsToSerie(serie)
+
+	// in some cases, the instance might have been unstaged. It is necessary to stage it again
+	serie.Stage()
 
 	// preserve pointer to serieDB. Otherwise, pointer will is recycled and the map of pointers
 	// Map_SerieDBID_SerieDB)[serieDB hold variable pointers

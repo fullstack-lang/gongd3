@@ -4,16 +4,13 @@ package models
 import (
 	"errors"
 	"fmt"
-	"log"
-	"os"
-	"path"
-	"regexp"
-	"sort"
-	"strings"
 )
 
 // errUnkownEnum is returns when a value cannot match enum values
 var errUnkownEnum = errors.New("unkown enum")
+
+// needed to avoid when fmt package is not needed by generated code
+var __dummy__fmt_variable fmt.Scanner
 
 // swagger:ignore
 type __void any
@@ -93,6 +90,17 @@ type StageStruct struct { // insertion point for definition of arrays registerin
 
 	// store the number of instance per gongstruct
 	Map_GongStructName_InstancesNb map[string]int
+
+	// store meta package import
+	MetaPackageImportPath  string
+	MetaPackageImportAlias string
+	Map_DocLink_Renaming   map[string]GONG__Identifier
+}
+
+// swagger:ignore
+type GONG__Identifier struct {
+	Ident string
+	Type  GONG__ExpressionType
 }
 
 type OnInitCommitInterface interface {
@@ -860,570 +868,31 @@ func (stage *StageStruct) Nil() { // insertion point for array nil
 
 }
 
-const marshallRes = `package {{PackageName}}
-
-import (
-	"time"
-
-	"{{ModelsPackageName}}"
-)
-
-// generated in order to avoid error in the package import
-// if there are no elements in the stage to marshall
-var ___dummy__Stage models.StageStruct
-var ___dummy__Time time.Time
-
-// init might be handy if one want to have the data embedded in the binary
-// but it has to properly reference the Injection gateway in the main package
-// func init() {
-// 	_ = __Dummy_time_variable
-// 	InjectionGateway["{{databaseName}}"] = {{databaseName}}Injection
-// }
-
-// {{databaseName}}Injection will stage objects of database "{{databaseName}}"
-func {{databaseName}}Injection() {
-
-	// Declaration of instances to stage{{Identifiers}}
-
-	// Setup of values{{ValueInitializers}}
-
-	// Setup of pointers{{PointersInitializers}}
-}
-
-`
-
-const IdentifiersDecls = `
-	{{Identifier}} := (&models.{{GeneratedStructName}}{Name: ` + "`" + `{{GeneratedFieldNameValue}}` + "`" + `}).Stage()`
-
-const StringInitStatement = `
-	{{Identifier}}.{{GeneratedFieldName}} = ` + "`" + `{{GeneratedFieldNameValue}}` + "`"
-
-const StringEnumInitStatement = `
-	{{Identifier}}.{{GeneratedFieldName}} = {{GeneratedFieldNameValue}}`
-
-const NumberInitStatement = `
-	{{Identifier}}.{{GeneratedFieldName}} = {{GeneratedFieldNameValue}}`
-
-const PointerFieldInitStatement = `
-	{{Identifier}}.{{GeneratedFieldName}} = {{GeneratedFieldNameValue}}`
-
-const SliceOfPointersFieldInitStatement = `
-	{{Identifier}}.{{GeneratedFieldName}} = append({{Identifier}}.{{GeneratedFieldName}}, {{GeneratedFieldNameValue}})`
-
-const TimeInitStatement = `
-	{{Identifier}}.{{GeneratedFieldName}}, _ = time.Parse("2006-01-02 15:04:05.999999999 -0700 MST", "{{GeneratedFieldNameValue}}")`
-
-// Marshall marshall the stage content into the file as an instanciation into a stage
-func (stage *StageStruct) Marshall(file *os.File, modelsPackageName, packageName string) {
-
-	name := file.Name()
-
-	if !strings.HasSuffix(name, ".go") {
-		log.Fatalln(name + " is not a go filename")
-	}
-
-	log.Println("filename of marshall output  is " + name)
-
-	res := marshallRes
-	res = strings.ReplaceAll(res, "{{databaseName}}", strings.ReplaceAll(path.Base(name), ".go", ""))
-	res = strings.ReplaceAll(res, "{{PackageName}}", packageName)
-	res = strings.ReplaceAll(res, "{{ModelsPackageName}}", modelsPackageName)
-
-	// map of identifiers
-	// var StageMapDstructIds map[*Dstruct]string
-	identifiersDecl := ""
-	initializerStatements := ""
-	pointersInitializesStatements := ""
-
-	id := ""
-	decl := ""
-	setValueField := ""
-
-	// insertion initialization of objects to stage
-	map_Bar_Identifiers := make(map[*Bar]string)
-	_ = map_Bar_Identifiers
-
-	barOrdered := []*Bar{}
+func (stage *StageStruct) Unstage() { // insertion point for array nil
 	for bar := range stage.Bars {
-		barOrdered = append(barOrdered, bar)
-	}
-	sort.Slice(barOrdered[:], func(i, j int) bool {
-		return barOrdered[i].Name < barOrdered[j].Name
-	})
-	identifiersDecl += "\n\n	// Declarations of staged instances of Bar"
-	for idx, bar := range barOrdered {
-
-		id = generatesIdentifier("Bar", idx, bar.Name)
-		map_Bar_Identifiers[bar] = id
-
-		decl = IdentifiersDecls
-		decl = strings.ReplaceAll(decl, "{{Identifier}}", id)
-		decl = strings.ReplaceAll(decl, "{{GeneratedStructName}}", "Bar")
-		decl = strings.ReplaceAll(decl, "{{GeneratedFieldNameValue}}", bar.Name)
-		identifiersDecl += decl
-
-		initializerStatements += "\n\n	// Bar values setup"
-		// Initialisation of values
-		setValueField = StringInitStatement
-		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "Name")
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", string(bar.Name))
-		initializerStatements += setValueField
-
-		setValueField = NumberInitStatement
-		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "AutoDomainX")
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", fmt.Sprintf("%t", bar.AutoDomainX))
-		initializerStatements += setValueField
-
-		setValueField = NumberInitStatement
-		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "XMin")
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", fmt.Sprintf("%f", bar.XMin))
-		initializerStatements += setValueField
-
-		setValueField = NumberInitStatement
-		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "XMax")
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", fmt.Sprintf("%f", bar.XMax))
-		initializerStatements += setValueField
-
-		setValueField = NumberInitStatement
-		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "AutoDomainY")
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", fmt.Sprintf("%t", bar.AutoDomainY))
-		initializerStatements += setValueField
-
-		setValueField = NumberInitStatement
-		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "YMin")
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", fmt.Sprintf("%f", bar.YMin))
-		initializerStatements += setValueField
-
-		setValueField = NumberInitStatement
-		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "YMax")
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", fmt.Sprintf("%f", bar.YMax))
-		initializerStatements += setValueField
-
-		setValueField = NumberInitStatement
-		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "YLabelPresent")
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", fmt.Sprintf("%t", bar.YLabelPresent))
-		initializerStatements += setValueField
-
-		setValueField = NumberInitStatement
-		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "YLabelOffset")
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", fmt.Sprintf("%f", bar.YLabelOffset))
-		initializerStatements += setValueField
-
-		setValueField = NumberInitStatement
-		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "XLabelPresent")
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", fmt.Sprintf("%t", bar.XLabelPresent))
-		initializerStatements += setValueField
-
-		setValueField = NumberInitStatement
-		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "XLabelOffset")
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", fmt.Sprintf("%f", bar.XLabelOffset))
-		initializerStatements += setValueField
-
-		setValueField = NumberInitStatement
-		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "Width")
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", fmt.Sprintf("%f", bar.Width))
-		initializerStatements += setValueField
-
-		setValueField = NumberInitStatement
-		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "Heigth")
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", fmt.Sprintf("%f", bar.Heigth))
-		initializerStatements += setValueField
-
-		setValueField = NumberInitStatement
-		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "Margin")
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", fmt.Sprintf("%f", bar.Margin))
-		initializerStatements += setValueField
-
+		bar.Unstage()
 	}
 
-	map_Key_Identifiers := make(map[*Key]string)
-	_ = map_Key_Identifiers
-
-	keyOrdered := []*Key{}
 	for key := range stage.Keys {
-		keyOrdered = append(keyOrdered, key)
-	}
-	sort.Slice(keyOrdered[:], func(i, j int) bool {
-		return keyOrdered[i].Name < keyOrdered[j].Name
-	})
-	identifiersDecl += "\n\n	// Declarations of staged instances of Key"
-	for idx, key := range keyOrdered {
-
-		id = generatesIdentifier("Key", idx, key.Name)
-		map_Key_Identifiers[key] = id
-
-		decl = IdentifiersDecls
-		decl = strings.ReplaceAll(decl, "{{Identifier}}", id)
-		decl = strings.ReplaceAll(decl, "{{GeneratedStructName}}", "Key")
-		decl = strings.ReplaceAll(decl, "{{GeneratedFieldNameValue}}", key.Name)
-		identifiersDecl += decl
-
-		initializerStatements += "\n\n	// Key values setup"
-		// Initialisation of values
-		setValueField = StringInitStatement
-		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "Name")
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", string(key.Name))
-		initializerStatements += setValueField
-
+		key.Unstage()
 	}
 
-	map_Pie_Identifiers := make(map[*Pie]string)
-	_ = map_Pie_Identifiers
-
-	pieOrdered := []*Pie{}
 	for pie := range stage.Pies {
-		pieOrdered = append(pieOrdered, pie)
-	}
-	sort.Slice(pieOrdered[:], func(i, j int) bool {
-		return pieOrdered[i].Name < pieOrdered[j].Name
-	})
-	identifiersDecl += "\n\n	// Declarations of staged instances of Pie"
-	for idx, pie := range pieOrdered {
-
-		id = generatesIdentifier("Pie", idx, pie.Name)
-		map_Pie_Identifiers[pie] = id
-
-		decl = IdentifiersDecls
-		decl = strings.ReplaceAll(decl, "{{Identifier}}", id)
-		decl = strings.ReplaceAll(decl, "{{GeneratedStructName}}", "Pie")
-		decl = strings.ReplaceAll(decl, "{{GeneratedFieldNameValue}}", pie.Name)
-		identifiersDecl += decl
-
-		initializerStatements += "\n\n	// Pie values setup"
-		// Initialisation of values
-		setValueField = StringInitStatement
-		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "Name")
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", string(pie.Name))
-		initializerStatements += setValueField
-
-		setValueField = NumberInitStatement
-		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "Width")
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", fmt.Sprintf("%f", pie.Width))
-		initializerStatements += setValueField
-
-		setValueField = NumberInitStatement
-		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "Heigth")
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", fmt.Sprintf("%f", pie.Heigth))
-		initializerStatements += setValueField
-
-		setValueField = NumberInitStatement
-		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "Margin")
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", fmt.Sprintf("%f", pie.Margin))
-		initializerStatements += setValueField
-
+		pie.Unstage()
 	}
 
-	map_Scatter_Identifiers := make(map[*Scatter]string)
-	_ = map_Scatter_Identifiers
-
-	scatterOrdered := []*Scatter{}
 	for scatter := range stage.Scatters {
-		scatterOrdered = append(scatterOrdered, scatter)
-	}
-	sort.Slice(scatterOrdered[:], func(i, j int) bool {
-		return scatterOrdered[i].Name < scatterOrdered[j].Name
-	})
-	identifiersDecl += "\n\n	// Declarations of staged instances of Scatter"
-	for idx, scatter := range scatterOrdered {
-
-		id = generatesIdentifier("Scatter", idx, scatter.Name)
-		map_Scatter_Identifiers[scatter] = id
-
-		decl = IdentifiersDecls
-		decl = strings.ReplaceAll(decl, "{{Identifier}}", id)
-		decl = strings.ReplaceAll(decl, "{{GeneratedStructName}}", "Scatter")
-		decl = strings.ReplaceAll(decl, "{{GeneratedFieldNameValue}}", scatter.Name)
-		identifiersDecl += decl
-
-		initializerStatements += "\n\n	// Scatter values setup"
-		// Initialisation of values
-		setValueField = StringInitStatement
-		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "Name")
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", string(scatter.Name))
-		initializerStatements += setValueField
-
-		setValueField = NumberInitStatement
-		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "Width")
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", fmt.Sprintf("%f", scatter.Width))
-		initializerStatements += setValueField
-
-		setValueField = NumberInitStatement
-		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "Heigth")
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", fmt.Sprintf("%f", scatter.Heigth))
-		initializerStatements += setValueField
-
-		setValueField = NumberInitStatement
-		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "Margin")
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", fmt.Sprintf("%f", scatter.Margin))
-		initializerStatements += setValueField
-
+		scatter.Unstage()
 	}
 
-	map_Serie_Identifiers := make(map[*Serie]string)
-	_ = map_Serie_Identifiers
-
-	serieOrdered := []*Serie{}
 	for serie := range stage.Series {
-		serieOrdered = append(serieOrdered, serie)
-	}
-	sort.Slice(serieOrdered[:], func(i, j int) bool {
-		return serieOrdered[i].Name < serieOrdered[j].Name
-	})
-	identifiersDecl += "\n\n	// Declarations of staged instances of Serie"
-	for idx, serie := range serieOrdered {
-
-		id = generatesIdentifier("Serie", idx, serie.Name)
-		map_Serie_Identifiers[serie] = id
-
-		decl = IdentifiersDecls
-		decl = strings.ReplaceAll(decl, "{{Identifier}}", id)
-		decl = strings.ReplaceAll(decl, "{{GeneratedStructName}}", "Serie")
-		decl = strings.ReplaceAll(decl, "{{GeneratedFieldNameValue}}", serie.Name)
-		identifiersDecl += decl
-
-		initializerStatements += "\n\n	// Serie values setup"
-		// Initialisation of values
-		setValueField = StringInitStatement
-		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "Name")
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", string(serie.Name))
-		initializerStatements += setValueField
-
+		serie.Unstage()
 	}
 
-	map_Value_Identifiers := make(map[*Value]string)
-	_ = map_Value_Identifiers
-
-	valueOrdered := []*Value{}
 	for value := range stage.Values {
-		valueOrdered = append(valueOrdered, value)
-	}
-	sort.Slice(valueOrdered[:], func(i, j int) bool {
-		return valueOrdered[i].Name < valueOrdered[j].Name
-	})
-	identifiersDecl += "\n\n	// Declarations of staged instances of Value"
-	for idx, value := range valueOrdered {
-
-		id = generatesIdentifier("Value", idx, value.Name)
-		map_Value_Identifiers[value] = id
-
-		decl = IdentifiersDecls
-		decl = strings.ReplaceAll(decl, "{{Identifier}}", id)
-		decl = strings.ReplaceAll(decl, "{{GeneratedStructName}}", "Value")
-		decl = strings.ReplaceAll(decl, "{{GeneratedFieldNameValue}}", value.Name)
-		identifiersDecl += decl
-
-		initializerStatements += "\n\n	// Value values setup"
-		// Initialisation of values
-		setValueField = StringInitStatement
-		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "Name")
-		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", string(value.Name))
-		initializerStatements += setValueField
-
+		value.Unstage()
 	}
 
-	// insertion initialization of objects to stage
-	for idx, bar := range barOrdered {
-		var setPointerField string
-		_ = setPointerField
-
-		id = generatesIdentifier("Bar", idx, bar.Name)
-		map_Bar_Identifiers[bar] = id
-
-		// Initialisation of values
-		if bar.X != nil {
-			setPointerField = PointerFieldInitStatement
-			setPointerField = strings.ReplaceAll(setPointerField, "{{Identifier}}", id)
-			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldName}}", "X")
-			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldNameValue}}", map_Key_Identifiers[bar.X])
-			pointersInitializesStatements += setPointerField
-		}
-
-		if bar.Y != nil {
-			setPointerField = PointerFieldInitStatement
-			setPointerField = strings.ReplaceAll(setPointerField, "{{Identifier}}", id)
-			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldName}}", "Y")
-			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldNameValue}}", map_Key_Identifiers[bar.Y])
-			pointersInitializesStatements += setPointerField
-		}
-
-		for _, _serie := range bar.Set {
-			setPointerField = SliceOfPointersFieldInitStatement
-			setPointerField = strings.ReplaceAll(setPointerField, "{{Identifier}}", id)
-			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldName}}", "Set")
-			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldNameValue}}", map_Serie_Identifiers[_serie])
-			pointersInitializesStatements += setPointerField
-		}
-
-	}
-
-	for idx, key := range keyOrdered {
-		var setPointerField string
-		_ = setPointerField
-
-		id = generatesIdentifier("Key", idx, key.Name)
-		map_Key_Identifiers[key] = id
-
-		// Initialisation of values
-	}
-
-	for idx, pie := range pieOrdered {
-		var setPointerField string
-		_ = setPointerField
-
-		id = generatesIdentifier("Pie", idx, pie.Name)
-		map_Pie_Identifiers[pie] = id
-
-		// Initialisation of values
-		if pie.X != nil {
-			setPointerField = PointerFieldInitStatement
-			setPointerField = strings.ReplaceAll(setPointerField, "{{Identifier}}", id)
-			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldName}}", "X")
-			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldNameValue}}", map_Key_Identifiers[pie.X])
-			pointersInitializesStatements += setPointerField
-		}
-
-		if pie.Y != nil {
-			setPointerField = PointerFieldInitStatement
-			setPointerField = strings.ReplaceAll(setPointerField, "{{Identifier}}", id)
-			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldName}}", "Y")
-			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldNameValue}}", map_Key_Identifiers[pie.Y])
-			pointersInitializesStatements += setPointerField
-		}
-
-		for _, _serie := range pie.Set {
-			setPointerField = SliceOfPointersFieldInitStatement
-			setPointerField = strings.ReplaceAll(setPointerField, "{{Identifier}}", id)
-			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldName}}", "Set")
-			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldNameValue}}", map_Serie_Identifiers[_serie])
-			pointersInitializesStatements += setPointerField
-		}
-
-	}
-
-	for idx, scatter := range scatterOrdered {
-		var setPointerField string
-		_ = setPointerField
-
-		id = generatesIdentifier("Scatter", idx, scatter.Name)
-		map_Scatter_Identifiers[scatter] = id
-
-		// Initialisation of values
-		if scatter.X != nil {
-			setPointerField = PointerFieldInitStatement
-			setPointerField = strings.ReplaceAll(setPointerField, "{{Identifier}}", id)
-			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldName}}", "X")
-			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldNameValue}}", map_Key_Identifiers[scatter.X])
-			pointersInitializesStatements += setPointerField
-		}
-
-		if scatter.Y != nil {
-			setPointerField = PointerFieldInitStatement
-			setPointerField = strings.ReplaceAll(setPointerField, "{{Identifier}}", id)
-			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldName}}", "Y")
-			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldNameValue}}", map_Key_Identifiers[scatter.Y])
-			pointersInitializesStatements += setPointerField
-		}
-
-		if scatter.Text != nil {
-			setPointerField = PointerFieldInitStatement
-			setPointerField = strings.ReplaceAll(setPointerField, "{{Identifier}}", id)
-			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldName}}", "Text")
-			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldNameValue}}", map_Key_Identifiers[scatter.Text])
-			pointersInitializesStatements += setPointerField
-		}
-
-		for _, _serie := range scatter.Set {
-			setPointerField = SliceOfPointersFieldInitStatement
-			setPointerField = strings.ReplaceAll(setPointerField, "{{Identifier}}", id)
-			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldName}}", "Set")
-			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldNameValue}}", map_Serie_Identifiers[_serie])
-			pointersInitializesStatements += setPointerField
-		}
-
-	}
-
-	for idx, serie := range serieOrdered {
-		var setPointerField string
-		_ = setPointerField
-
-		id = generatesIdentifier("Serie", idx, serie.Name)
-		map_Serie_Identifiers[serie] = id
-
-		// Initialisation of values
-		if serie.Key != nil {
-			setPointerField = PointerFieldInitStatement
-			setPointerField = strings.ReplaceAll(setPointerField, "{{Identifier}}", id)
-			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldName}}", "Key")
-			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldNameValue}}", map_Key_Identifiers[serie.Key])
-			pointersInitializesStatements += setPointerField
-		}
-
-		for _, _value := range serie.Values {
-			setPointerField = SliceOfPointersFieldInitStatement
-			setPointerField = strings.ReplaceAll(setPointerField, "{{Identifier}}", id)
-			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldName}}", "Values")
-			setPointerField = strings.ReplaceAll(setPointerField, "{{GeneratedFieldNameValue}}", map_Value_Identifiers[_value])
-			pointersInitializesStatements += setPointerField
-		}
-
-	}
-
-	for idx, value := range valueOrdered {
-		var setPointerField string
-		_ = setPointerField
-
-		id = generatesIdentifier("Value", idx, value.Name)
-		map_Value_Identifiers[value] = id
-
-		// Initialisation of values
-	}
-
-	res = strings.ReplaceAll(res, "{{Identifiers}}", identifiersDecl)
-	res = strings.ReplaceAll(res, "{{ValueInitializers}}", initializerStatements)
-	res = strings.ReplaceAll(res, "{{PointersInitializers}}", pointersInitializesStatements)
-
-	fmt.Fprintln(file, res)
-}
-
-// unique identifier per struct
-func generatesIdentifier(gongStructName string, idx int, instanceName string) (identifier string) {
-
-	identifier = instanceName
-	// Make a Regex to say we only want letters and numbers
-	reg, err := regexp.Compile("[^a-zA-Z0-9]+")
-	if err != nil {
-		log.Fatal(err)
-	}
-	processedString := reg.ReplaceAllString(instanceName, "_")
-
-	identifier = fmt.Sprintf("__%s__%06d_%s", gongStructName, idx, processedString)
-
-	return
 }
 
 // insertion point of functions that provide maps for reverse associations
@@ -2298,5 +1767,4 @@ func GetFieldStringValue[Type Gongstruct](instance Type, fieldName string) (res 
 	return
 }
 
-// insertion point of enum utility functions
 // Last line of the template
