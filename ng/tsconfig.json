@@ -8,13 +8,6 @@
     "strict": true,
     "noImplicitOverride": true,
     "paths": {
-      // 
-      // https://angular.io/guide/creating-libraries#use-typescript-path-mapping-for-peer-dependencies
-      //
-      // Angular libraries should list any @angular/* 
-      // dependencies the library depends on as peer dependencies. This ensures that when modules ask for Angular, 
-      // they all get the exact same module. If a library lists @angular/core in dependencies instead of peerDependencies, 
-      // it might get a different Angular module instead, which would cause your application to break.
       "@angular/*": [
         "./node_modules/@angular/*"
       ],
@@ -43,7 +36,7 @@
         "./node_modules/lodash"
       ],
       "gongd3specific": [
-        "projects/gongd3specific/src/public-api.ts",
+        "projects/gongd3specific/src/public-api.ts"
       ],
       "@types/loash": [
         "./node_modules/@types/loash"
@@ -70,7 +63,7 @@
         "../vendor/github.com/fullstack-lang/gongdoc/ng/projects/gongdocdiagrams/src/public-api.ts"
       ],
       "gongd3": [
-        "projects/gongd3/src/public-api.ts",
+        "projects/gongd3/src/public-api.ts"
       ]
     },
     "noPropertyAccessFromIndexSignature": true,
@@ -82,12 +75,14 @@
     "experimentalDecorators": true,
     "moduleResolution": "node",
     "importHelpers": true,
-    "target": "es2020",
+    "target": "ES2022",
     "module": "es2020",
     "lib": [
       "es2020",
       "dom"
-    ]
+    ],
+    "skipLibCheck": true,
+    "useDefineForClassFields": false
   },
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,
