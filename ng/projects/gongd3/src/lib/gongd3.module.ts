@@ -42,32 +42,26 @@ import { GongstructSelectionService } from './gongstruct-selection.service'
 import { BarsTableComponent } from './bars-table/bars-table.component'
 import { BarSortingComponent } from './bar-sorting/bar-sorting.component'
 import { BarDetailComponent } from './bar-detail/bar-detail.component'
-import { BarPresentationComponent } from './bar-presentation/bar-presentation.component'
 
 import { KeysTableComponent } from './keys-table/keys-table.component'
 import { KeySortingComponent } from './key-sorting/key-sorting.component'
 import { KeyDetailComponent } from './key-detail/key-detail.component'
-import { KeyPresentationComponent } from './key-presentation/key-presentation.component'
 
 import { PiesTableComponent } from './pies-table/pies-table.component'
 import { PieSortingComponent } from './pie-sorting/pie-sorting.component'
 import { PieDetailComponent } from './pie-detail/pie-detail.component'
-import { PiePresentationComponent } from './pie-presentation/pie-presentation.component'
 
 import { ScattersTableComponent } from './scatters-table/scatters-table.component'
 import { ScatterSortingComponent } from './scatter-sorting/scatter-sorting.component'
 import { ScatterDetailComponent } from './scatter-detail/scatter-detail.component'
-import { ScatterPresentationComponent } from './scatter-presentation/scatter-presentation.component'
 
 import { SeriesTableComponent } from './series-table/series-table.component'
 import { SerieSortingComponent } from './serie-sorting/serie-sorting.component'
 import { SerieDetailComponent } from './serie-detail/serie-detail.component'
-import { SeriePresentationComponent } from './serie-presentation/serie-presentation.component'
 
 import { ValuesTableComponent } from './values-table/values-table.component'
 import { ValueSortingComponent } from './value-sorting/value-sorting.component'
 import { ValueDetailComponent } from './value-detail/value-detail.component'
-import { ValuePresentationComponent } from './value-presentation/value-presentation.component'
 
 
 @NgModule({
@@ -76,32 +70,26 @@ import { ValuePresentationComponent } from './value-presentation/value-presentat
 		BarsTableComponent,
 		BarSortingComponent,
 		BarDetailComponent,
-		BarPresentationComponent,
 
 		KeysTableComponent,
 		KeySortingComponent,
 		KeyDetailComponent,
-		KeyPresentationComponent,
 
 		PiesTableComponent,
 		PieSortingComponent,
 		PieDetailComponent,
-		PiePresentationComponent,
 
 		ScattersTableComponent,
 		ScatterSortingComponent,
 		ScatterDetailComponent,
-		ScatterPresentationComponent,
 
 		SeriesTableComponent,
 		SerieSortingComponent,
 		SerieDetailComponent,
-		SeriePresentationComponent,
 
 		ValuesTableComponent,
 		ValueSortingComponent,
 		ValueDetailComponent,
-		ValuePresentationComponent,
 
 
 		SplitterComponent,
@@ -145,32 +133,26 @@ import { ValuePresentationComponent } from './value-presentation/value-presentat
 		BarsTableComponent,
 		BarSortingComponent,
 		BarDetailComponent,
-		BarPresentationComponent,
 
 		KeysTableComponent,
 		KeySortingComponent,
 		KeyDetailComponent,
-		KeyPresentationComponent,
 
 		PiesTableComponent,
 		PieSortingComponent,
 		PieDetailComponent,
-		PiePresentationComponent,
 
 		ScattersTableComponent,
 		ScatterSortingComponent,
 		ScatterDetailComponent,
-		ScatterPresentationComponent,
 
 		SeriesTableComponent,
 		SerieSortingComponent,
 		SerieDetailComponent,
-		SeriePresentationComponent,
 
 		ValuesTableComponent,
 		ValueSortingComponent,
 		ValueDetailComponent,
-		ValuePresentationComponent,
 
 
 		SplitterComponent,

@@ -992,7 +992,7 @@ export class SidebarComponent implements OnInit {
     if (type == GongNodeType.INSTANCE) {
       this.router.navigate([{
         outlets: {
-          gongd3_go_presentation: ["gongd3_go-" + structName.toLowerCase() + "-presentation", id]
+          gongd3_go_editor: ["gongd3_go-" + structName.toLowerCase() + "-detail", id]
         }
       }]);
     }

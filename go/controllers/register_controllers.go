@@ -85,8 +85,8 @@ func RegisterControllers(r *gin.Engine) {
 		v1.PUT("/v1/values/:id", UpdateValue)
 		v1.DELETE("/v1/values/:id", DeleteValue)
 
-		v1.GET("/commitfrombacknb", GetLastCommitFromBackNb)
-		v1.GET("/pushfromfrontnb", GetLastPushFromFrontNb)
+		v1.GET("/v1/commitfrombacknb", GetLastCommitFromBackNb)
+		v1.GET("/v1/pushfromfrontnb", GetLastPushFromFrontNb)
 	}
 }
 

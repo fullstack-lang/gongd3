@@ -165,7 +165,7 @@ export class ScattersTableComponent implements OnInit {
       }
     )
     if (this.mode == TableComponentMode.DISPLAY_MODE) {
-      this.displayedColumns = ['ID', 'Edit', 'Delete', // insertion point for columns to display
+      this.displayedColumns = ['ID', 'Delete', // insertion point for columns to display
         "Name",
         "X",
         "Y",
@@ -266,15 +266,6 @@ export class ScattersTableComponent implements OnInit {
     this.router.navigate([{
       outlets: {
         gongd3_go_editor: ["gongd3_go-" + "scatter-detail", scatterID]
-      }
-    }]);
-  }
-
-  // set presentation outlet
-  setPresentationRouterOutlet(scatterID: number) {
-    this.router.navigate([{
-      outlets: {
-        gongd3_go_presentation: ["gongd3_go-" + "scatter-presentation", scatterID]
       }
     }]);
   }

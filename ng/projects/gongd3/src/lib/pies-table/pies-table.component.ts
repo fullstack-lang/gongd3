@@ -159,7 +159,7 @@ export class PiesTableComponent implements OnInit {
       }
     )
     if (this.mode == TableComponentMode.DISPLAY_MODE) {
-      this.displayedColumns = ['ID', 'Edit', 'Delete', // insertion point for columns to display
+      this.displayedColumns = ['ID', 'Delete', // insertion point for columns to display
         "Name",
         "X",
         "Y",
@@ -258,15 +258,6 @@ export class PiesTableComponent implements OnInit {
     this.router.navigate([{
       outlets: {
         gongd3_go_editor: ["gongd3_go-" + "pie-detail", pieID]
-      }
-    }]);
-  }
-
-  // set presentation outlet
-  setPresentationRouterOutlet(pieID: number) {
-    this.router.navigate([{
-      outlets: {
-        gongd3_go_presentation: ["gongd3_go-" + "pie-presentation", pieID]
       }
     }]);
   }

@@ -146,7 +146,7 @@ export class ValuesTableComponent implements OnInit {
       }
     )
     if (this.mode == TableComponentMode.DISPLAY_MODE) {
-      this.displayedColumns = ['ID', 'Edit', 'Delete', // insertion point for columns to display
+      this.displayedColumns = ['ID', 'Delete', // insertion point for columns to display
         "Name",
         "Serie_Values",
       ]
@@ -237,15 +237,6 @@ export class ValuesTableComponent implements OnInit {
     this.router.navigate([{
       outlets: {
         gongd3_go_editor: ["gongd3_go-" + "value-detail", valueID]
-      }
-    }]);
-  }
-
-  // set presentation outlet
-  setPresentationRouterOutlet(valueID: number) {
-    this.router.navigate([{
-      outlets: {
-        gongd3_go_presentation: ["gongd3_go-" + "value-presentation", valueID]
       }
     }]);
   }

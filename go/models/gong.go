@@ -95,9 +95,19 @@ type StageStruct struct { // insertion point for definition of arrays registerin
 	MetaPackageImportPath  string
 	MetaPackageImportAlias string
 	Map_DocLink_Renaming   map[string]GONG__Identifier
+
+	// map_Gongstruct_BackPointer is storage of back pointers
+	map_Gongstruct_BackPointer map[any]any
 }
 
-// swagger:ignore
+func SetBackPointer[T Gongstruct](stageStruct *StageStruct, instance *T, backPointer any) {
+	stageStruct.map_Gongstruct_BackPointer[instance] = backPointer
+}
+func GetBackPointer[T Gongstruct](stageStruct *StageStruct, instance *T) (backPointer any) {
+	backPointer, _ = stageStruct.map_Gongstruct_BackPointer[instance]
+	return
+}
+
 type GONG__Identifier struct {
 	Ident string
 	Type  GONG__ExpressionType
@@ -176,6 +186,7 @@ var Stage StageStruct = StageStruct{ // insertion point for array initiatialisat
 
 	// end of insertion point
 	Map_GongStructName_InstancesNb: make(map[string]int),
+	map_Gongstruct_BackPointer:     make(map[any]any),
 }
 
 func (stage *StageStruct) Commit() {
@@ -894,228 +905,6 @@ func (stage *StageStruct) Unstage() { // insertion point for array nil
 	}
 
 }
-
-// insertion point of functions that provide maps for reverse associations
-
-// generate function for reverse association maps of Bar
-func (stageStruct *StageStruct) CreateReverseMap_Bar_X() (res map[*Key][]*Bar) {
-	res = make(map[*Key][]*Bar)
-
-	for bar := range stageStruct.Bars {
-		if bar.X != nil {
-			key_ := bar.X
-			var bars []*Bar
-			_, ok := res[key_]
-			if ok {
-				bars = res[key_]
-			} else {
-				bars = make([]*Bar, 0)
-			}
-			bars = append(bars, bar)
-			res[key_] = bars
-		}
-	}
-
-	return
-}
-func (stageStruct *StageStruct) CreateReverseMap_Bar_Y() (res map[*Key][]*Bar) {
-	res = make(map[*Key][]*Bar)
-
-	for bar := range stageStruct.Bars {
-		if bar.Y != nil {
-			key_ := bar.Y
-			var bars []*Bar
-			_, ok := res[key_]
-			if ok {
-				bars = res[key_]
-			} else {
-				bars = make([]*Bar, 0)
-			}
-			bars = append(bars, bar)
-			res[key_] = bars
-		}
-	}
-
-	return
-}
-func (stageStruct *StageStruct) CreateReverseMap_Bar_Set() (res map[*Serie]*Bar) {
-	res = make(map[*Serie]*Bar)
-
-	for bar := range stageStruct.Bars {
-		for _, serie_ := range bar.Set {
-			res[serie_] = bar
-		}
-	}
-
-	return
-}
-
-
-// generate function for reverse association maps of Key
-
-// generate function for reverse association maps of Pie
-func (stageStruct *StageStruct) CreateReverseMap_Pie_X() (res map[*Key][]*Pie) {
-	res = make(map[*Key][]*Pie)
-
-	for pie := range stageStruct.Pies {
-		if pie.X != nil {
-			key_ := pie.X
-			var pies []*Pie
-			_, ok := res[key_]
-			if ok {
-				pies = res[key_]
-			} else {
-				pies = make([]*Pie, 0)
-			}
-			pies = append(pies, pie)
-			res[key_] = pies
-		}
-	}
-
-	return
-}
-func (stageStruct *StageStruct) CreateReverseMap_Pie_Y() (res map[*Key][]*Pie) {
-	res = make(map[*Key][]*Pie)
-
-	for pie := range stageStruct.Pies {
-		if pie.Y != nil {
-			key_ := pie.Y
-			var pies []*Pie
-			_, ok := res[key_]
-			if ok {
-				pies = res[key_]
-			} else {
-				pies = make([]*Pie, 0)
-			}
-			pies = append(pies, pie)
-			res[key_] = pies
-		}
-	}
-
-	return
-}
-func (stageStruct *StageStruct) CreateReverseMap_Pie_Set() (res map[*Serie]*Pie) {
-	res = make(map[*Serie]*Pie)
-
-	for pie := range stageStruct.Pies {
-		for _, serie_ := range pie.Set {
-			res[serie_] = pie
-		}
-	}
-
-	return
-}
-
-
-// generate function for reverse association maps of Scatter
-func (stageStruct *StageStruct) CreateReverseMap_Scatter_X() (res map[*Key][]*Scatter) {
-	res = make(map[*Key][]*Scatter)
-
-	for scatter := range stageStruct.Scatters {
-		if scatter.X != nil {
-			key_ := scatter.X
-			var scatters []*Scatter
-			_, ok := res[key_]
-			if ok {
-				scatters = res[key_]
-			} else {
-				scatters = make([]*Scatter, 0)
-			}
-			scatters = append(scatters, scatter)
-			res[key_] = scatters
-		}
-	}
-
-	return
-}
-func (stageStruct *StageStruct) CreateReverseMap_Scatter_Y() (res map[*Key][]*Scatter) {
-	res = make(map[*Key][]*Scatter)
-
-	for scatter := range stageStruct.Scatters {
-		if scatter.Y != nil {
-			key_ := scatter.Y
-			var scatters []*Scatter
-			_, ok := res[key_]
-			if ok {
-				scatters = res[key_]
-			} else {
-				scatters = make([]*Scatter, 0)
-			}
-			scatters = append(scatters, scatter)
-			res[key_] = scatters
-		}
-	}
-
-	return
-}
-func (stageStruct *StageStruct) CreateReverseMap_Scatter_Text() (res map[*Key][]*Scatter) {
-	res = make(map[*Key][]*Scatter)
-
-	for scatter := range stageStruct.Scatters {
-		if scatter.Text != nil {
-			key_ := scatter.Text
-			var scatters []*Scatter
-			_, ok := res[key_]
-			if ok {
-				scatters = res[key_]
-			} else {
-				scatters = make([]*Scatter, 0)
-			}
-			scatters = append(scatters, scatter)
-			res[key_] = scatters
-		}
-	}
-
-	return
-}
-func (stageStruct *StageStruct) CreateReverseMap_Scatter_Set() (res map[*Serie]*Scatter) {
-	res = make(map[*Serie]*Scatter)
-
-	for scatter := range stageStruct.Scatters {
-		for _, serie_ := range scatter.Set {
-			res[serie_] = scatter
-		}
-	}
-
-	return
-}
-
-
-// generate function for reverse association maps of Serie
-func (stageStruct *StageStruct) CreateReverseMap_Serie_Key() (res map[*Key][]*Serie) {
-	res = make(map[*Key][]*Serie)
-
-	for serie := range stageStruct.Series {
-		if serie.Key != nil {
-			key_ := serie.Key
-			var series []*Serie
-			_, ok := res[key_]
-			if ok {
-				series = res[key_]
-			} else {
-				series = make([]*Serie, 0)
-			}
-			series = append(series, serie)
-			res[key_] = series
-		}
-	}
-
-	return
-}
-func (stageStruct *StageStruct) CreateReverseMap_Serie_Values() (res map[*Value]*Serie) {
-	res = make(map[*Value]*Serie)
-
-	for serie := range stageStruct.Series {
-		for _, value_ := range serie.Values {
-			res[value_] = serie
-		}
-	}
-
-	return
-}
-
-
-// generate function for reverse association maps of Value
 
 // Gongstruct is the type parameter for generated generic function that allows
 // - access to staged instances
