@@ -52,4 +52,3 @@ export * from './lib/value-db'
 export * from './lib/value.service'
 
 
-export * from './lib/GONG__ExpressionType'

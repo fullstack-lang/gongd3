@@ -951,23 +951,30 @@ type GongstructMapString interface {
 
 // GongGetSet returns the set staged GongstructType instances
 // it is usefull because it allows refactoring of gong struct identifier
-func GongGetSet[Type GongstructSet]() *Type {
+func GongGetSet[Type GongstructSet](stages ...*StageStruct) *Type {
 	var ret Type
+
+	var stage *StageStruct
+	if len(stages) > 0 {
+		stage = stages[0]
+	} else {
+		stage = &Stage
+	}
 
 	switch any(ret).(type) {
 	// insertion point for generic get functions
 	case map[*Bar]any:
-		return any(&Stage.Bars).(*Type)
+		return any(&stage.Bars).(*Type)
 	case map[*Key]any:
-		return any(&Stage.Keys).(*Type)
+		return any(&stage.Keys).(*Type)
 	case map[*Pie]any:
-		return any(&Stage.Pies).(*Type)
+		return any(&stage.Pies).(*Type)
 	case map[*Scatter]any:
-		return any(&Stage.Scatters).(*Type)
+		return any(&stage.Scatters).(*Type)
 	case map[*Serie]any:
-		return any(&Stage.Series).(*Type)
+		return any(&stage.Series).(*Type)
 	case map[*Value]any:
-		return any(&Stage.Values).(*Type)
+		return any(&stage.Values).(*Type)
 	default:
 		return nil
 	}
@@ -975,23 +982,30 @@ func GongGetSet[Type GongstructSet]() *Type {
 
 // GongGetMap returns the map of staged GongstructType instances
 // it is usefull because it allows refactoring of gong struct identifier
-func GongGetMap[Type GongstructMapString]() *Type {
+func GongGetMap[Type GongstructMapString](stages ...*StageStruct) *Type {
 	var ret Type
+
+	var stage *StageStruct
+	if len(stages) > 0 {
+		stage = stages[0]
+	} else {
+		stage = &Stage
+	}
 
 	switch any(ret).(type) {
 	// insertion point for generic get functions
 	case map[string]*Bar:
-		return any(&Stage.Bars_mapString).(*Type)
+		return any(&stage.Bars_mapString).(*Type)
 	case map[string]*Key:
-		return any(&Stage.Keys_mapString).(*Type)
+		return any(&stage.Keys_mapString).(*Type)
 	case map[string]*Pie:
-		return any(&Stage.Pies_mapString).(*Type)
+		return any(&stage.Pies_mapString).(*Type)
 	case map[string]*Scatter:
-		return any(&Stage.Scatters_mapString).(*Type)
+		return any(&stage.Scatters_mapString).(*Type)
 	case map[string]*Serie:
-		return any(&Stage.Series_mapString).(*Type)
+		return any(&stage.Series_mapString).(*Type)
 	case map[string]*Value:
-		return any(&Stage.Values_mapString).(*Type)
+		return any(&stage.Values_mapString).(*Type)
 	default:
 		return nil
 	}
@@ -999,23 +1013,30 @@ func GongGetMap[Type GongstructMapString]() *Type {
 
 // GetGongstructInstancesSet returns the set staged GongstructType instances
 // it is usefull because it allows refactoring of gongstruct identifier
-func GetGongstructInstancesSet[Type Gongstruct]() *map[*Type]any {
+func GetGongstructInstancesSet[Type Gongstruct](stages ...*StageStruct) *map[*Type]any {
 	var ret Type
+
+	var stage *StageStruct
+	if len(stages) > 0 {
+		stage = stages[0]
+	} else {
+		stage = &Stage
+	}
 
 	switch any(ret).(type) {
 	// insertion point for generic get functions
 	case Bar:
-		return any(&Stage.Bars).(*map[*Type]any)
+		return any(&stage.Bars).(*map[*Type]any)
 	case Key:
-		return any(&Stage.Keys).(*map[*Type]any)
+		return any(&stage.Keys).(*map[*Type]any)
 	case Pie:
-		return any(&Stage.Pies).(*map[*Type]any)
+		return any(&stage.Pies).(*map[*Type]any)
 	case Scatter:
-		return any(&Stage.Scatters).(*map[*Type]any)
+		return any(&stage.Scatters).(*map[*Type]any)
 	case Serie:
-		return any(&Stage.Series).(*map[*Type]any)
+		return any(&stage.Series).(*map[*Type]any)
 	case Value:
-		return any(&Stage.Values).(*map[*Type]any)
+		return any(&stage.Values).(*map[*Type]any)
 	default:
 		return nil
 	}
@@ -1023,23 +1044,30 @@ func GetGongstructInstancesSet[Type Gongstruct]() *map[*Type]any {
 
 // GetGongstructInstancesMap returns the map of staged GongstructType instances
 // it is usefull because it allows refactoring of gong struct identifier
-func GetGongstructInstancesMap[Type Gongstruct]() *map[string]*Type {
+func GetGongstructInstancesMap[Type Gongstruct](stages ...*StageStruct) *map[string]*Type {
 	var ret Type
+
+	var stage *StageStruct
+	if len(stages) > 0 {
+		stage = stages[0]
+	} else {
+		stage = &Stage
+	}
 
 	switch any(ret).(type) {
 	// insertion point for generic get functions
 	case Bar:
-		return any(&Stage.Bars_mapString).(*map[string]*Type)
+		return any(&stage.Bars_mapString).(*map[string]*Type)
 	case Key:
-		return any(&Stage.Keys_mapString).(*map[string]*Type)
+		return any(&stage.Keys_mapString).(*map[string]*Type)
 	case Pie:
-		return any(&Stage.Pies_mapString).(*map[string]*Type)
+		return any(&stage.Pies_mapString).(*map[string]*Type)
 	case Scatter:
-		return any(&Stage.Scatters_mapString).(*map[string]*Type)
+		return any(&stage.Scatters_mapString).(*map[string]*Type)
 	case Serie:
-		return any(&Stage.Series_mapString).(*map[string]*Type)
+		return any(&stage.Series_mapString).(*map[string]*Type)
 	case Value:
-		return any(&Stage.Values_mapString).(*map[string]*Type)
+		return any(&stage.Values_mapString).(*map[string]*Type)
 	default:
 		return nil
 	}

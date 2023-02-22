@@ -80,6 +80,8 @@ export class DialogData {
   IntermediateStruct: string = "" // the "AclassBclassUse" 
   IntermediateStructField: string = "" // the "Bclass" as field
   NextAssociationStruct: string = "" // the "Bclass"
+
+  GONG__StackPath: string = ""
 }
 
 export enum SelectionMode {
@@ -94,6 +96,8 @@ export enum SelectionMode {
   providedIn: 'root'
 })
 export class FrontRepoService {
+
+  GONG__StackPath: string = ""
 
   httpOptions = {
     headers: new HttpHeaders({ 'Content-Type': 'application/json' })
@@ -143,13 +147,13 @@ export class FrontRepoService {
     Observable<ScatterDB[]>,
     Observable<SerieDB[]>,
     Observable<ValueDB[]>,
-  ] = [ // insertion point sub template 
-      this.barService.getBars(),
-      this.keyService.getKeys(),
-      this.pieService.getPies(),
-      this.scatterService.getScatters(),
-      this.serieService.getSeries(),
-      this.valueService.getValues(),
+  ] = [ // insertion point sub template
+      this.barService.getBars(this.GONG__StackPath),
+      this.keyService.getKeys(this.GONG__StackPath),
+      this.pieService.getPies(this.GONG__StackPath),
+      this.scatterService.getScatters(this.GONG__StackPath),
+      this.serieService.getSeries(this.GONG__StackPath),
+      this.valueService.getValues(this.GONG__StackPath),
     ];
 
   //
@@ -158,7 +162,19 @@ export class FrontRepoService {
   // This is an observable. Therefore, the control flow forks with
   // - pull() return immediatly the observable
   // - the observable observer, if it subscribe, is called when all GET calls are performs
-  pull(): Observable<FrontRepo> {
+  pull(GONG__StackPath: string = ""): Observable<FrontRepo> {
+
+    this.GONG__StackPath = GONG__StackPath
+
+    this.observableFrontRepo = [ // insertion point sub template
+      this.barService.getBars(this.GONG__StackPath),
+      this.keyService.getKeys(this.GONG__StackPath),
+      this.pieService.getPies(this.GONG__StackPath),
+      this.scatterService.getScatters(this.GONG__StackPath),
+      this.serieService.getSeries(this.GONG__StackPath),
+      this.valueService.getValues(this.GONG__StackPath),
+    ]
+
     return new Observable<FrontRepo>(
       (observer) => {
         combineLatest(
