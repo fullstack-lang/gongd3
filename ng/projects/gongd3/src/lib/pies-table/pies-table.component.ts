@@ -187,7 +187,7 @@ export class PiesTableComponent implements OnInit {
 
   ngOnInit(): void {
     let stackPath = this.activatedRoute.snapshot.paramMap.get('GONG__StackPath')
-    if ( stackPath != undefined) {
+    if (stackPath != undefined) {
       this.GONG__StackPath = stackPath
     }
 
@@ -223,10 +223,14 @@ export class PiesTableComponent implements OnInit {
           let mapOfSourceInstances = this.frontRepo[this.dialogData.SourceStruct + "s" as keyof FrontRepo] as Map<number, PieDB>
           let sourceInstance = mapOfSourceInstances.get(this.dialogData.ID)!
 
-          let sourceField = sourceInstance[this.dialogData.SourceField as keyof typeof sourceInstance]! as unknown as PieDB[]
-          for (let associationInstance of sourceField) {
-            let pie = associationInstance[this.dialogData.IntermediateStructField as keyof typeof associationInstance] as unknown as PieDB
-            this.initialSelection.push(pie)
+          // we associates on sourceInstance of type SourceStruct with a MANY MANY associations to PieDB
+          // the field name is sourceField
+          let sourceFieldArray = sourceInstance[this.dialogData.SourceField as keyof typeof sourceInstance]! as unknown as PieDB[]
+          if (sourceFieldArray != null) {
+            for (let associationInstance of sourceFieldArray) {
+              let pie = associationInstance[this.dialogData.IntermediateStructField as keyof typeof associationInstance] as unknown as PieDB
+              this.initialSelection.push(pie)
+            }
           }
 
           this.selection = new SelectionModel<PieDB>(allowMultiSelect, this.initialSelection);
@@ -247,7 +251,7 @@ export class PiesTableComponent implements OnInit {
     // list of pies is truncated of pie before the delete
     this.pies = this.pies.filter(h => h !== pie);
 
-    this.pieService.deletePie(pieID).subscribe(
+    this.pieService.deletePie(pieID, this.GONG__StackPath).subscribe(
       pie => {
         this.pieService.PieServiceChanged.next("delete")
       }
@@ -313,7 +317,7 @@ export class PiesTableComponent implements OnInit {
 
       // update all pie (only update selection & initial selection)
       for (let pie of toUpdate) {
-        this.pieService.updatePie(pie)
+        this.pieService.updatePie(pie, this.GONG__StackPath)
           .subscribe(pie => {
             this.pieService.PieServiceChanged.next("update")
           });

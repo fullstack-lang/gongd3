@@ -174,13 +174,13 @@ export class ValueDetailComponent implements OnInit {
 
 		switch (this.state) {
 			case ValueDetailComponentState.UPDATE_INSTANCE:
-				this.valueService.updateValue(this.value)
+				this.valueService.updateValue(this.value, this.GONG__StackPath)
 					.subscribe(value => {
 						this.valueService.ValueServiceChanged.next("update")
 					});
 				break;
 			default:
-				this.valueService.postValue(this.value).subscribe(value => {
+				this.valueService.postValue(this.value, this.GONG__StackPath).subscribe(value => {
 					this.valueService.ValueServiceChanged.next("post")
 					this.value = new (ValueDB) // reset fields
 				});

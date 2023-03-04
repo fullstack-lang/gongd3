@@ -120,6 +120,13 @@ type BackRepoGongTimeFieldStruct struct {
 	Map_GongTimeFieldDBID_GongTimeFieldPtr *map[uint]*models.GongTimeField
 
 	db *gorm.DB
+
+	stage *models.StageStruct
+}
+
+func (backRepoGongTimeField *BackRepoGongTimeFieldStruct) GetStage() (stage *models.StageStruct) {
+	stage = backRepoGongTimeField.stage
+	return
 }
 
 func (backRepoGongTimeField *BackRepoGongTimeFieldStruct) GetDB() *gorm.DB {
@@ -134,7 +141,7 @@ func (backRepoGongTimeField *BackRepoGongTimeFieldStruct) GetGongTimeFieldDBFrom
 }
 
 // BackRepoGongTimeField.Init set up the BackRepo of the GongTimeField
-func (backRepoGongTimeField *BackRepoGongTimeFieldStruct) Init(db *gorm.DB) (Error error) {
+func (backRepoGongTimeField *BackRepoGongTimeFieldStruct) Init(stage *models.StageStruct, db *gorm.DB) (Error error) {
 
 	if backRepoGongTimeField.Map_GongTimeFieldDBID_GongTimeFieldPtr != nil {
 		err := errors.New("In Init, backRepoGongTimeField.Map_GongTimeFieldDBID_GongTimeFieldPtr should be nil")
@@ -161,6 +168,7 @@ func (backRepoGongTimeField *BackRepoGongTimeFieldStruct) Init(db *gorm.DB) (Err
 	backRepoGongTimeField.Map_GongTimeFieldPtr_GongTimeFieldDBID = &tmpID
 
 	backRepoGongTimeField.db = db
+	backRepoGongTimeField.stage = stage
 	return
 }
 
@@ -267,8 +275,7 @@ func (backRepoGongTimeField *BackRepoGongTimeFieldStruct) CommitPhaseTwoInstance
 // BackRepoGongTimeField.CheckoutPhaseOne Checkouts all BackRepo instances to the Stage
 //
 // Phase One will result in having instances on the stage aligned with the back repo
-// pointers are not initialized yet (this is for pahse two)
-//
+// pointers are not initialized yet (this is for phase two)
 func (backRepoGongTimeField *BackRepoGongTimeFieldStruct) CheckoutPhaseOne() (Error error) {
 
 	gongtimefieldDBArray := make([]GongTimeFieldDB, 0)
@@ -280,7 +287,7 @@ func (backRepoGongTimeField *BackRepoGongTimeFieldStruct) CheckoutPhaseOne() (Er
 	// list of instances to be removed
 	// start from the initial map on the stage and remove instances that have been checked out
 	gongtimefieldInstancesToBeRemovedFromTheStage := make(map[*models.GongTimeField]any)
-	for key, value := range models.Stage.GongTimeFields {
+	for key, value := range backRepoGongTimeField.stage.GongTimeFields {
 		gongtimefieldInstancesToBeRemovedFromTheStage[key] = value
 	}
 
@@ -298,7 +305,7 @@ func (backRepoGongTimeField *BackRepoGongTimeFieldStruct) CheckoutPhaseOne() (Er
 
 	// remove from stage and back repo's 3 maps all gongtimefields that are not in the checkout
 	for gongtimefield := range gongtimefieldInstancesToBeRemovedFromTheStage {
-		gongtimefield.Unstage()
+		gongtimefield.Unstage(backRepoGongTimeField.GetStage())
 
 		// remove instance from the back repo 3 maps
 		gongtimefieldID := (*backRepoGongTimeField.Map_GongTimeFieldPtr_GongTimeFieldDBID)[gongtimefield]
@@ -323,9 +330,12 @@ func (backRepoGongTimeField *BackRepoGongTimeFieldStruct) CheckoutPhaseOneInstan
 
 		// append model store with the new element
 		gongtimefield.Name = gongtimefieldDB.Name_Data.String
-		gongtimefield.Stage()
+		gongtimefield.Stage(backRepoGongTimeField.GetStage())
 	}
 	gongtimefieldDB.CopyBasicFieldsToGongTimeField(gongtimefield)
+
+	// in some cases, the instance might have been unstaged. It is necessary to stage it again
+	gongtimefield.Stage(backRepoGongTimeField.GetStage())
 
 	// preserve pointer to gongtimefieldDB. Otherwise, pointer will is recycled and the map of pointers
 	// Map_GongTimeFieldDBID_GongTimeFieldDB)[gongtimefieldDB hold variable pointers

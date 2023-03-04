@@ -46,6 +46,9 @@ func (modelPkg *ModelPkg) GenerateDocs(docPackage *doc.Package) {
 
 			doc := p.Parse(note.Body)
 
+			var pr comment.Printer
+			gongNote.BodyHTML = string(pr.HTML(doc))
+
 			for _, block := range doc.Content {
 
 				switch paragraph := block.(type) {
@@ -54,10 +57,12 @@ func (modelPkg *ModelPkg) GenerateDocs(docPackage *doc.Package) {
 					for _, text := range paragraph.Text {
 						switch docLink := text.(type) {
 						case *comment.DocLink:
+
 							link := (&GongLink{
 								Name:       docLink.Name,
+								Recv:       docLink.Recv,
 								ImportPath: docLink.ImportPath,
-							}).Stage()
+							}).Stage(modelPkg.Stage_)
 
 							gongNote.Links = append(gongNote.Links, link)
 						}

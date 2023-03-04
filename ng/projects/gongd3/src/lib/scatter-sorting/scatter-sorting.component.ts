@@ -100,7 +100,7 @@ export class ScatterSortingComponent implements OnInit {
 
     this.associatedScatters.forEach(
       scatter => {
-        this.scatterService.updateScatter(scatter)
+        this.scatterService.updateScatter(scatter, this.dialogData.GONG__StackPath)
           .subscribe(scatter => {
             this.scatterService.ScatterServiceChanged.next("update")
           });

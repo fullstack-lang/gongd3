@@ -195,7 +195,7 @@ export class ScattersTableComponent implements OnInit {
 
   ngOnInit(): void {
     let stackPath = this.activatedRoute.snapshot.paramMap.get('GONG__StackPath')
-    if ( stackPath != undefined) {
+    if (stackPath != undefined) {
       this.GONG__StackPath = stackPath
     }
 
@@ -231,10 +231,14 @@ export class ScattersTableComponent implements OnInit {
           let mapOfSourceInstances = this.frontRepo[this.dialogData.SourceStruct + "s" as keyof FrontRepo] as Map<number, ScatterDB>
           let sourceInstance = mapOfSourceInstances.get(this.dialogData.ID)!
 
-          let sourceField = sourceInstance[this.dialogData.SourceField as keyof typeof sourceInstance]! as unknown as ScatterDB[]
-          for (let associationInstance of sourceField) {
-            let scatter = associationInstance[this.dialogData.IntermediateStructField as keyof typeof associationInstance] as unknown as ScatterDB
-            this.initialSelection.push(scatter)
+          // we associates on sourceInstance of type SourceStruct with a MANY MANY associations to ScatterDB
+          // the field name is sourceField
+          let sourceFieldArray = sourceInstance[this.dialogData.SourceField as keyof typeof sourceInstance]! as unknown as ScatterDB[]
+          if (sourceFieldArray != null) {
+            for (let associationInstance of sourceFieldArray) {
+              let scatter = associationInstance[this.dialogData.IntermediateStructField as keyof typeof associationInstance] as unknown as ScatterDB
+              this.initialSelection.push(scatter)
+            }
           }
 
           this.selection = new SelectionModel<ScatterDB>(allowMultiSelect, this.initialSelection);
@@ -255,7 +259,7 @@ export class ScattersTableComponent implements OnInit {
     // list of scatters is truncated of scatter before the delete
     this.scatters = this.scatters.filter(h => h !== scatter);
 
-    this.scatterService.deleteScatter(scatterID).subscribe(
+    this.scatterService.deleteScatter(scatterID, this.GONG__StackPath).subscribe(
       scatter => {
         this.scatterService.ScatterServiceChanged.next("delete")
       }
@@ -321,7 +325,7 @@ export class ScattersTableComponent implements OnInit {
 
       // update all scatter (only update selection & initial selection)
       for (let scatter of toUpdate) {
-        this.scatterService.updateScatter(scatter)
+        this.scatterService.updateScatter(scatter, this.GONG__StackPath)
           .subscribe(scatter => {
             this.scatterService.ScatterServiceChanged.next("update")
           });

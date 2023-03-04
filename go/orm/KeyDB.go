@@ -102,6 +102,13 @@ type BackRepoKeyStruct struct {
 	Map_KeyDBID_KeyPtr *map[uint]*models.Key
 
 	db *gorm.DB
+
+	stage *models.StageStruct
+}
+
+func (backRepoKey *BackRepoKeyStruct) GetStage() (stage *models.StageStruct) {
+	stage = backRepoKey.stage
+	return
 }
 
 func (backRepoKey *BackRepoKeyStruct) GetDB() *gorm.DB {
@@ -116,7 +123,7 @@ func (backRepoKey *BackRepoKeyStruct) GetKeyDBFromKeyPtr(key *models.Key) (keyDB
 }
 
 // BackRepoKey.Init set up the BackRepo of the Key
-func (backRepoKey *BackRepoKeyStruct) Init(db *gorm.DB) (Error error) {
+func (backRepoKey *BackRepoKeyStruct) Init(stage *models.StageStruct, db *gorm.DB) (Error error) {
 
 	if backRepoKey.Map_KeyDBID_KeyPtr != nil {
 		err := errors.New("In Init, backRepoKey.Map_KeyDBID_KeyPtr should be nil")
@@ -143,6 +150,7 @@ func (backRepoKey *BackRepoKeyStruct) Init(db *gorm.DB) (Error error) {
 	backRepoKey.Map_KeyPtr_KeyDBID = &tmpID
 
 	backRepoKey.db = db
+	backRepoKey.stage = stage
 	return
 }
 
@@ -261,7 +269,7 @@ func (backRepoKey *BackRepoKeyStruct) CheckoutPhaseOne() (Error error) {
 	// list of instances to be removed
 	// start from the initial map on the stage and remove instances that have been checked out
 	keyInstancesToBeRemovedFromTheStage := make(map[*models.Key]any)
-	for key, value := range models.Stage.Keys {
+	for key, value := range backRepoKey.stage.Keys {
 		keyInstancesToBeRemovedFromTheStage[key] = value
 	}
 
@@ -279,7 +287,7 @@ func (backRepoKey *BackRepoKeyStruct) CheckoutPhaseOne() (Error error) {
 
 	// remove from stage and back repo's 3 maps all keys that are not in the checkout
 	for key := range keyInstancesToBeRemovedFromTheStage {
-		key.Unstage()
+		key.Unstage(backRepoKey.GetStage())
 
 		// remove instance from the back repo 3 maps
 		keyID := (*backRepoKey.Map_KeyPtr_KeyDBID)[key]
@@ -304,12 +312,12 @@ func (backRepoKey *BackRepoKeyStruct) CheckoutPhaseOneInstance(keyDB *KeyDB) (Er
 
 		// append model store with the new element
 		key.Name = keyDB.Name_Data.String
-		key.Stage()
+		key.Stage(backRepoKey.GetStage())
 	}
 	keyDB.CopyBasicFieldsToKey(key)
 
 	// in some cases, the instance might have been unstaged. It is necessary to stage it again
-	key.Stage()
+	key.Stage(backRepoKey.GetStage())
 
 	// preserve pointer to keyDB. Otherwise, pointer will is recycled and the map of pointers
 	// Map_KeyDBID_KeyDB)[keyDB hold variable pointers

@@ -124,6 +124,13 @@ type BackRepoSliceOfPointerToGongStructFieldStruct struct {
 	Map_SliceOfPointerToGongStructFieldDBID_SliceOfPointerToGongStructFieldPtr *map[uint]*models.SliceOfPointerToGongStructField
 
 	db *gorm.DB
+
+	stage *models.StageStruct
+}
+
+func (backRepoSliceOfPointerToGongStructField *BackRepoSliceOfPointerToGongStructFieldStruct) GetStage() (stage *models.StageStruct) {
+	stage = backRepoSliceOfPointerToGongStructField.stage
+	return
 }
 
 func (backRepoSliceOfPointerToGongStructField *BackRepoSliceOfPointerToGongStructFieldStruct) GetDB() *gorm.DB {
@@ -138,7 +145,7 @@ func (backRepoSliceOfPointerToGongStructField *BackRepoSliceOfPointerToGongStruc
 }
 
 // BackRepoSliceOfPointerToGongStructField.Init set up the BackRepo of the SliceOfPointerToGongStructField
-func (backRepoSliceOfPointerToGongStructField *BackRepoSliceOfPointerToGongStructFieldStruct) Init(db *gorm.DB) (Error error) {
+func (backRepoSliceOfPointerToGongStructField *BackRepoSliceOfPointerToGongStructFieldStruct) Init(stage *models.StageStruct, db *gorm.DB) (Error error) {
 
 	if backRepoSliceOfPointerToGongStructField.Map_SliceOfPointerToGongStructFieldDBID_SliceOfPointerToGongStructFieldPtr != nil {
 		err := errors.New("In Init, backRepoSliceOfPointerToGongStructField.Map_SliceOfPointerToGongStructFieldDBID_SliceOfPointerToGongStructFieldPtr should be nil")
@@ -165,6 +172,7 @@ func (backRepoSliceOfPointerToGongStructField *BackRepoSliceOfPointerToGongStruc
 	backRepoSliceOfPointerToGongStructField.Map_SliceOfPointerToGongStructFieldPtr_SliceOfPointerToGongStructFieldDBID = &tmpID
 
 	backRepoSliceOfPointerToGongStructField.db = db
+	backRepoSliceOfPointerToGongStructField.stage = stage
 	return
 }
 
@@ -280,8 +288,7 @@ func (backRepoSliceOfPointerToGongStructField *BackRepoSliceOfPointerToGongStruc
 // BackRepoSliceOfPointerToGongStructField.CheckoutPhaseOne Checkouts all BackRepo instances to the Stage
 //
 // Phase One will result in having instances on the stage aligned with the back repo
-// pointers are not initialized yet (this is for pahse two)
-//
+// pointers are not initialized yet (this is for phase two)
 func (backRepoSliceOfPointerToGongStructField *BackRepoSliceOfPointerToGongStructFieldStruct) CheckoutPhaseOne() (Error error) {
 
 	sliceofpointertogongstructfieldDBArray := make([]SliceOfPointerToGongStructFieldDB, 0)
@@ -293,7 +300,7 @@ func (backRepoSliceOfPointerToGongStructField *BackRepoSliceOfPointerToGongStruc
 	// list of instances to be removed
 	// start from the initial map on the stage and remove instances that have been checked out
 	sliceofpointertogongstructfieldInstancesToBeRemovedFromTheStage := make(map[*models.SliceOfPointerToGongStructField]any)
-	for key, value := range models.Stage.SliceOfPointerToGongStructFields {
+	for key, value := range backRepoSliceOfPointerToGongStructField.stage.SliceOfPointerToGongStructFields {
 		sliceofpointertogongstructfieldInstancesToBeRemovedFromTheStage[key] = value
 	}
 
@@ -311,7 +318,7 @@ func (backRepoSliceOfPointerToGongStructField *BackRepoSliceOfPointerToGongStruc
 
 	// remove from stage and back repo's 3 maps all sliceofpointertogongstructfields that are not in the checkout
 	for sliceofpointertogongstructfield := range sliceofpointertogongstructfieldInstancesToBeRemovedFromTheStage {
-		sliceofpointertogongstructfield.Unstage()
+		sliceofpointertogongstructfield.Unstage(backRepoSliceOfPointerToGongStructField.GetStage())
 
 		// remove instance from the back repo 3 maps
 		sliceofpointertogongstructfieldID := (*backRepoSliceOfPointerToGongStructField.Map_SliceOfPointerToGongStructFieldPtr_SliceOfPointerToGongStructFieldDBID)[sliceofpointertogongstructfield]
@@ -336,9 +343,12 @@ func (backRepoSliceOfPointerToGongStructField *BackRepoSliceOfPointerToGongStruc
 
 		// append model store with the new element
 		sliceofpointertogongstructfield.Name = sliceofpointertogongstructfieldDB.Name_Data.String
-		sliceofpointertogongstructfield.Stage()
+		sliceofpointertogongstructfield.Stage(backRepoSliceOfPointerToGongStructField.GetStage())
 	}
 	sliceofpointertogongstructfieldDB.CopyBasicFieldsToSliceOfPointerToGongStructField(sliceofpointertogongstructfield)
+
+	// in some cases, the instance might have been unstaged. It is necessary to stage it again
+	sliceofpointertogongstructfield.Stage(backRepoSliceOfPointerToGongStructField.GetStage())
 
 	// preserve pointer to sliceofpointertogongstructfieldDB. Otherwise, pointer will is recycled and the map of pointers
 	// Map_SliceOfPointerToGongStructFieldDBID_SliceOfPointerToGongStructFieldDB)[sliceofpointertogongstructfieldDB hold variable pointers

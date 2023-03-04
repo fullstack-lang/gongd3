@@ -47,11 +47,23 @@ type ModelPkgInput struct {
 // default: genericError
 //
 //	200: modelpkgDBResponse
-func GetModelPkgs(c *gin.Context) {
-	db := orm.BackRepo.BackRepoModelPkg.GetDB()
+func (controller *Controller) GetModelPkgs(c *gin.Context) {
 
 	// source slice
 	var modelpkgDBs []orm.ModelPkgDB
+
+	values := c.Request.URL.Query()
+	stackPath := ""
+	if len(values) == 1 {
+		value := values["GONG__StackPath"]
+		if len(value) == 1 {
+			stackPath = value[0]
+			log.Println("GetModelPkgs", "GONG__StackPath", stackPath)
+		}
+	}
+	backRepo := controller.Map_BackRepos[stackPath]
+	db := backRepo.BackRepoModelPkg.GetDB()
+
 	query := db.Find(&modelpkgDBs)
 	if query.Error != nil {
 		var returnError GenericError
@@ -95,8 +107,19 @@ func GetModelPkgs(c *gin.Context) {
 //
 //	Responses:
 //	  200: nodeDBResponse
-func PostModelPkg(c *gin.Context) {
-	db := orm.BackRepo.BackRepoModelPkg.GetDB()
+func (controller *Controller) PostModelPkg(c *gin.Context) {
+
+	values := c.Request.URL.Query()
+	stackPath := ""
+	if len(values) == 1 {
+		value := values["GONG__StackPath"]
+		if len(value) == 1 {
+			stackPath = value[0]
+			log.Println("PostModelPkgs", "GONG__StackPath", stackPath)
+		}
+	}
+	backRepo := controller.Map_BackRepos[stackPath]
+	db := backRepo.BackRepoModelPkg.GetDB()
 
 	// Validate input
 	var input orm.ModelPkgAPI
@@ -127,16 +150,16 @@ func PostModelPkg(c *gin.Context) {
 	}
 
 	// get an instance (not staged) from DB instance, and call callback function
-	orm.BackRepo.BackRepoModelPkg.CheckoutPhaseOneInstance(&modelpkgDB)
-	modelpkg := (*orm.BackRepo.BackRepoModelPkg.Map_ModelPkgDBID_ModelPkgPtr)[modelpkgDB.ID]
+	backRepo.BackRepoModelPkg.CheckoutPhaseOneInstance(&modelpkgDB)
+	modelpkg := (*backRepo.BackRepoModelPkg.Map_ModelPkgDBID_ModelPkgPtr)[modelpkgDB.ID]
 
 	if modelpkg != nil {
-		models.AfterCreateFromFront(&models.Stage, modelpkg)
+		models.AfterCreateFromFront(backRepo.GetStage(), modelpkg)
 	}
 
 	// a POST is equivalent to a back repo commit increase
 	// (this will be improved with implementation of unit of work design pattern)
-	orm.BackRepo.IncrementPushFromFrontNb()
+	backRepo.IncrementPushFromFrontNb()
 
 	c.JSON(http.StatusOK, modelpkgDB)
 }
@@ -151,8 +174,19 @@ func PostModelPkg(c *gin.Context) {
 // default: genericError
 //
 //	200: modelpkgDBResponse
-func GetModelPkg(c *gin.Context) {
-	db := orm.BackRepo.BackRepoModelPkg.GetDB()
+func (controller *Controller) GetModelPkg(c *gin.Context) {
+
+	values := c.Request.URL.Query()
+	stackPath := ""
+	if len(values) == 1 {
+		value := values["GONG__StackPath"]
+		if len(value) == 1 {
+			stackPath = value[0]
+			log.Println("GetModelPkg", "GONG__StackPath", stackPath)
+		}
+	}
+	backRepo := controller.Map_BackRepos[stackPath]
+	db := backRepo.BackRepoModelPkg.GetDB()
 
 	// Get modelpkgDB in DB
 	var modelpkgDB orm.ModelPkgDB
@@ -183,8 +217,27 @@ func GetModelPkg(c *gin.Context) {
 // default: genericError
 //
 //	200: modelpkgDBResponse
-func UpdateModelPkg(c *gin.Context) {
-	db := orm.BackRepo.BackRepoModelPkg.GetDB()
+func (controller *Controller) UpdateModelPkg(c *gin.Context) {
+
+	values := c.Request.URL.Query()
+	stackPath := ""
+	if len(values) == 1 {
+		value := values["GONG__StackPath"]
+		if len(value) == 1 {
+			stackPath = value[0]
+			log.Println("UpdateModelPkg", "GONG__StackPath", stackPath)
+		}
+	}
+	backRepo := controller.Map_BackRepos[stackPath]
+	db := backRepo.BackRepoModelPkg.GetDB()
+
+	// Validate input
+	var input orm.ModelPkgAPI
+	if err := c.ShouldBindJSON(&input); err != nil {
+		log.Println(err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 
 	// Get model if exist
 	var modelpkgDB orm.ModelPkgDB
@@ -198,14 +251,6 @@ func UpdateModelPkg(c *gin.Context) {
 		returnError.Body.Message = query.Error.Error()
 		log.Println(query.Error.Error())
 		c.JSON(http.StatusBadRequest, returnError.Body)
-		return
-	}
-
-	// Validate input
-	var input orm.ModelPkgAPI
-	if err := c.ShouldBindJSON(&input); err != nil {
-		log.Println(err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -228,16 +273,16 @@ func UpdateModelPkg(c *gin.Context) {
 	modelpkgDB.CopyBasicFieldsToModelPkg(modelpkgNew)
 
 	// get stage instance from DB instance, and call callback function
-	modelpkgOld := (*orm.BackRepo.BackRepoModelPkg.Map_ModelPkgDBID_ModelPkgPtr)[modelpkgDB.ID]
+	modelpkgOld := (*backRepo.BackRepoModelPkg.Map_ModelPkgDBID_ModelPkgPtr)[modelpkgDB.ID]
 	if modelpkgOld != nil {
-		models.AfterUpdateFromFront(&models.Stage, modelpkgOld, modelpkgNew)
+		models.AfterUpdateFromFront(backRepo.GetStage(), modelpkgOld, modelpkgNew)
 	}
 
 	// an UPDATE generates a back repo commit increase
 	// (this will be improved with implementation of unit of work design pattern)
 	// in some cases, with the marshalling of the stage, this operation might
 	// generates a checkout
-	orm.BackRepo.IncrementPushFromFrontNb()
+	backRepo.IncrementPushFromFrontNb()
 
 	// return status OK with the marshalling of the the modelpkgDB
 	c.JSON(http.StatusOK, modelpkgDB)
@@ -252,8 +297,19 @@ func UpdateModelPkg(c *gin.Context) {
 // default: genericError
 //
 //	200: modelpkgDBResponse
-func DeleteModelPkg(c *gin.Context) {
-	db := orm.BackRepo.BackRepoModelPkg.GetDB()
+func (controller *Controller) DeleteModelPkg(c *gin.Context) {
+
+	values := c.Request.URL.Query()
+	stackPath := ""
+	if len(values) == 1 {
+		value := values["GONG__StackPath"]
+		if len(value) == 1 {
+			stackPath = value[0]
+			log.Println("DeleteModelPkg", "GONG__StackPath", stackPath)
+		}
+	}
+	backRepo := controller.Map_BackRepos[stackPath]
+	db := backRepo.BackRepoModelPkg.GetDB()
 
 	// Get model if exist
 	var modelpkgDB orm.ModelPkgDB
@@ -274,14 +330,14 @@ func DeleteModelPkg(c *gin.Context) {
 	modelpkgDB.CopyBasicFieldsToModelPkg(modelpkgDeleted)
 
 	// get stage instance from DB instance, and call callback function
-	modelpkgStaged := (*orm.BackRepo.BackRepoModelPkg.Map_ModelPkgDBID_ModelPkgPtr)[modelpkgDB.ID]
+	modelpkgStaged := (*backRepo.BackRepoModelPkg.Map_ModelPkgDBID_ModelPkgPtr)[modelpkgDB.ID]
 	if modelpkgStaged != nil {
-		models.AfterDeleteFromFront(&models.Stage, modelpkgStaged, modelpkgDeleted)
+		models.AfterDeleteFromFront(backRepo.GetStage(), modelpkgStaged, modelpkgDeleted)
 	}
 
 	// a DELETE generates a back repo commit increase
 	// (this will be improved with implementation of unit of work design pattern)
-	orm.BackRepo.IncrementPushFromFrontNb()
+	backRepo.IncrementPushFromFrontNb()
 
 	c.JSON(http.StatusOK, gin.H{"data": true})
 }

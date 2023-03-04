@@ -21,10 +21,6 @@ import { KeyDB } from './key-db'
 })
 export class ScatterService {
 
-  httpOptions = {
-    headers: new HttpHeaders({ 'Content-Type': 'application/json' })
-  };
-
   // Kamar Raïmo: Adding a way to communicate between components that share information
   // so that they are notified of a change.
   ScatterServiceChanged: BehaviorSubject<string> = new BehaviorSubject("");
@@ -33,7 +29,6 @@ export class ScatterService {
 
   constructor(
     private http: HttpClient,
-    private location: Location,
     @Inject(DOCUMENT) private document: Document
   ) {
     // path to the service share the same origin with the path to the document
@@ -68,10 +63,8 @@ export class ScatterService {
     );
   }
 
-  //////// Save methods //////////
-
   /** POST: add a new scatter to the server */
-  postScatter(scatterdb: ScatterDB): Observable<ScatterDB> {
+  postScatter(scatterdb: ScatterDB, GONG__StackPath: string): Observable<ScatterDB> {
 
     // insertion point for reset of pointers and reverse pointers (to avoid circular JSON)
     scatterdb.X = new KeyDB
@@ -79,7 +72,13 @@ export class ScatterService {
     scatterdb.Text = new KeyDB
     scatterdb.Set = []
 
-    return this.http.post<ScatterDB>(this.scattersUrl, scatterdb, this.httpOptions).pipe(
+    let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
+    let httpOptions = {
+      headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
+      params: params
+    }
+
+	return this.http.post<ScatterDB>(this.scattersUrl, scatterdb, httpOptions).pipe(
       tap(_ => {
         // insertion point for restoration of reverse pointers
         this.log(`posted scatterdb id=${scatterdb.ID}`)
@@ -89,18 +88,24 @@ export class ScatterService {
   }
 
   /** DELETE: delete the scatterdb from the server */
-  deleteScatter(scatterdb: ScatterDB | number): Observable<ScatterDB> {
+  deleteScatter(scatterdb: ScatterDB | number, GONG__StackPath: string): Observable<ScatterDB> {
     const id = typeof scatterdb === 'number' ? scatterdb : scatterdb.ID;
     const url = `${this.scattersUrl}/${id}`;
 
-    return this.http.delete<ScatterDB>(url, this.httpOptions).pipe(
+    let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
+    let httpOptions = {
+      headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
+      params: params
+    };
+
+    return this.http.delete<ScatterDB>(url, httpOptions).pipe(
       tap(_ => this.log(`deleted scatterdb id=${id}`)),
       catchError(this.handleError<ScatterDB>('deleteScatter'))
     );
   }
 
   /** PUT: update the scatterdb on the server */
-  updateScatter(scatterdb: ScatterDB): Observable<ScatterDB> {
+  updateScatter(scatterdb: ScatterDB, GONG__StackPath: string): Observable<ScatterDB> {
     const id = typeof scatterdb === 'number' ? scatterdb : scatterdb.ID;
     const url = `${this.scattersUrl}/${id}`;
 
@@ -110,7 +115,13 @@ export class ScatterService {
     scatterdb.Text = new KeyDB
     scatterdb.Set = []
 
-    return this.http.put<ScatterDB>(url, scatterdb, this.httpOptions).pipe(
+    let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
+    let httpOptions = {
+      headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
+      params: params
+    };
+
+    return this.http.put<ScatterDB>(url, scatterdb, httpOptions).pipe(
       tap(_ => {
         // insertion point for restoration of reverse pointers
         this.log(`updated scatterdb id=${scatterdb.ID}`)

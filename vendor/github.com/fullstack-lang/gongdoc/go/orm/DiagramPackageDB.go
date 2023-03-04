@@ -45,6 +45,10 @@ type DiagramPackageAPI struct {
 // reverse pointers of slice of poitners to Struct
 type DiagramPackagePointersEnconding struct {
 	// insertion for pointer fields encoding declaration
+
+	// field SelectedClassdiagram is a pointer to another Struct (optional or 0..1)
+	// This field is generated into another field to enable AS ONE association
+	SelectedClassdiagramID sql.NullInt64
 }
 
 // DiagramPackageDB describes a diagrampackage in the database
@@ -134,6 +138,13 @@ type BackRepoDiagramPackageStruct struct {
 	Map_DiagramPackageDBID_DiagramPackagePtr *map[uint]*models.DiagramPackage
 
 	db *gorm.DB
+
+	stage *models.StageStruct
+}
+
+func (backRepoDiagramPackage *BackRepoDiagramPackageStruct) GetStage() (stage *models.StageStruct) {
+	stage = backRepoDiagramPackage.stage
+	return
 }
 
 func (backRepoDiagramPackage *BackRepoDiagramPackageStruct) GetDB() *gorm.DB {
@@ -148,7 +159,7 @@ func (backRepoDiagramPackage *BackRepoDiagramPackageStruct) GetDiagramPackageDBF
 }
 
 // BackRepoDiagramPackage.Init set up the BackRepo of the DiagramPackage
-func (backRepoDiagramPackage *BackRepoDiagramPackageStruct) Init(db *gorm.DB) (Error error) {
+func (backRepoDiagramPackage *BackRepoDiagramPackageStruct) Init(stage *models.StageStruct, db *gorm.DB) (Error error) {
 
 	if backRepoDiagramPackage.Map_DiagramPackageDBID_DiagramPackagePtr != nil {
 		err := errors.New("In Init, backRepoDiagramPackage.Map_DiagramPackageDBID_DiagramPackagePtr should be nil")
@@ -175,6 +186,7 @@ func (backRepoDiagramPackage *BackRepoDiagramPackageStruct) Init(db *gorm.DB) (E
 	backRepoDiagramPackage.Map_DiagramPackagePtr_DiagramPackageDBID = &tmpID
 
 	backRepoDiagramPackage.db = db
+	backRepoDiagramPackage.stage = stage
 	return
 }
 
@@ -283,6 +295,15 @@ func (backRepoDiagramPackage *BackRepoDiagramPackageStruct) CommitPhaseTwoInstan
 			}
 		}
 
+		// commit pointer value diagrampackage.SelectedClassdiagram translates to updating the diagrampackage.SelectedClassdiagramID
+		diagrampackageDB.SelectedClassdiagramID.Valid = true // allow for a 0 value (nil association)
+		if diagrampackage.SelectedClassdiagram != nil {
+			if SelectedClassdiagramId, ok := (*backRepo.BackRepoClassdiagram.Map_ClassdiagramPtr_ClassdiagramDBID)[diagrampackage.SelectedClassdiagram]; ok {
+				diagrampackageDB.SelectedClassdiagramID.Int64 = int64(SelectedClassdiagramId)
+				diagrampackageDB.SelectedClassdiagramID.Valid = true
+			}
+		}
+
 		// This loop encodes the slice of pointers diagrampackage.Umlscs into the back repo.
 		// Each back repo instance at the end of the association encode the ID of the association start
 		// into a dedicated field for coding the association. The back repo instance is then saved to the db
@@ -319,8 +340,7 @@ func (backRepoDiagramPackage *BackRepoDiagramPackageStruct) CommitPhaseTwoInstan
 // BackRepoDiagramPackage.CheckoutPhaseOne Checkouts all BackRepo instances to the Stage
 //
 // Phase One will result in having instances on the stage aligned with the back repo
-// pointers are not initialized yet (this is for pahse two)
-//
+// pointers are not initialized yet (this is for phase two)
 func (backRepoDiagramPackage *BackRepoDiagramPackageStruct) CheckoutPhaseOne() (Error error) {
 
 	diagrampackageDBArray := make([]DiagramPackageDB, 0)
@@ -332,7 +352,7 @@ func (backRepoDiagramPackage *BackRepoDiagramPackageStruct) CheckoutPhaseOne() (
 	// list of instances to be removed
 	// start from the initial map on the stage and remove instances that have been checked out
 	diagrampackageInstancesToBeRemovedFromTheStage := make(map[*models.DiagramPackage]any)
-	for key, value := range models.Stage.DiagramPackages {
+	for key, value := range backRepoDiagramPackage.stage.DiagramPackages {
 		diagrampackageInstancesToBeRemovedFromTheStage[key] = value
 	}
 
@@ -350,7 +370,7 @@ func (backRepoDiagramPackage *BackRepoDiagramPackageStruct) CheckoutPhaseOne() (
 
 	// remove from stage and back repo's 3 maps all diagrampackages that are not in the checkout
 	for diagrampackage := range diagrampackageInstancesToBeRemovedFromTheStage {
-		diagrampackage.Unstage()
+		diagrampackage.Unstage(backRepoDiagramPackage.GetStage())
 
 		// remove instance from the back repo 3 maps
 		diagrampackageID := (*backRepoDiagramPackage.Map_DiagramPackagePtr_DiagramPackageDBID)[diagrampackage]
@@ -375,9 +395,12 @@ func (backRepoDiagramPackage *BackRepoDiagramPackageStruct) CheckoutPhaseOneInst
 
 		// append model store with the new element
 		diagrampackage.Name = diagrampackageDB.Name_Data.String
-		diagrampackage.Stage()
+		diagrampackage.Stage(backRepoDiagramPackage.GetStage())
 	}
 	diagrampackageDB.CopyBasicFieldsToDiagramPackage(diagrampackage)
+
+	// in some cases, the instance might have been unstaged. It is necessary to stage it again
+	diagrampackage.Stage(backRepoDiagramPackage.GetStage())
 
 	// preserve pointer to diagrampackageDB. Otherwise, pointer will is recycled and the map of pointers
 	// Map_DiagramPackageDBID_DiagramPackageDB)[diagrampackageDB hold variable pointers
@@ -434,6 +457,10 @@ func (backRepoDiagramPackage *BackRepoDiagramPackageStruct) CheckoutPhaseTwoInst
 		return classdiagramDB_i.DiagramPackage_ClassdiagramsDBID_Index.Int64 < classdiagramDB_j.DiagramPackage_ClassdiagramsDBID_Index.Int64
 	})
 
+	// SelectedClassdiagram field
+	if diagrampackageDB.SelectedClassdiagramID.Int64 != 0 {
+		diagrampackage.SelectedClassdiagram = (*backRepo.BackRepoClassdiagram.Map_ClassdiagramDBID_ClassdiagramPtr)[uint(diagrampackageDB.SelectedClassdiagramID.Int64)]
+	}
 	// This loop redeem diagrampackage.Umlscs in the stage from the encode in the back repo
 	// It parses all UmlscDB in the back repo and if the reverse pointer encoding matches the back repo ID
 	// it appends the stage instance
@@ -715,6 +742,12 @@ func (backRepoDiagramPackage *BackRepoDiagramPackageStruct) RestorePhaseTwo() {
 		_ = diagrampackageDB
 
 		// insertion point for reindexing pointers encoding
+		// reindexing SelectedClassdiagram field
+		if diagrampackageDB.SelectedClassdiagramID.Int64 != 0 {
+			diagrampackageDB.SelectedClassdiagramID.Int64 = int64(BackRepoClassdiagramid_atBckpTime_newID[uint(diagrampackageDB.SelectedClassdiagramID.Int64)])
+			diagrampackageDB.SelectedClassdiagramID.Valid = true
+		}
+
 		// update databse with new index encoding
 		query := backRepoDiagramPackage.db.Model(diagrampackageDB).Updates(*diagrampackageDB)
 		if query.Error != nil {

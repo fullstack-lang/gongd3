@@ -172,13 +172,13 @@ export class PieDetailComponent implements OnInit {
 
 		switch (this.state) {
 			case PieDetailComponentState.UPDATE_INSTANCE:
-				this.pieService.updatePie(this.pie)
+				this.pieService.updatePie(this.pie, this.GONG__StackPath)
 					.subscribe(pie => {
 						this.pieService.PieServiceChanged.next("update")
 					});
 				break;
 			default:
-				this.pieService.postPie(this.pie).subscribe(pie => {
+				this.pieService.postPie(this.pie, this.GONG__StackPath).subscribe(pie => {
 					this.pieService.PieServiceChanged.next("post")
 					this.pie = new (PieDB) // reset fields
 				});

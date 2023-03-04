@@ -100,7 +100,7 @@ export class ValueSortingComponent implements OnInit {
 
     this.associatedValues.forEach(
       value => {
-        this.valueService.updateValue(value)
+        this.valueService.updateValue(value, this.dialogData.GONG__StackPath)
           .subscribe(value => {
             this.valueService.ValueServiceChanged.next("update")
           });

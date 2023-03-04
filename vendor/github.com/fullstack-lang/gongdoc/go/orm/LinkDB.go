@@ -50,11 +50,11 @@ type LinkPointersEnconding struct {
 	// This field is generated into another field to enable AS ONE association
 	MiddleverticeID sql.NullInt64
 
-	// Implementation of a reverse ID for field Classshape{}.Links []*Link
-	Classshape_LinksDBID sql.NullInt64
+	// Implementation of a reverse ID for field GongStructShape{}.Links []*Link
+	GongStructShape_LinksDBID sql.NullInt64
 
 	// implementation of the index of the withing the slice
-	Classshape_LinksDBID_Index sql.NullInt64
+	GongStructShape_LinksDBID_Index sql.NullInt64
 }
 
 // LinkDB describes a link in the database
@@ -71,11 +71,8 @@ type LinkDB struct {
 	// Declation for basic field linkDB.Name
 	Name_Data sql.NullString
 
-	// Declation for basic field linkDB.Fieldname
-	Fieldname_Data sql.NullString
-
-	// Declation for basic field linkDB.Structname
-	Structname_Data sql.NullString
+	// Declation for basic field linkDB.Identifier
+	Identifier_Data sql.NullString
 
 	// Declation for basic field linkDB.Fieldtypename
 	Fieldtypename_Data sql.NullString
@@ -108,15 +105,13 @@ type LinkWOP struct {
 
 	Name string `xlsx:"1"`
 
-	Fieldname string `xlsx:"2"`
+	Identifier string `xlsx:"2"`
 
-	Structname string `xlsx:"3"`
+	Fieldtypename string `xlsx:"3"`
 
-	Fieldtypename string `xlsx:"4"`
+	TargetMultiplicity models.MultiplicityType `xlsx:"4"`
 
-	TargetMultiplicity models.MultiplicityType `xlsx:"5"`
-
-	SourceMultiplicity models.MultiplicityType `xlsx:"6"`
+	SourceMultiplicity models.MultiplicityType `xlsx:"5"`
 	// insertion for WOP pointer fields
 }
 
@@ -124,8 +119,7 @@ var Link_Fields = []string{
 	// insertion for WOP basic fields
 	"ID",
 	"Name",
-	"Fieldname",
-	"Structname",
+	"Identifier",
 	"Fieldtypename",
 	"TargetMultiplicity",
 	"SourceMultiplicity",
@@ -142,6 +136,13 @@ type BackRepoLinkStruct struct {
 	Map_LinkDBID_LinkPtr *map[uint]*models.Link
 
 	db *gorm.DB
+
+	stage *models.StageStruct
+}
+
+func (backRepoLink *BackRepoLinkStruct) GetStage() (stage *models.StageStruct) {
+	stage = backRepoLink.stage
+	return
 }
 
 func (backRepoLink *BackRepoLinkStruct) GetDB() *gorm.DB {
@@ -156,7 +157,7 @@ func (backRepoLink *BackRepoLinkStruct) GetLinkDBFromLinkPtr(link *models.Link) 
 }
 
 // BackRepoLink.Init set up the BackRepo of the Link
-func (backRepoLink *BackRepoLinkStruct) Init(db *gorm.DB) (Error error) {
+func (backRepoLink *BackRepoLinkStruct) Init(stage *models.StageStruct, db *gorm.DB) (Error error) {
 
 	if backRepoLink.Map_LinkDBID_LinkPtr != nil {
 		err := errors.New("In Init, backRepoLink.Map_LinkDBID_LinkPtr should be nil")
@@ -183,6 +184,7 @@ func (backRepoLink *BackRepoLinkStruct) Init(db *gorm.DB) (Error error) {
 	backRepoLink.Map_LinkPtr_LinkDBID = &tmpID
 
 	backRepoLink.db = db
+	backRepoLink.stage = stage
 	return
 }
 
@@ -298,8 +300,7 @@ func (backRepoLink *BackRepoLinkStruct) CommitPhaseTwoInstance(backRepo *BackRep
 // BackRepoLink.CheckoutPhaseOne Checkouts all BackRepo instances to the Stage
 //
 // Phase One will result in having instances on the stage aligned with the back repo
-// pointers are not initialized yet (this is for pahse two)
-//
+// pointers are not initialized yet (this is for phase two)
 func (backRepoLink *BackRepoLinkStruct) CheckoutPhaseOne() (Error error) {
 
 	linkDBArray := make([]LinkDB, 0)
@@ -311,7 +312,7 @@ func (backRepoLink *BackRepoLinkStruct) CheckoutPhaseOne() (Error error) {
 	// list of instances to be removed
 	// start from the initial map on the stage and remove instances that have been checked out
 	linkInstancesToBeRemovedFromTheStage := make(map[*models.Link]any)
-	for key, value := range models.Stage.Links {
+	for key, value := range backRepoLink.stage.Links {
 		linkInstancesToBeRemovedFromTheStage[key] = value
 	}
 
@@ -329,7 +330,7 @@ func (backRepoLink *BackRepoLinkStruct) CheckoutPhaseOne() (Error error) {
 
 	// remove from stage and back repo's 3 maps all links that are not in the checkout
 	for link := range linkInstancesToBeRemovedFromTheStage {
-		link.Unstage()
+		link.Unstage(backRepoLink.GetStage())
 
 		// remove instance from the back repo 3 maps
 		linkID := (*backRepoLink.Map_LinkPtr_LinkDBID)[link]
@@ -354,9 +355,12 @@ func (backRepoLink *BackRepoLinkStruct) CheckoutPhaseOneInstance(linkDB *LinkDB)
 
 		// append model store with the new element
 		link.Name = linkDB.Name_Data.String
-		link.Stage()
+		link.Stage(backRepoLink.GetStage())
 	}
 	linkDB.CopyBasicFieldsToLink(link)
+
+	// in some cases, the instance might have been unstaged. It is necessary to stage it again
+	link.Stage(backRepoLink.GetStage())
 
 	// preserve pointer to linkDB. Otherwise, pointer will is recycled and the map of pointers
 	// Map_LinkDBID_LinkDB)[linkDB hold variable pointers
@@ -427,11 +431,8 @@ func (linkDB *LinkDB) CopyBasicFieldsFromLink(link *models.Link) {
 	linkDB.Name_Data.String = link.Name
 	linkDB.Name_Data.Valid = true
 
-	linkDB.Fieldname_Data.String = link.Fieldname
-	linkDB.Fieldname_Data.Valid = true
-
-	linkDB.Structname_Data.String = link.Structname
-	linkDB.Structname_Data.Valid = true
+	linkDB.Identifier_Data.String = link.Identifier
+	linkDB.Identifier_Data.Valid = true
 
 	linkDB.Fieldtypename_Data.String = link.Fieldtypename
 	linkDB.Fieldtypename_Data.Valid = true
@@ -450,11 +451,8 @@ func (linkDB *LinkDB) CopyBasicFieldsFromLinkWOP(link *LinkWOP) {
 	linkDB.Name_Data.String = link.Name
 	linkDB.Name_Data.Valid = true
 
-	linkDB.Fieldname_Data.String = link.Fieldname
-	linkDB.Fieldname_Data.Valid = true
-
-	linkDB.Structname_Data.String = link.Structname
-	linkDB.Structname_Data.Valid = true
+	linkDB.Identifier_Data.String = link.Identifier
+	linkDB.Identifier_Data.Valid = true
 
 	linkDB.Fieldtypename_Data.String = link.Fieldtypename
 	linkDB.Fieldtypename_Data.Valid = true
@@ -470,8 +468,7 @@ func (linkDB *LinkDB) CopyBasicFieldsFromLinkWOP(link *LinkWOP) {
 func (linkDB *LinkDB) CopyBasicFieldsToLink(link *models.Link) {
 	// insertion point for checkout of basic fields (back repo to stage)
 	link.Name = linkDB.Name_Data.String
-	link.Fieldname = linkDB.Fieldname_Data.String
-	link.Structname = linkDB.Structname_Data.String
+	link.Identifier = linkDB.Identifier_Data.String
 	link.Fieldtypename = linkDB.Fieldtypename_Data.String
 	link.TargetMultiplicity.FromString(linkDB.TargetMultiplicity_Data.String)
 	link.SourceMultiplicity.FromString(linkDB.SourceMultiplicity_Data.String)
@@ -482,8 +479,7 @@ func (linkDB *LinkDB) CopyBasicFieldsToLinkWOP(link *LinkWOP) {
 	link.ID = int(linkDB.ID)
 	// insertion point for checkout of basic fields (back repo to stage)
 	link.Name = linkDB.Name_Data.String
-	link.Fieldname = linkDB.Fieldname_Data.String
-	link.Structname = linkDB.Structname_Data.String
+	link.Identifier = linkDB.Identifier_Data.String
 	link.Fieldtypename = linkDB.Fieldtypename_Data.String
 	link.TargetMultiplicity.FromString(linkDB.TargetMultiplicity_Data.String)
 	link.SourceMultiplicity.FromString(linkDB.SourceMultiplicity_Data.String)
@@ -651,9 +647,9 @@ func (backRepoLink *BackRepoLinkStruct) RestorePhaseTwo() {
 		}
 
 		// This reindex link.Links
-		if linkDB.Classshape_LinksDBID.Int64 != 0 {
-			linkDB.Classshape_LinksDBID.Int64 =
-				int64(BackRepoClassshapeid_atBckpTime_newID[uint(linkDB.Classshape_LinksDBID.Int64)])
+		if linkDB.GongStructShape_LinksDBID.Int64 != 0 {
+			linkDB.GongStructShape_LinksDBID.Int64 =
+				int64(BackRepoGongStructShapeid_atBckpTime_newID[uint(linkDB.GongStructShape_LinksDBID.Int64)])
 		}
 
 		// update databse with new index encoding

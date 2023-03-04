@@ -4,6 +4,8 @@ package orm
 import (
 	"fmt"
 
+	"github.com/fullstack-lang/gongdoc/go/models"
+
 	"github.com/glebarez/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
@@ -15,7 +17,7 @@ func genQuery(columnName string) string {
 }
 
 // SetupModels connects to the sqlite database
-func SetupModels(logMode bool, filepath string) *gorm.DB {
+func SetupModels(stage *models.StageStruct, logMode bool, filepath string) *gorm.DB {
 	// adjust naming strategy to the stack
 	gormConfig := &gorm.Config{
 		NamingStrategy: schema.NamingStrategy{
@@ -28,13 +30,13 @@ func SetupModels(logMode bool, filepath string) *gorm.DB {
 		panic("Failed to connect to database!")
 	}
 
-	AutoMigrate(db)
+	AutoMigrate(stage, db)
 
 	return db
 }
 
 // AutoMigrate migrates db with with orm Struct
-func AutoMigrate(db *gorm.DB) {
+func AutoMigrate(stage *models.StageStruct, db *gorm.DB) {
 	// adjust naming strategy to the stack
 	db.Config.NamingStrategy = &schema.NamingStrategy{
 		TablePrefix: "github_com_fullstack_lang_gongdoc_go_", // table name prefix
@@ -42,15 +44,16 @@ func AutoMigrate(db *gorm.DB) {
 
 	err := db.AutoMigrate( // insertion point for reference to structs
 		&ClassdiagramDB{},
-		&ClassshapeDB{},
 		&DiagramPackageDB{},
 		&FieldDB{},
+		&GongEnumShapeDB{},
+		&GongEnumValueEntryDB{},
+		&GongStructShapeDB{},
 		&LinkDB{},
 		&NodeDB{},
-		&NoteLinkDB{},
 		&NoteShapeDB{},
+		&NoteShapeLinkDB{},
 		&PositionDB{},
-		&ReferenceDB{},
 		&TreeDB{},
 		&UmlStateDB{},
 		&UmlscDB{},
@@ -63,20 +66,21 @@ func AutoMigrate(db *gorm.DB) {
 	}
 	// log.Printf("Database Migration of package github.com/fullstack-lang/gongdoc/go is OK")
 
-	BackRepo.init(db)
+	BackRepo.init(stage, db)
 }
 
 func ResetDB(db *gorm.DB) { // insertion point for reference to structs
 	db.Delete(&ClassdiagramDB{})
-	db.Delete(&ClassshapeDB{})
 	db.Delete(&DiagramPackageDB{})
 	db.Delete(&FieldDB{})
+	db.Delete(&GongEnumShapeDB{})
+	db.Delete(&GongEnumValueEntryDB{})
+	db.Delete(&GongStructShapeDB{})
 	db.Delete(&LinkDB{})
 	db.Delete(&NodeDB{})
-	db.Delete(&NoteLinkDB{})
 	db.Delete(&NoteShapeDB{})
+	db.Delete(&NoteShapeLinkDB{})
 	db.Delete(&PositionDB{})
-	db.Delete(&ReferenceDB{})
 	db.Delete(&TreeDB{})
 	db.Delete(&UmlStateDB{})
 	db.Delete(&UmlscDB{})

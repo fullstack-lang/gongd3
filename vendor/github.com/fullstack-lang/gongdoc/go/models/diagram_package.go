@@ -1,27 +1,26 @@
 package models
 
 import (
-	"embed"
 	"fmt"
 	"go/ast"
-	"go/parser"
 	"go/token"
 	"log"
 	"os"
-	"path/filepath"
-	"sort"
 	"strings"
 	"time"
 
 	gong_models "github.com/fullstack-lang/gong/go/models"
-
-	"github.com/fullstack-lang/gongdoc/go/walk"
 )
+
+const LegacyDiagramUmarshalling = false
 
 // DiagramPackage stores all diagrams related to a gong package
 // swagger:model DiagramPackage
 type DiagramPackage struct {
 	Name string
+
+	// Stage_ where the DiagamPackage lives
+	Stage_ *StageStruct
 
 	// Path to the "diagrams" directory
 	Path string
@@ -31,6 +30,14 @@ type DiagramPackage struct {
 
 	// Classdiagrams store UML Classdiagrams
 	Classdiagrams []*Classdiagram
+
+	// SelectedClassdiagram is the diagram of interest
+	SelectedClassdiagram *Classdiagram
+
+	// list of files in the "diagrams" directory
+	Files []string
+	Ast   *ast.Package
+	Fset  *token.FileSet
 
 	// Umlscs stores UML State charts diagrams
 	Umlscs []*Umlsc
@@ -50,117 +57,9 @@ type DiagramPackage struct {
 	// pointer to the model package
 	ModelPkg                     *gong_models.ModelPkg
 	AbsolutePathToDiagramPackage string
-}
 
-func LoadEmbedded(fs embed.FS, modelPkg *gong_models.ModelPkg) (diagramPackage *DiagramPackage, err error) {
-	diagramPackage = (&DiagramPackage{})
-	diagramPackage.IsEditable = false
-	diagramPackage.ModelPkg = modelPkg
-	fset := new(token.FileSet)
-	pkgsParser := gong_models.ParseEmbedModel(fs, "go/diagrams")
-	if len(pkgsParser) != 1 {
-		log.Panic("Unable to parser, wrong number of parsers ", len(pkgsParser))
-	}
-	if pkgParser, ok := pkgsParser["diagrams"]; ok {
-		diagramPackage.Unmarshall(modelPkg, pkgParser, fset, "go/diagrams")
-	}
-
-	diagramPackage.SerializeToStage()
-	FillUpNodeTree(diagramPackage)
-	return diagramPackage, nil
-}
-
-func Load(pkgPath string, modelPkg *gong_models.ModelPkg, editable bool) (diagramPackage *DiagramPackage, err error) {
-	diagramPackage = (&DiagramPackage{})
-	diagramPackage.IsEditable = editable
-	diagramPackage.ModelPkg = modelPkg
-
-	// parse the diagram package
-	diagramPkgPath := filepath.Join(pkgPath, "../diagrams")
-	diagramPackage.AbsolutePathToDiagramPackage, _ = filepath.Abs(diagramPkgPath)
-
-	// if diagrams directory does not exist create it
-	_, errd := os.Stat(diagramPkgPath)
-	if os.IsNotExist(errd) {
-		log.Printf(diagramPkgPath, " does not exist, gongdoc creates it")
-
-		errd := os.MkdirAll(diagramPkgPath, os.ModePerm)
-		if os.IsNotExist(errd) {
-			log.Println("creating directory : " + diagramPkgPath)
-		}
-		if os.IsExist(errd) {
-			log.Println("directory " + diagramPkgPath + " allready exists")
-		}
-	}
-
-	fset := token.NewFileSet()
-	startParser := time.Now()
-	pkgsParser, errParser := parser.ParseDir(fset, diagramPkgPath, nil, parser.ParseComments)
-	log.Printf("Parser took %s", time.Since(startParser))
-
-	if errParser != nil {
-		log.Panic("Unable to parser ")
-	}
-	if len(pkgsParser) != 1 {
-		log.Println("Unable to parser, wrong number of parsers ", len(pkgsParser))
-	} else {
-		diagramPackage.Unmarshall(modelPkg, pkgsParser["diagrams"], fset, diagramPkgPath)
-		diagramPackage.IsEditable = editable
-	}
-	diagramPackage.SerializeToStage()
-	FillUpNodeTree(diagramPackage)
-	return diagramPackage, nil
-}
-
-func (diagramPackage *DiagramPackage) Reload() {
-
-	gong_models.Stage.Checkout()
-	gong_models.Stage.Reset()
-	modelPkg, _ := gong_models.LoadSource(
-		filepath.Join(diagramPackage.AbsolutePathToDiagramPackage, "../models"))
-	gong_models.Stage.Commit()
-
-	Stage.Checkout()
-	Stage.Reset()
-	Stage.Commit()
-
-	diagramPackage.Classdiagrams = nil
-	diagramPackage.Umlscs = nil
-	diagramPackage.ModelPkg = modelPkg
-
-	fset := token.NewFileSet()
-	startParser := time.Now()
-	pkgsParser, errParser := parser.ParseDir(fset,
-		diagramPackage.AbsolutePathToDiagramPackage,
-		nil,
-		parser.ParseComments)
-	log.Printf("Parser took %s", time.Since(startParser))
-
-	if errParser != nil {
-		log.Panic("Unable to parser ")
-	}
-	if len(pkgsParser) != 1 {
-		log.Println("Unable to parser, wrong number of parsers ", len(pkgsParser))
-	} else {
-		diagramPackage.Unmarshall(
-			diagramPackage.ModelPkg,
-			pkgsParser["diagrams"],
-			fset, filepath.Join(diagramPackage.GongModelPath, "../diagrams"))
-	}
-	diagramPackage.SerializeToStage()
-	FillUpNodeTree(diagramPackage)
-	Stage.Commit()
-}
-
-func closeFile(f *os.File) {
-	fmt.Println("Closing file ", f.Name())
-
-	err := f.Close()
-
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "error: %v\n", err)
-		os.Exit(1)
-	}
+	// swagger:ignore
+	Map_Identifier_NbInstances map[string]int
 }
 
 const preludeRef string = `package diagrams
@@ -173,128 +72,99 @@ import (
 
 `
 
-// Marshall translates all elements of a Pkgelt into a go file
-// it recusively call Marshall function into the elements
-func (pkgelt *DiagramPackage) Marshall(pkgPath string) error {
+func (diagramPackage *DiagramPackage) UnmarshallOneDiagram(stage *StageStruct, diagramName string, inFile *ast.File, fset *token.FileSet) (classdiagram *Classdiagram) {
 
-	// sort Classdiagrams
-	sort.Slice(pkgelt.Classdiagrams[:], func(i, j int) bool {
-		return pkgelt.Classdiagrams[i].Name < pkgelt.Classdiagrams[j].Name
-	})
-	for _, classdiagram := range pkgelt.Classdiagrams {
-		// open file
-		file, err := os.Create(filepath.Join(pkgPath, classdiagram.Name) + ".go")
-		defer closeFile(file)
+	var err error
+	startParser := time.Now()
+	err = ParseAstFileFromAst(stage, inFile, fset)
+	log.Printf("Parsing of %s took %s", diagramName, time.Since(startParser))
 
-		log.SetFlags(log.Lshortfile)
-		filename := walk.CaptureOutput(func() { log.Printf("") })
-		log.SetFlags(log.LstdFlags)
-		prelude := strings.ReplaceAll(preludeRef, "{{filename}}", filename)
-		prelude = strings.ReplaceAll(prelude, "{{ClassdiagramName}}", classdiagram.Name)
-		if len(classdiagram.Classshapes) > 0 {
-			prelude = strings.ReplaceAll(prelude, "{{Imports}}", "\n\t\""+
-				pkgelt.GongModelPath+"\"")
-		} else {
-			prelude = strings.ReplaceAll(prelude, "{{Imports}}", "")
-		}
-		prelude = strings.ReplaceAll(prelude, "docs", "models")
+	if err != nil {
+		log.Fatalln("Unable to parse", diagramName, err.Error())
+	} else {
+		// there should be one diagram on the stage and it has to be
+		// appended to the diagram package
+		var ok bool
+		classdiagram, ok = (*GetGongstructInstancesMap[Classdiagram]())[diagramName]
 
-		if err == nil {
-			fmt.Fprintf(file, prelude)
-		} else {
-			log.Fatal(err)
-		}
-		if err2 := classdiagram.MarshallAsVariable(file); err != nil {
-			return err2
-		}
-	}
-
-	for _, umlsc := range pkgelt.Umlscs {
-		// open file
-		file, err := os.Create(filepath.Join(pkgPath, umlsc.Name) + ".go")
-		defer closeFile(file)
-
-		prelude := strings.ReplaceAll(preludeRef, "{{Imports}}", strings.ReplaceAll(pkgelt.Name, "diagrams", "models"))
-		prelude = strings.ReplaceAll(prelude, "docs", "models")
-
-		if err == nil {
-			fmt.Fprintf(file, prelude)
-		} else {
-			log.Fatal(err)
+		if !ok {
+			// log.Println("Unable to find", diagramName, ". It might be a docs.go file")
+			return
 		}
 
-		if err2 := umlsc.MarshallAsVariable(file); err != nil {
-			return err2
-		}
-	}
+		// the parsed diagram might have been in draw mode
+		// let's not keep that
+		classdiagram.IsInDrawMode = false
 
-	return nil
-}
+		diagramPackage.Classdiagrams = append(diagramPackage.Classdiagrams,
+			classdiagram)
 
-// PkgeltMap is a Map of all Classdiagrams via their Name
-type PkgeltMap map[string]*DiagramPackage
+		for gongStructShape := range *GetGongstructInstancesSet[GongStructShape]() {
 
-// PkgeltStore is a handy ClassdiagramsMap
-var PkgeltStore PkgeltMap = make(map[string]*DiagramPackage, 0)
+			_, ok := (*gong_models.GetGongstructInstancesMap[gong_models.GongStruct]())[IdentifierToGongObjectName(gongStructShape.Identifier)]
 
-// Unmarshall parse the diagram package to get diagrams
-// diagramPackagePath is "../diagrams" relative to the "models"
-// gongModelPackagePath is the model package path, e.g. "github.com/fullstack-lang/gongxlsx/go/models"
-func (pkgelt *DiagramPackage) Unmarshall(modelPkg *gong_models.ModelPkg, astPkg *ast.Package, fset2 *token.FileSet, diagramPackagePath string) {
+			if !ok {
+				log.Println("UnmarshallOneDiagram: In diagram", classdiagram.Name, "unknown note related to note shape", gongStructShape.Identifier)
+				gongStructShape.Unstage(diagramPackage.Stage_)
 
-	pkgelt.Path = diagramPackagePath
-	pkgelt.GongModelPath = modelPkg.PkgPath
-
-	ast.Inspect(astPkg, func(n ast.Node) bool {
-		switch x := n.(type) {
-		case *ast.GenDecl:
-			if len(x.Specs) > 0 {
-				// log.Println("Found declaration ")
-				switch vs := x.Specs[0].(type) {
-				case *ast.ValueSpec:
-					// log.Println("Found value spec ", vs.Names[0])
-
-					switch se := vs.Type.(type) {
-					case *ast.SelectorExpr:
-						switch se.Sel.Name {
-						case "Classdiagram":
-							var classdiagram Classdiagram
-							classdiagram.Name = vs.Names[0].Name
-							_ = astPkg
-							// log.Println("nb files ", len(astPkg.Files))
-							astNode := vs.Values[0]
-							classdiagram.Unmarshall(modelPkg, astNode, fset2)
-
-							pkgelt.Classdiagrams = append(pkgelt.Classdiagrams, &classdiagram)
-						case "Umlsc":
-							var umlsc Umlsc
-							umlsc.Name = vs.Names[0].Name
-							astNode := vs.Values[0]
-							umlsc.Unmarshall(modelPkg, astNode, fset2)
-
-							pkgelt.Umlscs = append(pkgelt.Umlscs, &umlsc)
-						}
-
-					}
+				if contains(classdiagram.GongStructShapes, gongStructShape) {
+					classdiagram.GongStructShapes = remove(classdiagram.GongStructShapes, gongStructShape)
 				}
+				continue
 			}
 		}
-		return true
-	})
+
+		// refresh all notes body from the original gong note in the package models
+		// because, note are not synchronized via the gopls renaming request
+		//
+		// if a can be traced, this is probably for a lack of diagram maintenance
+		for noteShape := range *GetGongstructInstancesSet[NoteShape]() {
+
+			note, ok := (*gong_models.GetGongstructInstancesMap[gong_models.GongNote]())[IdentifierToGongObjectName(noteShape.Identifier)]
+
+			if !ok {
+				log.Println("UnmarshallOneDiagram: In diagram", classdiagram.Name, "unknown note related to note shape", noteShape.Identifier)
+				noteShape.Unstage(diagramPackage.Stage_)
+
+				if contains(classdiagram.NoteShapes, noteShape) {
+					classdiagram.NoteShapes = remove(classdiagram.NoteShapes, noteShape)
+				}
+				continue
+			}
+
+			noteShape.Body = note.Body
+			noteShape.BodyHTML = note.BodyHTML
+		}
+
+		// legacy diagram file may have Fieldtypename without the ident `Point`
+		// the following will turn it into `ref_models.Point`
+		for link := range *GetGongstructInstancesSet[Link]() {
+
+			if !strings.ContainsAny(link.Fieldtypename, ".") {
+				link.Fieldtypename = GongStructNameToIdentifier(link.Fieldtypename)
+			}
+		}
+
+	}
+	return
 }
 
-// serialize the package and its elements to the Stage
-// this is used if one Umlsc is dynamicaly created
-func (pkgelt *DiagramPackage) SerializeToStage() {
-
-	pkgelt.Stage()
-
-	for _, classdiagram := range pkgelt.Classdiagrams {
-		classdiagram.SerializeToStage()
+func contains[T comparable](elems []T, v T) bool {
+	for _, s := range elems {
+		if v == s {
+			return true
+		}
 	}
+	return false
+}
 
-	for _, umlsc := range pkgelt.Umlscs {
-		umlsc.SerializeToStage()
+func closeFile(f *os.File) {
+	fmt.Println("Closing file (legacy)", f.Name())
+
+	err := f.Close()
+
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		os.Exit(1)
 	}
-
 }

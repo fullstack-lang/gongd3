@@ -100,7 +100,7 @@ export class SerieSortingComponent implements OnInit {
 
     this.associatedSeries.forEach(
       serie => {
-        this.serieService.updateSerie(serie)
+        this.serieService.updateSerie(serie, this.dialogData.GONG__StackPath)
           .subscribe(serie => {
             this.serieService.SerieServiceChanged.next("update")
           });

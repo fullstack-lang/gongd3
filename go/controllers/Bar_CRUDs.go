@@ -47,23 +47,22 @@ type BarInput struct {
 // default: genericError
 //
 //	200: barDBResponse
-func GetBars(c *gin.Context) {
-	db := orm.BackRepo.BackRepoBar.GetDB()
+func (controller *Controller) GetBars(c *gin.Context) {
 
 	// source slice
 	var barDBs []orm.BarDB
 
-	// type Values map[string][]string
 	values := c.Request.URL.Query()
+	stackPath := ""
 	if len(values) == 1 {
 		value := values["GONG__StackPath"]
 		if len(value) == 1 {
-			// we have a single parameter
-			// we assume it is the stack
-			stackParam := value[0]
-			log.Println("GONG__StackPath", stackParam)
+			stackPath = value[0]
+			log.Println("GetBars", "GONG__StackPath", stackPath)
 		}
 	}
+	backRepo := controller.Map_BackRepos[stackPath]
+	db := backRepo.BackRepoBar.GetDB()
 
 	query := db.Find(&barDBs)
 	if query.Error != nil {
@@ -108,7 +107,19 @@ func GetBars(c *gin.Context) {
 //
 //	Responses:
 //	  200: nodeDBResponse
-func PostBar(c *gin.Context) {
+func (controller *Controller) PostBar(c *gin.Context) {
+
+	values := c.Request.URL.Query()
+	stackPath := ""
+	if len(values) == 1 {
+		value := values["GONG__StackPath"]
+		if len(value) == 1 {
+			stackPath = value[0]
+			log.Println("PostBars", "GONG__StackPath", stackPath)
+		}
+	}
+	backRepo := controller.Map_BackRepos[stackPath]
+	db := backRepo.BackRepoBar.GetDB()
 
 	// Validate input
 	var input orm.BarAPI
@@ -128,7 +139,6 @@ func PostBar(c *gin.Context) {
 	barDB.BarPointersEnconding = input.BarPointersEnconding
 	barDB.CopyBasicFieldsFromBar(&input.Bar)
 
-	db := orm.BackRepo.BackRepoBar.GetDB()
 	query := db.Create(&barDB)
 	if query.Error != nil {
 		var returnError GenericError
@@ -140,16 +150,16 @@ func PostBar(c *gin.Context) {
 	}
 
 	// get an instance (not staged) from DB instance, and call callback function
-	orm.BackRepo.BackRepoBar.CheckoutPhaseOneInstance(&barDB)
-	bar := (*orm.BackRepo.BackRepoBar.Map_BarDBID_BarPtr)[barDB.ID]
+	backRepo.BackRepoBar.CheckoutPhaseOneInstance(&barDB)
+	bar := (*backRepo.BackRepoBar.Map_BarDBID_BarPtr)[barDB.ID]
 
 	if bar != nil {
-		models.AfterCreateFromFront(&models.Stage, bar)
+		models.AfterCreateFromFront(backRepo.GetStage(), bar)
 	}
 
 	// a POST is equivalent to a back repo commit increase
 	// (this will be improved with implementation of unit of work design pattern)
-	orm.BackRepo.IncrementPushFromFrontNb()
+	backRepo.IncrementPushFromFrontNb()
 
 	c.JSON(http.StatusOK, barDB)
 }
@@ -164,21 +174,19 @@ func PostBar(c *gin.Context) {
 // default: genericError
 //
 //	200: barDBResponse
-func GetBar(c *gin.Context) {
+func (controller *Controller) GetBar(c *gin.Context) {
 
-	// type Values map[string][]string
 	values := c.Request.URL.Query()
+	stackPath := ""
 	if len(values) == 1 {
-		value := values["stack"]
+		value := values["GONG__StackPath"]
 		if len(value) == 1 {
-			// we have a single parameter
-			// we assume it is the stack
-			stackParam := value[0]
-			log.Println("GET params", stackParam)
+			stackPath = value[0]
+			log.Println("GetBar", "GONG__StackPath", stackPath)
 		}
 	}
-
-	db := orm.BackRepo.BackRepoBar.GetDB()
+	backRepo := controller.Map_BackRepos[stackPath]
+	db := backRepo.BackRepoBar.GetDB()
 
 	// Get barDB in DB
 	var barDB orm.BarDB
@@ -209,7 +217,19 @@ func GetBar(c *gin.Context) {
 // default: genericError
 //
 //	200: barDBResponse
-func UpdateBar(c *gin.Context) {
+func (controller *Controller) UpdateBar(c *gin.Context) {
+
+	values := c.Request.URL.Query()
+	stackPath := ""
+	if len(values) == 1 {
+		value := values["GONG__StackPath"]
+		if len(value) == 1 {
+			stackPath = value[0]
+			log.Println("UpdateBar", "GONG__StackPath", stackPath)
+		}
+	}
+	backRepo := controller.Map_BackRepos[stackPath]
+	db := backRepo.BackRepoBar.GetDB()
 
 	// Validate input
 	var input orm.BarAPI
@@ -218,8 +238,6 @@ func UpdateBar(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-
-	db := orm.BackRepo.BackRepoBar.GetDB()
 
 	// Get model if exist
 	var barDB orm.BarDB
@@ -255,16 +273,16 @@ func UpdateBar(c *gin.Context) {
 	barDB.CopyBasicFieldsToBar(barNew)
 
 	// get stage instance from DB instance, and call callback function
-	barOld := (*orm.BackRepo.BackRepoBar.Map_BarDBID_BarPtr)[barDB.ID]
+	barOld := (*backRepo.BackRepoBar.Map_BarDBID_BarPtr)[barDB.ID]
 	if barOld != nil {
-		models.AfterUpdateFromFront(&models.Stage, barOld, barNew)
+		models.AfterUpdateFromFront(backRepo.GetStage(), barOld, barNew)
 	}
 
 	// an UPDATE generates a back repo commit increase
 	// (this will be improved with implementation of unit of work design pattern)
 	// in some cases, with the marshalling of the stage, this operation might
 	// generates a checkout
-	orm.BackRepo.IncrementPushFromFrontNb()
+	backRepo.IncrementPushFromFrontNb()
 
 	// return status OK with the marshalling of the the barDB
 	c.JSON(http.StatusOK, barDB)
@@ -279,8 +297,19 @@ func UpdateBar(c *gin.Context) {
 // default: genericError
 //
 //	200: barDBResponse
-func DeleteBar(c *gin.Context) {
-	db := orm.BackRepo.BackRepoBar.GetDB()
+func (controller *Controller) DeleteBar(c *gin.Context) {
+
+	values := c.Request.URL.Query()
+	stackPath := ""
+	if len(values) == 1 {
+		value := values["GONG__StackPath"]
+		if len(value) == 1 {
+			stackPath = value[0]
+			log.Println("DeleteBar", "GONG__StackPath", stackPath)
+		}
+	}
+	backRepo := controller.Map_BackRepos[stackPath]
+	db := backRepo.BackRepoBar.GetDB()
 
 	// Get model if exist
 	var barDB orm.BarDB
@@ -301,14 +330,14 @@ func DeleteBar(c *gin.Context) {
 	barDB.CopyBasicFieldsToBar(barDeleted)
 
 	// get stage instance from DB instance, and call callback function
-	barStaged := (*orm.BackRepo.BackRepoBar.Map_BarDBID_BarPtr)[barDB.ID]
+	barStaged := (*backRepo.BackRepoBar.Map_BarDBID_BarPtr)[barDB.ID]
 	if barStaged != nil {
-		models.AfterDeleteFromFront(&models.Stage, barStaged, barDeleted)
+		models.AfterDeleteFromFront(backRepo.GetStage(), barStaged, barDeleted)
 	}
 
 	// a DELETE generates a back repo commit increase
 	// (this will be improved with implementation of unit of work design pattern)
-	orm.BackRepo.IncrementPushFromFrontNb()
+	backRepo.IncrementPushFromFrontNb()
 
 	c.JSON(http.StatusOK, gin.H{"data": true})
 }

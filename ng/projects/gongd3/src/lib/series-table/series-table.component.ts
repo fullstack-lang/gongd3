@@ -200,7 +200,7 @@ export class SeriesTableComponent implements OnInit {
 
   ngOnInit(): void {
     let stackPath = this.activatedRoute.snapshot.paramMap.get('GONG__StackPath')
-    if ( stackPath != undefined) {
+    if (stackPath != undefined) {
       this.GONG__StackPath = stackPath
     }
 
@@ -236,10 +236,14 @@ export class SeriesTableComponent implements OnInit {
           let mapOfSourceInstances = this.frontRepo[this.dialogData.SourceStruct + "s" as keyof FrontRepo] as Map<number, SerieDB>
           let sourceInstance = mapOfSourceInstances.get(this.dialogData.ID)!
 
-          let sourceField = sourceInstance[this.dialogData.SourceField as keyof typeof sourceInstance]! as unknown as SerieDB[]
-          for (let associationInstance of sourceField) {
-            let serie = associationInstance[this.dialogData.IntermediateStructField as keyof typeof associationInstance] as unknown as SerieDB
-            this.initialSelection.push(serie)
+          // we associates on sourceInstance of type SourceStruct with a MANY MANY associations to SerieDB
+          // the field name is sourceField
+          let sourceFieldArray = sourceInstance[this.dialogData.SourceField as keyof typeof sourceInstance]! as unknown as SerieDB[]
+          if (sourceFieldArray != null) {
+            for (let associationInstance of sourceFieldArray) {
+              let serie = associationInstance[this.dialogData.IntermediateStructField as keyof typeof associationInstance] as unknown as SerieDB
+              this.initialSelection.push(serie)
+            }
           }
 
           this.selection = new SelectionModel<SerieDB>(allowMultiSelect, this.initialSelection);
@@ -260,7 +264,7 @@ export class SeriesTableComponent implements OnInit {
     // list of series is truncated of serie before the delete
     this.series = this.series.filter(h => h !== serie);
 
-    this.serieService.deleteSerie(serieID).subscribe(
+    this.serieService.deleteSerie(serieID, this.GONG__StackPath).subscribe(
       serie => {
         this.serieService.SerieServiceChanged.next("delete")
       }
@@ -326,7 +330,7 @@ export class SeriesTableComponent implements OnInit {
 
       // update all serie (only update selection & initial selection)
       for (let serie of toUpdate) {
-        this.serieService.updateSerie(serie)
+        this.serieService.updateSerie(serie, this.GONG__StackPath)
           .subscribe(serie => {
             this.serieService.SerieServiceChanged.next("update")
           });

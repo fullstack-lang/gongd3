@@ -46,7 +46,7 @@ export class NodeSortingComponent implements OnInit {
   }
 
   getNodes(): void {
-    this.frontRepoService.pull().subscribe(
+    this.frontRepoService.pull(this.dialogData.GONG__StackPath).subscribe(
       frontRepo => {
         this.frontRepo = frontRepo
 
@@ -100,13 +100,13 @@ export class NodeSortingComponent implements OnInit {
 
     this.associatedNodes.forEach(
       node => {
-        this.nodeService.updateNode(node)
+        this.nodeService.updateNode(node, this.dialogData.GONG__StackPath)
           .subscribe(node => {
             this.nodeService.NodeServiceChanged.next("update")
           });
       }
     )
 
-    this.dialogRef.close('Sorting of ' + this.dialogData.ReversePointer +' done');
+    this.dialogRef.close('Sorting of ' + this.dialogData.ReversePointer + ' done');
   }
 }

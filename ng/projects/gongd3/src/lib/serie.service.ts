@@ -24,10 +24,6 @@ import { ScatterDB } from './scatter-db'
 })
 export class SerieService {
 
-  httpOptions = {
-    headers: new HttpHeaders({ 'Content-Type': 'application/json' })
-  };
-
   // Kamar Raïmo: Adding a way to communicate between components that share information
   // so that they are notified of a change.
   SerieServiceChanged: BehaviorSubject<string> = new BehaviorSubject("");
@@ -36,7 +32,6 @@ export class SerieService {
 
   constructor(
     private http: HttpClient,
-    private location: Location,
     @Inject(DOCUMENT) private document: Document
   ) {
     // path to the service share the same origin with the path to the document
@@ -71,10 +66,8 @@ export class SerieService {
     );
   }
 
-  //////// Save methods //////////
-
   /** POST: add a new serie to the server */
-  postSerie(seriedb: SerieDB): Observable<SerieDB> {
+  postSerie(seriedb: SerieDB, GONG__StackPath: string): Observable<SerieDB> {
 
     // insertion point for reset of pointers and reverse pointers (to avoid circular JSON)
     seriedb.Key = new KeyDB
@@ -86,7 +79,13 @@ export class SerieService {
     let _Scatter_Set_reverse = seriedb.Scatter_Set_reverse
     seriedb.Scatter_Set_reverse = new ScatterDB
 
-    return this.http.post<SerieDB>(this.seriesUrl, seriedb, this.httpOptions).pipe(
+    let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
+    let httpOptions = {
+      headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
+      params: params
+    }
+
+	return this.http.post<SerieDB>(this.seriesUrl, seriedb, httpOptions).pipe(
       tap(_ => {
         // insertion point for restoration of reverse pointers
         seriedb.Bar_Set_reverse = _Bar_Set_reverse
@@ -99,18 +98,24 @@ export class SerieService {
   }
 
   /** DELETE: delete the seriedb from the server */
-  deleteSerie(seriedb: SerieDB | number): Observable<SerieDB> {
+  deleteSerie(seriedb: SerieDB | number, GONG__StackPath: string): Observable<SerieDB> {
     const id = typeof seriedb === 'number' ? seriedb : seriedb.ID;
     const url = `${this.seriesUrl}/${id}`;
 
-    return this.http.delete<SerieDB>(url, this.httpOptions).pipe(
+    let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
+    let httpOptions = {
+      headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
+      params: params
+    };
+
+    return this.http.delete<SerieDB>(url, httpOptions).pipe(
       tap(_ => this.log(`deleted seriedb id=${id}`)),
       catchError(this.handleError<SerieDB>('deleteSerie'))
     );
   }
 
   /** PUT: update the seriedb on the server */
-  updateSerie(seriedb: SerieDB): Observable<SerieDB> {
+  updateSerie(seriedb: SerieDB, GONG__StackPath: string): Observable<SerieDB> {
     const id = typeof seriedb === 'number' ? seriedb : seriedb.ID;
     const url = `${this.seriesUrl}/${id}`;
 
@@ -124,7 +129,13 @@ export class SerieService {
     let _Scatter_Set_reverse = seriedb.Scatter_Set_reverse
     seriedb.Scatter_Set_reverse = new ScatterDB
 
-    return this.http.put<SerieDB>(url, seriedb, this.httpOptions).pipe(
+    let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
+    let httpOptions = {
+      headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
+      params: params
+    };
+
+    return this.http.put<SerieDB>(url, seriedb, httpOptions).pipe(
       tap(_ => {
         // insertion point for restoration of reverse pointers
         seriedb.Bar_Set_reverse = _Bar_Set_reverse

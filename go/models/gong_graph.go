@@ -23,6 +23,8 @@ func IsStaged[Type Gongstruct](stage *StageStruct, instance *Type) (ok bool) {
 	case *Value:
 		ok = stage.IsStagedValue(target)
 
+	default:
+		_ = target
 	}
 	return
 }
@@ -97,6 +99,8 @@ func StageBranch[Type Gongstruct](stage *StageStruct, instance *Type) {
 	case *Value:
 		stage.StageBranchValue(target)
 
+	default:
+		_ = target
 	}
 }
 
@@ -108,7 +112,7 @@ func (stage *StageStruct) StageBranchBar(bar *Bar) {
 		return
 	}
 
-	bar.Stage()
+	bar.Stage(stage)
 
 	//insertion point for the staging of instances referenced by pointers
 	if bar.X != nil {
@@ -132,7 +136,7 @@ func (stage *StageStruct) StageBranchKey(key *Key) {
 		return
 	}
 
-	key.Stage()
+	key.Stage(stage)
 
 	//insertion point for the staging of instances referenced by pointers
 
@@ -147,7 +151,7 @@ func (stage *StageStruct) StageBranchPie(pie *Pie) {
 		return
 	}
 
-	pie.Stage()
+	pie.Stage(stage)
 
 	//insertion point for the staging of instances referenced by pointers
 	if pie.X != nil {
@@ -171,7 +175,7 @@ func (stage *StageStruct) StageBranchScatter(scatter *Scatter) {
 		return
 	}
 
-	scatter.Stage()
+	scatter.Stage(stage)
 
 	//insertion point for the staging of instances referenced by pointers
 	if scatter.X != nil {
@@ -198,7 +202,7 @@ func (stage *StageStruct) StageBranchSerie(serie *Serie) {
 		return
 	}
 
-	serie.Stage()
+	serie.Stage(stage)
 
 	//insertion point for the staging of instances referenced by pointers
 	if serie.Key != nil {
@@ -219,7 +223,7 @@ func (stage *StageStruct) StageBranchValue(value *Value) {
 		return
 	}
 
-	value.Stage()
+	value.Stage(stage)
 
 	//insertion point for the staging of instances referenced by pointers
 
@@ -254,6 +258,8 @@ func UnstageBranch[Type Gongstruct](stage *StageStruct, instance *Type) {
 	case *Value:
 		stage.UnstageBranchValue(target)
 
+	default:
+		_ = target
 	}
 }
 
@@ -265,7 +271,7 @@ func (stage *StageStruct) UnstageBranchBar(bar *Bar) {
 		return
 	}
 
-	bar.Unstage()
+	bar.Unstage(stage)
 
 	//insertion point for the staging of instances referenced by pointers
 	if bar.X != nil {
@@ -289,7 +295,7 @@ func (stage *StageStruct) UnstageBranchKey(key *Key) {
 		return
 	}
 
-	key.Unstage()
+	key.Unstage(stage)
 
 	//insertion point for the staging of instances referenced by pointers
 
@@ -304,7 +310,7 @@ func (stage *StageStruct) UnstageBranchPie(pie *Pie) {
 		return
 	}
 
-	pie.Unstage()
+	pie.Unstage(stage)
 
 	//insertion point for the staging of instances referenced by pointers
 	if pie.X != nil {
@@ -328,7 +334,7 @@ func (stage *StageStruct) UnstageBranchScatter(scatter *Scatter) {
 		return
 	}
 
-	scatter.Unstage()
+	scatter.Unstage(stage)
 
 	//insertion point for the staging of instances referenced by pointers
 	if scatter.X != nil {
@@ -355,7 +361,7 @@ func (stage *StageStruct) UnstageBranchSerie(serie *Serie) {
 		return
 	}
 
-	serie.Unstage()
+	serie.Unstage(stage)
 
 	//insertion point for the staging of instances referenced by pointers
 	if serie.Key != nil {
@@ -376,7 +382,7 @@ func (stage *StageStruct) UnstageBranchValue(value *Value) {
 		return
 	}
 
-	value.Unstage()
+	value.Unstage(stage)
 
 	//insertion point for the staging of instances referenced by pointers
 

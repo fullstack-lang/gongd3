@@ -10,9 +10,9 @@ import { MapOfComponents } from '../map-components'
 import { MapOfSortingComponents } from '../map-components'
 
 // insertion point for imports
-import { ClassshapeDB } from '../classshape-db'
+import { GongStructShapeDB } from '../gongstructshape-db'
 
-import { Router, RouterState, ActivatedRoute } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 
 import { MatDialog, MAT_DIALOG_DATA, MatDialogRef, MatDialogConfig } from '@angular/material/dialog';
 
@@ -24,7 +24,7 @@ enum FieldDetailComponentState {
 	CREATE_INSTANCE,
 	UPDATE_INSTANCE,
 	// insertion point for declarations of enum values of state
-	CREATE_INSTANCE_WITH_ASSOCIATION_Classshape_Fields_SET,
+	CREATE_INSTANCE_WITH_ASSOCIATION_GongStructShape_Fields_SET,
 }
 
 @Component({
@@ -58,23 +58,34 @@ export class FieldDetailComponent implements OnInit {
 	originStruct: string = ""
 	originStructFieldName: string = ""
 
+	GONG__StackPath: string = ""
+
 	constructor(
 		private fieldService: FieldService,
 		private frontRepoService: FrontRepoService,
 		public dialog: MatDialog,
-		private route: ActivatedRoute,
+		private activatedRoute: ActivatedRoute,
 		private router: Router,
 	) {
 	}
 
 	ngOnInit(): void {
+		this.GONG__StackPath = this.activatedRoute.snapshot.paramMap.get('GONG__StackPath')!;
+
+		this.activatedRoute.params.subscribe(params => {
+			this.onChangedActivatedRoute()
+		});
+	}
+	onChangedActivatedRoute(): void {
 
 		// compute state
-		this.id = +this.route.snapshot.paramMap.get('id')!;
-		this.originStruct = this.route.snapshot.paramMap.get('originStruct')!;
-		this.originStructFieldName = this.route.snapshot.paramMap.get('originStructFieldName')!;
+		this.id = +this.activatedRoute.snapshot.paramMap.get('id')!;
+		this.originStruct = this.activatedRoute.snapshot.paramMap.get('originStruct')!;
+		this.originStructFieldName = this.activatedRoute.snapshot.paramMap.get('originStructFieldName')!;
 
-		const association = this.route.snapshot.paramMap.get('association');
+		this.GONG__StackPath = this.activatedRoute.snapshot.paramMap.get('GONG__StackPath')!;
+
+		const association = this.activatedRoute.snapshot.paramMap.get('association');
 		if (this.id == 0) {
 			this.state = FieldDetailComponentState.CREATE_INSTANCE
 		} else {
@@ -84,8 +95,8 @@ export class FieldDetailComponent implements OnInit {
 				switch (this.originStructFieldName) {
 					// insertion point for state computation
 					case "Fields":
-						// console.log("Field" + " is instanciated with back pointer to instance " + this.id + " Classshape association Fields")
-						this.state = FieldDetailComponentState.CREATE_INSTANCE_WITH_ASSOCIATION_Classshape_Fields_SET
+						// console.log("Field" + " is instanciated with back pointer to instance " + this.id + " GongStructShape association Fields")
+						this.state = FieldDetailComponentState.CREATE_INSTANCE_WITH_ASSOCIATION_GongStructShape_Fields_SET
 						break;
 					default:
 						console.log(this.originStructFieldName + " is unkown association")
@@ -109,7 +120,7 @@ export class FieldDetailComponent implements OnInit {
 
 	getField(): void {
 
-		this.frontRepoService.pull().subscribe(
+		this.frontRepoService.pull(this.GONG__StackPath).subscribe(
 			frontRepo => {
 				this.frontRepo = frontRepo
 
@@ -123,9 +134,9 @@ export class FieldDetailComponent implements OnInit {
 						this.field = field!
 						break;
 					// insertion point for init of association field
-					case FieldDetailComponentState.CREATE_INSTANCE_WITH_ASSOCIATION_Classshape_Fields_SET:
+					case FieldDetailComponentState.CREATE_INSTANCE_WITH_ASSOCIATION_GongStructShape_Fields_SET:
 						this.field = new (FieldDB)
-						this.field.Classshape_Fields_reverse = frontRepo.Classshapes.get(this.id)!
+						this.field.GongStructShape_Fields_reverse = frontRepo.GongStructShapes.get(this.id)!
 						break;
 					default:
 						console.log(this.state + " is unkown state")
@@ -148,28 +159,28 @@ export class FieldDetailComponent implements OnInit {
 		// save from the front pointer space to the non pointer space for serialization
 
 		// insertion point for translation/nullation of each pointers
-		if (this.field.Classshape_Fields_reverse != undefined) {
-			if (this.field.Classshape_FieldsDBID == undefined) {
-				this.field.Classshape_FieldsDBID = new NullInt64
+		if (this.field.GongStructShape_Fields_reverse != undefined) {
+			if (this.field.GongStructShape_FieldsDBID == undefined) {
+				this.field.GongStructShape_FieldsDBID = new NullInt64
 			}
-			this.field.Classshape_FieldsDBID.Int64 = this.field.Classshape_Fields_reverse.ID
-			this.field.Classshape_FieldsDBID.Valid = true
-			if (this.field.Classshape_FieldsDBID_Index == undefined) {
-				this.field.Classshape_FieldsDBID_Index = new NullInt64
+			this.field.GongStructShape_FieldsDBID.Int64 = this.field.GongStructShape_Fields_reverse.ID
+			this.field.GongStructShape_FieldsDBID.Valid = true
+			if (this.field.GongStructShape_FieldsDBID_Index == undefined) {
+				this.field.GongStructShape_FieldsDBID_Index = new NullInt64
 			}
-			this.field.Classshape_FieldsDBID_Index.Valid = true
-			this.field.Classshape_Fields_reverse = new ClassshapeDB // very important, otherwise, circular JSON
+			this.field.GongStructShape_FieldsDBID_Index.Valid = true
+			this.field.GongStructShape_Fields_reverse = new GongStructShapeDB // very important, otherwise, circular JSON
 		}
 
 		switch (this.state) {
 			case FieldDetailComponentState.UPDATE_INSTANCE:
-				this.fieldService.updateField(this.field)
+				this.fieldService.updateField(this.field, this.GONG__StackPath)
 					.subscribe(field => {
 						this.fieldService.FieldServiceChanged.next("update")
 					});
 				break;
 			default:
-				this.fieldService.postField(this.field).subscribe(field => {
+				this.fieldService.postField(this.field, this.GONG__StackPath).subscribe(field => {
 					this.fieldService.FieldServiceChanged.next("post")
 					this.field = new (FieldDB) // reset fields
 				});
@@ -198,6 +209,7 @@ export class FieldDetailComponent implements OnInit {
 			dialogData.ReversePointer = reverseField
 			dialogData.OrderingMode = false
 			dialogData.SelectionMode = selectionMode
+			dialogData.GONG__StackPath = this.GONG__StackPath
 
 			dialogConfig.data = dialogData
 			const dialogRef: MatDialogRef<string, any> = this.dialog.open(
@@ -214,6 +226,7 @@ export class FieldDetailComponent implements OnInit {
 			dialogData.ReversePointer = reverseField
 			dialogData.OrderingMode = false
 			dialogData.SelectionMode = selectionMode
+			dialogData.GONG__StackPath = this.GONG__StackPath
 
 			// set up the source
 			dialogData.SourceStruct = "Field"
@@ -249,6 +262,7 @@ export class FieldDetailComponent implements OnInit {
 			ID: this.field.ID,
 			ReversePointer: reverseField,
 			OrderingMode: true,
+			GONG__StackPath: this.GONG__StackPath,
 		};
 		const dialogRef: MatDialogRef<string, any> = this.dialog.open(
 			MapOfSortingComponents.get(AssociatedStruct).get(

@@ -46,7 +46,7 @@ export class FieldSortingComponent implements OnInit {
   }
 
   getFields(): void {
-    this.frontRepoService.pull().subscribe(
+    this.frontRepoService.pull(this.dialogData.GONG__StackPath).subscribe(
       frontRepo => {
         this.frontRepo = frontRepo
 
@@ -100,13 +100,13 @@ export class FieldSortingComponent implements OnInit {
 
     this.associatedFields.forEach(
       field => {
-        this.fieldService.updateField(field)
+        this.fieldService.updateField(field, this.dialogData.GONG__StackPath)
           .subscribe(field => {
             this.fieldService.FieldServiceChanged.next("update")
           });
       }
     )
 
-    this.dialogRef.close('Sorting of ' + this.dialogData.ReversePointer +' done');
+    this.dialogRef.close('Sorting of ' + this.dialogData.ReversePointer + ' done');
   }
 }

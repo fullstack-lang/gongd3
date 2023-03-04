@@ -47,11 +47,23 @@ type GongLinkInput struct {
 // default: genericError
 //
 //	200: gonglinkDBResponse
-func GetGongLinks(c *gin.Context) {
-	db := orm.BackRepo.BackRepoGongLink.GetDB()
+func (controller *Controller) GetGongLinks(c *gin.Context) {
 
 	// source slice
 	var gonglinkDBs []orm.GongLinkDB
+
+	values := c.Request.URL.Query()
+	stackPath := ""
+	if len(values) == 1 {
+		value := values["GONG__StackPath"]
+		if len(value) == 1 {
+			stackPath = value[0]
+			log.Println("GetGongLinks", "GONG__StackPath", stackPath)
+		}
+	}
+	backRepo := controller.Map_BackRepos[stackPath]
+	db := backRepo.BackRepoGongLink.GetDB()
+
 	query := db.Find(&gonglinkDBs)
 	if query.Error != nil {
 		var returnError GenericError
@@ -95,8 +107,19 @@ func GetGongLinks(c *gin.Context) {
 //
 //	Responses:
 //	  200: nodeDBResponse
-func PostGongLink(c *gin.Context) {
-	db := orm.BackRepo.BackRepoGongLink.GetDB()
+func (controller *Controller) PostGongLink(c *gin.Context) {
+
+	values := c.Request.URL.Query()
+	stackPath := ""
+	if len(values) == 1 {
+		value := values["GONG__StackPath"]
+		if len(value) == 1 {
+			stackPath = value[0]
+			log.Println("PostGongLinks", "GONG__StackPath", stackPath)
+		}
+	}
+	backRepo := controller.Map_BackRepos[stackPath]
+	db := backRepo.BackRepoGongLink.GetDB()
 
 	// Validate input
 	var input orm.GongLinkAPI
@@ -127,16 +150,16 @@ func PostGongLink(c *gin.Context) {
 	}
 
 	// get an instance (not staged) from DB instance, and call callback function
-	orm.BackRepo.BackRepoGongLink.CheckoutPhaseOneInstance(&gonglinkDB)
-	gonglink := (*orm.BackRepo.BackRepoGongLink.Map_GongLinkDBID_GongLinkPtr)[gonglinkDB.ID]
+	backRepo.BackRepoGongLink.CheckoutPhaseOneInstance(&gonglinkDB)
+	gonglink := (*backRepo.BackRepoGongLink.Map_GongLinkDBID_GongLinkPtr)[gonglinkDB.ID]
 
 	if gonglink != nil {
-		models.AfterCreateFromFront(&models.Stage, gonglink)
+		models.AfterCreateFromFront(backRepo.GetStage(), gonglink)
 	}
 
 	// a POST is equivalent to a back repo commit increase
 	// (this will be improved with implementation of unit of work design pattern)
-	orm.BackRepo.IncrementPushFromFrontNb()
+	backRepo.IncrementPushFromFrontNb()
 
 	c.JSON(http.StatusOK, gonglinkDB)
 }
@@ -151,8 +174,19 @@ func PostGongLink(c *gin.Context) {
 // default: genericError
 //
 //	200: gonglinkDBResponse
-func GetGongLink(c *gin.Context) {
-	db := orm.BackRepo.BackRepoGongLink.GetDB()
+func (controller *Controller) GetGongLink(c *gin.Context) {
+
+	values := c.Request.URL.Query()
+	stackPath := ""
+	if len(values) == 1 {
+		value := values["GONG__StackPath"]
+		if len(value) == 1 {
+			stackPath = value[0]
+			log.Println("GetGongLink", "GONG__StackPath", stackPath)
+		}
+	}
+	backRepo := controller.Map_BackRepos[stackPath]
+	db := backRepo.BackRepoGongLink.GetDB()
 
 	// Get gonglinkDB in DB
 	var gonglinkDB orm.GongLinkDB
@@ -183,8 +217,27 @@ func GetGongLink(c *gin.Context) {
 // default: genericError
 //
 //	200: gonglinkDBResponse
-func UpdateGongLink(c *gin.Context) {
-	db := orm.BackRepo.BackRepoGongLink.GetDB()
+func (controller *Controller) UpdateGongLink(c *gin.Context) {
+
+	values := c.Request.URL.Query()
+	stackPath := ""
+	if len(values) == 1 {
+		value := values["GONG__StackPath"]
+		if len(value) == 1 {
+			stackPath = value[0]
+			log.Println("UpdateGongLink", "GONG__StackPath", stackPath)
+		}
+	}
+	backRepo := controller.Map_BackRepos[stackPath]
+	db := backRepo.BackRepoGongLink.GetDB()
+
+	// Validate input
+	var input orm.GongLinkAPI
+	if err := c.ShouldBindJSON(&input); err != nil {
+		log.Println(err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 
 	// Get model if exist
 	var gonglinkDB orm.GongLinkDB
@@ -198,14 +251,6 @@ func UpdateGongLink(c *gin.Context) {
 		returnError.Body.Message = query.Error.Error()
 		log.Println(query.Error.Error())
 		c.JSON(http.StatusBadRequest, returnError.Body)
-		return
-	}
-
-	// Validate input
-	var input orm.GongLinkAPI
-	if err := c.ShouldBindJSON(&input); err != nil {
-		log.Println(err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -228,16 +273,16 @@ func UpdateGongLink(c *gin.Context) {
 	gonglinkDB.CopyBasicFieldsToGongLink(gonglinkNew)
 
 	// get stage instance from DB instance, and call callback function
-	gonglinkOld := (*orm.BackRepo.BackRepoGongLink.Map_GongLinkDBID_GongLinkPtr)[gonglinkDB.ID]
+	gonglinkOld := (*backRepo.BackRepoGongLink.Map_GongLinkDBID_GongLinkPtr)[gonglinkDB.ID]
 	if gonglinkOld != nil {
-		models.AfterUpdateFromFront(&models.Stage, gonglinkOld, gonglinkNew)
+		models.AfterUpdateFromFront(backRepo.GetStage(), gonglinkOld, gonglinkNew)
 	}
 
 	// an UPDATE generates a back repo commit increase
 	// (this will be improved with implementation of unit of work design pattern)
 	// in some cases, with the marshalling of the stage, this operation might
 	// generates a checkout
-	orm.BackRepo.IncrementPushFromFrontNb()
+	backRepo.IncrementPushFromFrontNb()
 
 	// return status OK with the marshalling of the the gonglinkDB
 	c.JSON(http.StatusOK, gonglinkDB)
@@ -252,8 +297,19 @@ func UpdateGongLink(c *gin.Context) {
 // default: genericError
 //
 //	200: gonglinkDBResponse
-func DeleteGongLink(c *gin.Context) {
-	db := orm.BackRepo.BackRepoGongLink.GetDB()
+func (controller *Controller) DeleteGongLink(c *gin.Context) {
+
+	values := c.Request.URL.Query()
+	stackPath := ""
+	if len(values) == 1 {
+		value := values["GONG__StackPath"]
+		if len(value) == 1 {
+			stackPath = value[0]
+			log.Println("DeleteGongLink", "GONG__StackPath", stackPath)
+		}
+	}
+	backRepo := controller.Map_BackRepos[stackPath]
+	db := backRepo.BackRepoGongLink.GetDB()
 
 	// Get model if exist
 	var gonglinkDB orm.GongLinkDB
@@ -274,14 +330,14 @@ func DeleteGongLink(c *gin.Context) {
 	gonglinkDB.CopyBasicFieldsToGongLink(gonglinkDeleted)
 
 	// get stage instance from DB instance, and call callback function
-	gonglinkStaged := (*orm.BackRepo.BackRepoGongLink.Map_GongLinkDBID_GongLinkPtr)[gonglinkDB.ID]
+	gonglinkStaged := (*backRepo.BackRepoGongLink.Map_GongLinkDBID_GongLinkPtr)[gonglinkDB.ID]
 	if gonglinkStaged != nil {
-		models.AfterDeleteFromFront(&models.Stage, gonglinkStaged, gonglinkDeleted)
+		models.AfterDeleteFromFront(backRepo.GetStage(), gonglinkStaged, gonglinkDeleted)
 	}
 
 	// a DELETE generates a back repo commit increase
 	// (this will be improved with implementation of unit of work design pattern)
-	orm.BackRepo.IncrementPushFromFrontNb()
+	backRepo.IncrementPushFromFrontNb()
 
 	c.JSON(http.StatusOK, gin.H{"data": true})
 }

@@ -132,6 +132,13 @@ type BackRepoScatterStruct struct {
 	Map_ScatterDBID_ScatterPtr *map[uint]*models.Scatter
 
 	db *gorm.DB
+
+	stage *models.StageStruct
+}
+
+func (backRepoScatter *BackRepoScatterStruct) GetStage() (stage *models.StageStruct) {
+	stage = backRepoScatter.stage
+	return
 }
 
 func (backRepoScatter *BackRepoScatterStruct) GetDB() *gorm.DB {
@@ -146,7 +153,7 @@ func (backRepoScatter *BackRepoScatterStruct) GetScatterDBFromScatterPtr(scatter
 }
 
 // BackRepoScatter.Init set up the BackRepo of the Scatter
-func (backRepoScatter *BackRepoScatterStruct) Init(db *gorm.DB) (Error error) {
+func (backRepoScatter *BackRepoScatterStruct) Init(stage *models.StageStruct, db *gorm.DB) (Error error) {
 
 	if backRepoScatter.Map_ScatterDBID_ScatterPtr != nil {
 		err := errors.New("In Init, backRepoScatter.Map_ScatterDBID_ScatterPtr should be nil")
@@ -173,6 +180,7 @@ func (backRepoScatter *BackRepoScatterStruct) Init(db *gorm.DB) (Error error) {
 	backRepoScatter.Map_ScatterPtr_ScatterDBID = &tmpID
 
 	backRepoScatter.db = db
+	backRepoScatter.stage = stage
 	return
 }
 
@@ -337,7 +345,7 @@ func (backRepoScatter *BackRepoScatterStruct) CheckoutPhaseOne() (Error error) {
 	// list of instances to be removed
 	// start from the initial map on the stage and remove instances that have been checked out
 	scatterInstancesToBeRemovedFromTheStage := make(map[*models.Scatter]any)
-	for key, value := range models.Stage.Scatters {
+	for key, value := range backRepoScatter.stage.Scatters {
 		scatterInstancesToBeRemovedFromTheStage[key] = value
 	}
 
@@ -355,7 +363,7 @@ func (backRepoScatter *BackRepoScatterStruct) CheckoutPhaseOne() (Error error) {
 
 	// remove from stage and back repo's 3 maps all scatters that are not in the checkout
 	for scatter := range scatterInstancesToBeRemovedFromTheStage {
-		scatter.Unstage()
+		scatter.Unstage(backRepoScatter.GetStage())
 
 		// remove instance from the back repo 3 maps
 		scatterID := (*backRepoScatter.Map_ScatterPtr_ScatterDBID)[scatter]
@@ -380,12 +388,12 @@ func (backRepoScatter *BackRepoScatterStruct) CheckoutPhaseOneInstance(scatterDB
 
 		// append model store with the new element
 		scatter.Name = scatterDB.Name_Data.String
-		scatter.Stage()
+		scatter.Stage(backRepoScatter.GetStage())
 	}
 	scatterDB.CopyBasicFieldsToScatter(scatter)
 
 	// in some cases, the instance might have been unstaged. It is necessary to stage it again
-	scatter.Stage()
+	scatter.Stage(backRepoScatter.GetStage())
 
 	// preserve pointer to scatterDB. Otherwise, pointer will is recycled and the map of pointers
 	// Map_ScatterDBID_ScatterDB)[scatterDB hold variable pointers

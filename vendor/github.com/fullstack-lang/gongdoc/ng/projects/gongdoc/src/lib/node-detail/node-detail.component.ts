@@ -10,10 +10,9 @@ import { MapOfComponents } from '../map-components'
 import { MapOfSortingComponents } from '../map-components'
 
 // insertion point for imports
-import { GongdocNodeTypeSelect, GongdocNodeTypeList } from '../GongdocNodeType'
 import { TreeDB } from '../tree-db'
 
-import { Router, RouterState, ActivatedRoute } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 
 import { MatDialog, MAT_DIALOG_DATA, MatDialogRef, MatDialogConfig } from '@angular/material/dialog';
 
@@ -37,7 +36,6 @@ enum NodeDetailComponentState {
 export class NodeDetailComponent implements OnInit {
 
 	// insertion point for declarations
-	GongdocNodeTypeList: GongdocNodeTypeSelect[] = []
 	IsExpandedFormControl: UntypedFormControl = new UntypedFormControl(false);
 	HasCheckboxButtonFormControl: UntypedFormControl = new UntypedFormControl(false);
 	IsCheckedFormControl: UntypedFormControl = new UntypedFormControl(false);
@@ -73,23 +71,34 @@ export class NodeDetailComponent implements OnInit {
 	originStruct: string = ""
 	originStructFieldName: string = ""
 
+	GONG__StackPath: string = ""
+
 	constructor(
 		private nodeService: NodeService,
 		private frontRepoService: FrontRepoService,
 		public dialog: MatDialog,
-		private route: ActivatedRoute,
+		private activatedRoute: ActivatedRoute,
 		private router: Router,
 	) {
 	}
 
 	ngOnInit(): void {
+		this.GONG__StackPath = this.activatedRoute.snapshot.paramMap.get('GONG__StackPath')!;
+
+		this.activatedRoute.params.subscribe(params => {
+			this.onChangedActivatedRoute()
+		});
+	}
+	onChangedActivatedRoute(): void {
 
 		// compute state
-		this.id = +this.route.snapshot.paramMap.get('id')!;
-		this.originStruct = this.route.snapshot.paramMap.get('originStruct')!;
-		this.originStructFieldName = this.route.snapshot.paramMap.get('originStructFieldName')!;
+		this.id = +this.activatedRoute.snapshot.paramMap.get('id')!;
+		this.originStruct = this.activatedRoute.snapshot.paramMap.get('originStruct')!;
+		this.originStructFieldName = this.activatedRoute.snapshot.paramMap.get('originStructFieldName')!;
 
-		const association = this.route.snapshot.paramMap.get('association');
+		this.GONG__StackPath = this.activatedRoute.snapshot.paramMap.get('GONG__StackPath')!;
+
+		const association = this.activatedRoute.snapshot.paramMap.get('association');
 		if (this.id == 0) {
 			this.state = NodeDetailComponentState.CREATE_INSTANCE
 		} else {
@@ -124,12 +133,11 @@ export class NodeDetailComponent implements OnInit {
 		)
 
 		// insertion point for initialisation of enums list
-		this.GongdocNodeTypeList = GongdocNodeTypeList
 	}
 
 	getNode(): void {
 
-		this.frontRepoService.pull().subscribe(
+		this.frontRepoService.pull(this.GONG__StackPath).subscribe(
 			frontRepo => {
 				this.frontRepo = frontRepo
 
@@ -180,26 +188,6 @@ export class NodeDetailComponent implements OnInit {
 		// pointers fields, after the translation, are nulled in order to perform serialization
 
 		// insertion point for translation/nullation of each field
-		if (this.node.ClassdiagramID == undefined) {
-			this.node.ClassdiagramID = new NullInt64
-		}
-		if (this.node.Classdiagram != undefined) {
-			this.node.ClassdiagramID.Int64 = this.node.Classdiagram.ID
-			this.node.ClassdiagramID.Valid = true
-		} else {
-			this.node.ClassdiagramID.Int64 = 0
-			this.node.ClassdiagramID.Valid = true
-		}
-		if (this.node.UmlscID == undefined) {
-			this.node.UmlscID = new NullInt64
-		}
-		if (this.node.Umlsc != undefined) {
-			this.node.UmlscID.Int64 = this.node.Umlsc.ID
-			this.node.UmlscID.Valid = true
-		} else {
-			this.node.UmlscID.Int64 = 0
-			this.node.UmlscID.Valid = true
-		}
 		this.node.IsExpanded = this.IsExpandedFormControl.value
 		this.node.HasCheckboxButton = this.HasCheckboxButtonFormControl.value
 		this.node.IsChecked = this.IsCheckedFormControl.value
@@ -243,13 +231,13 @@ export class NodeDetailComponent implements OnInit {
 
 		switch (this.state) {
 			case NodeDetailComponentState.UPDATE_INSTANCE:
-				this.nodeService.updateNode(this.node)
+				this.nodeService.updateNode(this.node, this.GONG__StackPath)
 					.subscribe(node => {
 						this.nodeService.NodeServiceChanged.next("update")
 					});
 				break;
 			default:
-				this.nodeService.postNode(this.node).subscribe(node => {
+				this.nodeService.postNode(this.node, this.GONG__StackPath).subscribe(node => {
 					this.nodeService.NodeServiceChanged.next("post")
 					this.node = new (NodeDB) // reset fields
 				});
@@ -278,6 +266,7 @@ export class NodeDetailComponent implements OnInit {
 			dialogData.ReversePointer = reverseField
 			dialogData.OrderingMode = false
 			dialogData.SelectionMode = selectionMode
+			dialogData.GONG__StackPath = this.GONG__StackPath
 
 			dialogConfig.data = dialogData
 			const dialogRef: MatDialogRef<string, any> = this.dialog.open(
@@ -294,6 +283,7 @@ export class NodeDetailComponent implements OnInit {
 			dialogData.ReversePointer = reverseField
 			dialogData.OrderingMode = false
 			dialogData.SelectionMode = selectionMode
+			dialogData.GONG__StackPath = this.GONG__StackPath
 
 			// set up the source
 			dialogData.SourceStruct = "Node"
@@ -329,6 +319,7 @@ export class NodeDetailComponent implements OnInit {
 			ID: this.node.ID,
 			ReversePointer: reverseField,
 			OrderingMode: true,
+			GONG__StackPath: this.GONG__StackPath,
 		};
 		const dialogRef: MatDialogRef<string, any> = this.dialog.open(
 			MapOfSortingComponents.get(AssociatedStruct).get(

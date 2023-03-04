@@ -46,7 +46,7 @@ export class SliceOfPointerToGongStructFieldSortingComponent implements OnInit {
   }
 
   getSliceOfPointerToGongStructFields(): void {
-    this.frontRepoService.pull().subscribe(
+    this.frontRepoService.pull(this.dialogData.GONG__StackPath).subscribe(
       frontRepo => {
         this.frontRepo = frontRepo
 
@@ -100,13 +100,13 @@ export class SliceOfPointerToGongStructFieldSortingComponent implements OnInit {
 
     this.associatedSliceOfPointerToGongStructFields.forEach(
       sliceofpointertogongstructfield => {
-        this.sliceofpointertogongstructfieldService.updateSliceOfPointerToGongStructField(sliceofpointertogongstructfield)
+        this.sliceofpointertogongstructfieldService.updateSliceOfPointerToGongStructField(sliceofpointertogongstructfield, this.dialogData.GONG__StackPath)
           .subscribe(sliceofpointertogongstructfield => {
             this.sliceofpointertogongstructfieldService.SliceOfPointerToGongStructFieldServiceChanged.next("update")
           });
       }
     )
 
-    this.dialogRef.close('Sorting of ' + this.dialogData.ReversePointer +' done');
+    this.dialogRef.close('Sorting of ' + this.dialogData.ReversePointer + ' done');
   }
 }

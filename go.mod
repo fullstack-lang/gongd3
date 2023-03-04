@@ -3,8 +3,7 @@ module gongd3
 go 1.19
 
 require (
-	github.com/fullstack-lang/gong v0.0.0-20230113142403-16f40ea2992b
-	github.com/fullstack-lang/gongdoc v0.0.0-20230113144132-036dabf1a5bb
+	github.com/fullstack-lang/gongdoc v0.0.0-20230304034746-882fe82b8517
 	github.com/gin-contrib/cors v1.4.0
 	github.com/gin-contrib/static v0.0.1
 	github.com/gin-gonic/gin v1.8.1
@@ -22,6 +21,7 @@ require (
 	github.com/benoitkugler/textlayout v0.0.1 // indirect
 	github.com/dsnet/compress v0.0.1 // indirect
 	github.com/frankban/quicktest v1.13.1 // indirect
+	github.com/fullstack-lang/gong v0.0.0-20230304032503-0a390233abd0 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/glebarez/go-sqlite v1.19.1 // indirect
 	github.com/go-latex/latex v0.0.0-20210823091927-c0d11ff05a81 // indirect

@@ -228,13 +228,13 @@ export class SerieDetailComponent implements OnInit {
 
 		switch (this.state) {
 			case SerieDetailComponentState.UPDATE_INSTANCE:
-				this.serieService.updateSerie(this.serie)
+				this.serieService.updateSerie(this.serie, this.GONG__StackPath)
 					.subscribe(serie => {
 						this.serieService.SerieServiceChanged.next("update")
 					});
 				break;
 			default:
-				this.serieService.postSerie(this.serie).subscribe(serie => {
+				this.serieService.postSerie(this.serie, this.GONG__StackPath).subscribe(serie => {
 					this.serieService.SerieServiceChanged.next("post")
 					this.serie = new (SerieDB) // reset fields
 				});

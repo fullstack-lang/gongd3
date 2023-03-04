@@ -60,9 +60,6 @@ type TreeDB struct {
 
 	// Declation for basic field treeDB.Name
 	Name_Data sql.NullString
-
-	// Declation for basic field treeDB.Type
-	Type_Data sql.NullString
 	// encoding of pointers
 	TreePointersEnconding
 }
@@ -85,8 +82,6 @@ type TreeWOP struct {
 	// insertion for WOP basic fields
 
 	Name string `xlsx:"1"`
-
-	Type models.TreeType `xlsx:"2"`
 	// insertion for WOP pointer fields
 }
 
@@ -94,7 +89,6 @@ var Tree_Fields = []string{
 	// insertion for WOP basic fields
 	"ID",
 	"Name",
-	"Type",
 }
 
 type BackRepoTreeStruct struct {
@@ -108,6 +102,13 @@ type BackRepoTreeStruct struct {
 	Map_TreeDBID_TreePtr *map[uint]*models.Tree
 
 	db *gorm.DB
+
+	stage *models.StageStruct
+}
+
+func (backRepoTree *BackRepoTreeStruct) GetStage() (stage *models.StageStruct) {
+	stage = backRepoTree.stage
+	return
 }
 
 func (backRepoTree *BackRepoTreeStruct) GetDB() *gorm.DB {
@@ -122,7 +123,7 @@ func (backRepoTree *BackRepoTreeStruct) GetTreeDBFromTreePtr(tree *models.Tree) 
 }
 
 // BackRepoTree.Init set up the BackRepo of the Tree
-func (backRepoTree *BackRepoTreeStruct) Init(db *gorm.DB) (Error error) {
+func (backRepoTree *BackRepoTreeStruct) Init(stage *models.StageStruct, db *gorm.DB) (Error error) {
 
 	if backRepoTree.Map_TreeDBID_TreePtr != nil {
 		err := errors.New("In Init, backRepoTree.Map_TreeDBID_TreePtr should be nil")
@@ -149,6 +150,7 @@ func (backRepoTree *BackRepoTreeStruct) Init(db *gorm.DB) (Error error) {
 	backRepoTree.Map_TreePtr_TreeDBID = &tmpID
 
 	backRepoTree.db = db
+	backRepoTree.stage = stage
 	return
 }
 
@@ -274,8 +276,7 @@ func (backRepoTree *BackRepoTreeStruct) CommitPhaseTwoInstance(backRepo *BackRep
 // BackRepoTree.CheckoutPhaseOne Checkouts all BackRepo instances to the Stage
 //
 // Phase One will result in having instances on the stage aligned with the back repo
-// pointers are not initialized yet (this is for pahse two)
-//
+// pointers are not initialized yet (this is for phase two)
 func (backRepoTree *BackRepoTreeStruct) CheckoutPhaseOne() (Error error) {
 
 	treeDBArray := make([]TreeDB, 0)
@@ -287,7 +288,7 @@ func (backRepoTree *BackRepoTreeStruct) CheckoutPhaseOne() (Error error) {
 	// list of instances to be removed
 	// start from the initial map on the stage and remove instances that have been checked out
 	treeInstancesToBeRemovedFromTheStage := make(map[*models.Tree]any)
-	for key, value := range models.Stage.Trees {
+	for key, value := range backRepoTree.stage.Trees {
 		treeInstancesToBeRemovedFromTheStage[key] = value
 	}
 
@@ -305,7 +306,7 @@ func (backRepoTree *BackRepoTreeStruct) CheckoutPhaseOne() (Error error) {
 
 	// remove from stage and back repo's 3 maps all trees that are not in the checkout
 	for tree := range treeInstancesToBeRemovedFromTheStage {
-		tree.Unstage()
+		tree.Unstage(backRepoTree.GetStage())
 
 		// remove instance from the back repo 3 maps
 		treeID := (*backRepoTree.Map_TreePtr_TreeDBID)[tree]
@@ -330,9 +331,12 @@ func (backRepoTree *BackRepoTreeStruct) CheckoutPhaseOneInstance(treeDB *TreeDB)
 
 		// append model store with the new element
 		tree.Name = treeDB.Name_Data.String
-		tree.Stage()
+		tree.Stage(backRepoTree.GetStage())
 	}
 	treeDB.CopyBasicFieldsToTree(tree)
+
+	// in some cases, the instance might have been unstaged. It is necessary to stage it again
+	tree.Stage(backRepoTree.GetStage())
 
 	// preserve pointer to treeDB. Otherwise, pointer will is recycled and the map of pointers
 	// Map_TreeDBID_TreeDB)[treeDB hold variable pointers
@@ -425,9 +429,6 @@ func (treeDB *TreeDB) CopyBasicFieldsFromTree(tree *models.Tree) {
 
 	treeDB.Name_Data.String = tree.Name
 	treeDB.Name_Data.Valid = true
-
-	treeDB.Type_Data.String = tree.Type.ToString()
-	treeDB.Type_Data.Valid = true
 }
 
 // CopyBasicFieldsFromTreeWOP
@@ -436,16 +437,12 @@ func (treeDB *TreeDB) CopyBasicFieldsFromTreeWOP(tree *TreeWOP) {
 
 	treeDB.Name_Data.String = tree.Name
 	treeDB.Name_Data.Valid = true
-
-	treeDB.Type_Data.String = tree.Type.ToString()
-	treeDB.Type_Data.Valid = true
 }
 
 // CopyBasicFieldsToTree
 func (treeDB *TreeDB) CopyBasicFieldsToTree(tree *models.Tree) {
 	// insertion point for checkout of basic fields (back repo to stage)
 	tree.Name = treeDB.Name_Data.String
-	tree.Type.FromString(treeDB.Type_Data.String)
 }
 
 // CopyBasicFieldsToTreeWOP
@@ -453,7 +450,6 @@ func (treeDB *TreeDB) CopyBasicFieldsToTreeWOP(tree *TreeWOP) {
 	tree.ID = int(treeDB.ID)
 	// insertion point for checkout of basic fields (back repo to stage)
 	tree.Name = treeDB.Name_Data.String
-	tree.Type.FromString(treeDB.Type_Data.String)
 }
 
 // Backup generates a json file from a slice of all TreeDB instances in the backrepo

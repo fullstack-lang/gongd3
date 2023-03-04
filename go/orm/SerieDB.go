@@ -124,6 +124,13 @@ type BackRepoSerieStruct struct {
 	Map_SerieDBID_SeriePtr *map[uint]*models.Serie
 
 	db *gorm.DB
+
+	stage *models.StageStruct
+}
+
+func (backRepoSerie *BackRepoSerieStruct) GetStage() (stage *models.StageStruct) {
+	stage = backRepoSerie.stage
+	return
 }
 
 func (backRepoSerie *BackRepoSerieStruct) GetDB() *gorm.DB {
@@ -138,7 +145,7 @@ func (backRepoSerie *BackRepoSerieStruct) GetSerieDBFromSeriePtr(serie *models.S
 }
 
 // BackRepoSerie.Init set up the BackRepo of the Serie
-func (backRepoSerie *BackRepoSerieStruct) Init(db *gorm.DB) (Error error) {
+func (backRepoSerie *BackRepoSerieStruct) Init(stage *models.StageStruct, db *gorm.DB) (Error error) {
 
 	if backRepoSerie.Map_SerieDBID_SeriePtr != nil {
 		err := errors.New("In Init, backRepoSerie.Map_SerieDBID_SeriePtr should be nil")
@@ -165,6 +172,7 @@ func (backRepoSerie *BackRepoSerieStruct) Init(db *gorm.DB) (Error error) {
 	backRepoSerie.Map_SeriePtr_SerieDBID = &tmpID
 
 	backRepoSerie.db = db
+	backRepoSerie.stage = stage
 	return
 }
 
@@ -311,7 +319,7 @@ func (backRepoSerie *BackRepoSerieStruct) CheckoutPhaseOne() (Error error) {
 	// list of instances to be removed
 	// start from the initial map on the stage and remove instances that have been checked out
 	serieInstancesToBeRemovedFromTheStage := make(map[*models.Serie]any)
-	for key, value := range models.Stage.Series {
+	for key, value := range backRepoSerie.stage.Series {
 		serieInstancesToBeRemovedFromTheStage[key] = value
 	}
 
@@ -329,7 +337,7 @@ func (backRepoSerie *BackRepoSerieStruct) CheckoutPhaseOne() (Error error) {
 
 	// remove from stage and back repo's 3 maps all series that are not in the checkout
 	for serie := range serieInstancesToBeRemovedFromTheStage {
-		serie.Unstage()
+		serie.Unstage(backRepoSerie.GetStage())
 
 		// remove instance from the back repo 3 maps
 		serieID := (*backRepoSerie.Map_SeriePtr_SerieDBID)[serie]
@@ -354,12 +362,12 @@ func (backRepoSerie *BackRepoSerieStruct) CheckoutPhaseOneInstance(serieDB *Seri
 
 		// append model store with the new element
 		serie.Name = serieDB.Name_Data.String
-		serie.Stage()
+		serie.Stage(backRepoSerie.GetStage())
 	}
 	serieDB.CopyBasicFieldsToSerie(serie)
 
 	// in some cases, the instance might have been unstaged. It is necessary to stage it again
-	serie.Stage()
+	serie.Stage(backRepoSerie.GetStage())
 
 	// preserve pointer to serieDB. Otherwise, pointer will is recycled and the map of pointers
 	// Map_SerieDBID_SerieDB)[serieDB hold variable pointers

@@ -12,7 +12,7 @@ import { MapOfSortingComponents } from '../map-components'
 // insertion point for imports
 import { DiagramPackageDB } from '../diagrampackage-db'
 
-import { Router, RouterState, ActivatedRoute } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 
 import { MatDialog, MAT_DIALOG_DATA, MatDialogRef, MatDialogConfig } from '@angular/material/dialog';
 
@@ -59,23 +59,34 @@ export class ClassdiagramDetailComponent implements OnInit {
 	originStruct: string = ""
 	originStructFieldName: string = ""
 
+	GONG__StackPath: string = ""
+
 	constructor(
 		private classdiagramService: ClassdiagramService,
 		private frontRepoService: FrontRepoService,
 		public dialog: MatDialog,
-		private route: ActivatedRoute,
+		private activatedRoute: ActivatedRoute,
 		private router: Router,
 	) {
 	}
 
 	ngOnInit(): void {
+		this.GONG__StackPath = this.activatedRoute.snapshot.paramMap.get('GONG__StackPath')!;
+
+		this.activatedRoute.params.subscribe(params => {
+			this.onChangedActivatedRoute()
+		});
+	}
+	onChangedActivatedRoute(): void {
 
 		// compute state
-		this.id = +this.route.snapshot.paramMap.get('id')!;
-		this.originStruct = this.route.snapshot.paramMap.get('originStruct')!;
-		this.originStructFieldName = this.route.snapshot.paramMap.get('originStructFieldName')!;
+		this.id = +this.activatedRoute.snapshot.paramMap.get('id')!;
+		this.originStruct = this.activatedRoute.snapshot.paramMap.get('originStruct')!;
+		this.originStructFieldName = this.activatedRoute.snapshot.paramMap.get('originStructFieldName')!;
 
-		const association = this.route.snapshot.paramMap.get('association');
+		this.GONG__StackPath = this.activatedRoute.snapshot.paramMap.get('GONG__StackPath')!;
+
+		const association = this.activatedRoute.snapshot.paramMap.get('association');
 		if (this.id == 0) {
 			this.state = ClassdiagramDetailComponentState.CREATE_INSTANCE
 		} else {
@@ -110,7 +121,7 @@ export class ClassdiagramDetailComponent implements OnInit {
 
 	getClassdiagram(): void {
 
-		this.frontRepoService.pull().subscribe(
+		this.frontRepoService.pull(this.GONG__StackPath).subscribe(
 			frontRepo => {
 				this.frontRepo = frontRepo
 
@@ -166,13 +177,13 @@ export class ClassdiagramDetailComponent implements OnInit {
 
 		switch (this.state) {
 			case ClassdiagramDetailComponentState.UPDATE_INSTANCE:
-				this.classdiagramService.updateClassdiagram(this.classdiagram)
+				this.classdiagramService.updateClassdiagram(this.classdiagram, this.GONG__StackPath)
 					.subscribe(classdiagram => {
 						this.classdiagramService.ClassdiagramServiceChanged.next("update")
 					});
 				break;
 			default:
-				this.classdiagramService.postClassdiagram(this.classdiagram).subscribe(classdiagram => {
+				this.classdiagramService.postClassdiagram(this.classdiagram, this.GONG__StackPath).subscribe(classdiagram => {
 					this.classdiagramService.ClassdiagramServiceChanged.next("post")
 					this.classdiagram = new (ClassdiagramDB) // reset fields
 				});
@@ -201,6 +212,7 @@ export class ClassdiagramDetailComponent implements OnInit {
 			dialogData.ReversePointer = reverseField
 			dialogData.OrderingMode = false
 			dialogData.SelectionMode = selectionMode
+			dialogData.GONG__StackPath = this.GONG__StackPath
 
 			dialogConfig.data = dialogData
 			const dialogRef: MatDialogRef<string, any> = this.dialog.open(
@@ -217,6 +229,7 @@ export class ClassdiagramDetailComponent implements OnInit {
 			dialogData.ReversePointer = reverseField
 			dialogData.OrderingMode = false
 			dialogData.SelectionMode = selectionMode
+			dialogData.GONG__StackPath = this.GONG__StackPath
 
 			// set up the source
 			dialogData.SourceStruct = "Classdiagram"
@@ -252,6 +265,7 @@ export class ClassdiagramDetailComponent implements OnInit {
 			ID: this.classdiagram.ID,
 			ReversePointer: reverseField,
 			OrderingMode: true,
+			GONG__StackPath: this.GONG__StackPath,
 		};
 		const dialogRef: MatDialogRef<string, any> = this.dialog.open(
 			MapOfSortingComponents.get(AssociatedStruct).get(

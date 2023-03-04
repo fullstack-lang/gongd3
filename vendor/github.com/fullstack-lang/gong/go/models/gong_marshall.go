@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"path"
+	"path/filepath"
 	"regexp"
 	"sort"
 	"strings"
@@ -47,7 +47,7 @@ var map_DocLink_Identifier_{{databaseName}} map[string]any = map[string]any{
 // }
 
 // {{databaseName}}Injection will stage objects of database "{{databaseName}}"
-func {{databaseName}}Injection() {
+func {{databaseName}}Injection(stage *models.StageStruct) {
 
 	// Declaration of instances to stage{{Identifiers}}
 
@@ -59,7 +59,7 @@ func {{databaseName}}Injection() {
 `
 
 const IdentifiersDecls = `
-	{{Identifier}} := (&models.{{GeneratedStructName}}{Name: ` + "`" + `{{GeneratedFieldNameValue}}` + "`" + `}).Stage()`
+	{{Identifier}} := (&models.{{GeneratedStructName}}{Name: ` + "`" + `{{GeneratedFieldNameValue}}` + "`" + `}).Stage(stage)`
 
 const StringInitStatement = `
 	{{Identifier}}.{{GeneratedFieldName}} = ` + "`" + `{{GeneratedFieldNameValue}}` + "`"
@@ -88,10 +88,11 @@ func (stage *StageStruct) Marshall(file *os.File, modelsPackageName, packageName
 		log.Fatalln(name + " is not a go filename")
 	}
 
-	log.Println("filename of marshall output  is " + name)
+	log.Println("filename of marshall output is " + name)
+	newBase := filepath.Base(file.Name())
 
 	res := marshallRes
-	res = strings.ReplaceAll(res, "{{databaseName}}", strings.ReplaceAll(path.Base(name), ".go", ""))
+	res = strings.ReplaceAll(res, "{{databaseName}}", strings.ReplaceAll(newBase, ".go", ""))
 	res = strings.ReplaceAll(res, "{{PackageName}}", packageName)
 	res = strings.ReplaceAll(res, "{{ModelsPackageName}}", modelsPackageName)
 
@@ -102,8 +103,11 @@ func (stage *StageStruct) Marshall(file *os.File, modelsPackageName, packageName
 	pointersInitializesStatements := ""
 
 	id := ""
+	_ = id
 	decl := ""
+	_ = decl
 	setValueField := ""
+	_ = setValueField 
 
 	// insertion initialization of objects to stage
 	map_GongBasicField_Identifiers := make(map[*GongBasicField]string)
@@ -276,6 +280,12 @@ func (stage *StageStruct) Marshall(file *os.File, modelsPackageName, packageName
 
 		setValueField = StringInitStatement
 		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
+		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "Recv")
+		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", string(gonglink.Recv))
+		initializerStatements += setValueField
+
+		setValueField = StringInitStatement
+		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
 		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "ImportPath")
 		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", string(gonglink.ImportPath))
 		initializerStatements += setValueField
@@ -316,6 +326,12 @@ func (stage *StageStruct) Marshall(file *os.File, modelsPackageName, packageName
 		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
 		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "Body")
 		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", string(gongnote.Body))
+		initializerStatements += setValueField
+
+		setValueField = StringInitStatement
+		setValueField = strings.ReplaceAll(setValueField, "{{Identifier}}", id)
+		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldName}}", "BodyHTML")
+		setValueField = strings.ReplaceAll(setValueField, "{{GeneratedFieldNameValue}}", string(gongnote.BodyHTML))
 		initializerStatements += setValueField
 
 	}
@@ -804,7 +820,7 @@ func (stage *StageStruct) Marshall(file *os.File, modelsPackageName, packageName
 		res = strings.ReplaceAll(res, "{{ImportPackageDummyDeclaration}}",
 			fmt.Sprintf("\nvar ___dummy__%s_%s %s.StageStruct",
 				stage.MetaPackageImportAlias,
-				strings.ReplaceAll(path.Base(name), ".go", ""),
+				strings.ReplaceAll(filepath.Base(name), ".go", ""),
 				stage.MetaPackageImportAlias))
 
 		var entries string
@@ -812,22 +828,34 @@ func (stage *StageStruct) Marshall(file *os.File, modelsPackageName, packageName
 		// regenerate the map of doc link renaming
 		// the key and value are set to the value because
 		// if it has been renamed, this is the new value that matters
+		valuesOrdered := make([]GONG__Identifier, 0)
 		for _, value := range stage.Map_DocLink_Renaming {
+			valuesOrdered = append(valuesOrdered, value)
+		}
+		sort.Slice(valuesOrdered[:], func(i, j int) bool {
+			return valuesOrdered[i].Ident < valuesOrdered[j].Ident
+		})
+		for _, value := range valuesOrdered {
 
 			// get the number of points in the value to find if it is a field
 			// or a struct
-			nbPoints := strings.Count(value, ".")
 
-			if nbPoints == 1 {
-				entries += fmt.Sprintf("\n\n\t\"%s\": &(%s{}),", value, value)
-			}
-			if nbPoints == 2 {
+			switch value.Type {
+			case GONG__ENUM_CAST_INT:
+				entries += fmt.Sprintf("\n\n\t\"%s\": %s(0),", value.Ident, value.Ident)
+			case GONG__ENUM_CAST_STRING:
+				entries += fmt.Sprintf("\n\n\t\"%s\": %s(\"\"),", value.Ident, value.Ident)
+			case GONG__FIELD_VALUE:
 				// substitute the second point with "{})."
 				joker := "__substitute_for_first_point__"
-				valueIdentifier := strings.Replace(value, ".", joker, 1)
+				valueIdentifier := strings.Replace(value.Ident, ".", joker, 1)
 				valueIdentifier = strings.Replace(valueIdentifier, ".", "{}).", 1)
 				valueIdentifier = strings.Replace(valueIdentifier, joker, ".", 1)
-				entries += fmt.Sprintf("\n\n\t\"%s\": (%s,", value, valueIdentifier)
+				entries += fmt.Sprintf("\n\n\t\"%s\": (%s,", value.Ident, valueIdentifier)
+			case GONG__IDENTIFIER_CONST:
+				entries += fmt.Sprintf("\n\n\t\"%s\": %s,", value.Ident, value.Ident)
+			case GONG__STRUCT_INSTANCE:
+				entries += fmt.Sprintf("\n\n\t\"%s\": &(%s{}),", value.Ident, value.Ident)
 			}
 		}
 

@@ -182,13 +182,13 @@ export class ScatterDetailComponent implements OnInit {
 
 		switch (this.state) {
 			case ScatterDetailComponentState.UPDATE_INSTANCE:
-				this.scatterService.updateScatter(this.scatter)
+				this.scatterService.updateScatter(this.scatter, this.GONG__StackPath)
 					.subscribe(scatter => {
 						this.scatterService.ScatterServiceChanged.next("update")
 					});
 				break;
 			default:
-				this.scatterService.postScatter(this.scatter).subscribe(scatter => {
+				this.scatterService.postScatter(this.scatter, this.GONG__StackPath).subscribe(scatter => {
 					this.scatterService.ScatterServiceChanged.next("post")
 					this.scatter = new (ScatterDB) // reset fields
 				});

@@ -100,7 +100,7 @@ export class BarSortingComponent implements OnInit {
 
     this.associatedBars.forEach(
       bar => {
-        this.barService.updateBar(bar)
+        this.barService.updateBar(bar, this.dialogData.GONG__StackPath)
           .subscribe(bar => {
             this.barService.BarServiceChanged.next("update")
           });

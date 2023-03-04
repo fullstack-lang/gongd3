@@ -46,7 +46,7 @@ export class ClassdiagramSortingComponent implements OnInit {
   }
 
   getClassdiagrams(): void {
-    this.frontRepoService.pull().subscribe(
+    this.frontRepoService.pull(this.dialogData.GONG__StackPath).subscribe(
       frontRepo => {
         this.frontRepo = frontRepo
 
@@ -100,13 +100,13 @@ export class ClassdiagramSortingComponent implements OnInit {
 
     this.associatedClassdiagrams.forEach(
       classdiagram => {
-        this.classdiagramService.updateClassdiagram(classdiagram)
+        this.classdiagramService.updateClassdiagram(classdiagram, this.dialogData.GONG__StackPath)
           .subscribe(classdiagram => {
             this.classdiagramService.ClassdiagramServiceChanged.next("update")
           });
       }
     )
 
-    this.dialogRef.close('Sorting of ' + this.dialogData.ReversePointer +' done');
+    this.dialogRef.close('Sorting of ' + this.dialogData.ReversePointer + ' done');
   }
 }

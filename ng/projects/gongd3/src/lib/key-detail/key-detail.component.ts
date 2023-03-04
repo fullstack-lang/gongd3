@@ -152,13 +152,13 @@ export class KeyDetailComponent implements OnInit {
 
 		switch (this.state) {
 			case KeyDetailComponentState.UPDATE_INSTANCE:
-				this.keyService.updateKey(this.key)
+				this.keyService.updateKey(this.key, this.GONG__StackPath)
 					.subscribe(key => {
 						this.keyService.KeyServiceChanged.next("update")
 					});
 				break;
 			default:
-				this.keyService.postKey(this.key).subscribe(key => {
+				this.keyService.postKey(this.key, this.GONG__StackPath).subscribe(key => {
 					this.keyService.KeyServiceChanged.next("post")
 					this.key = new (KeyDB) // reset fields
 				});

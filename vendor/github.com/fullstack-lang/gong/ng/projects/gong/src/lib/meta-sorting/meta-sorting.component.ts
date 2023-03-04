@@ -46,7 +46,7 @@ export class MetaSortingComponent implements OnInit {
   }
 
   getMetas(): void {
-    this.frontRepoService.pull().subscribe(
+    this.frontRepoService.pull(this.dialogData.GONG__StackPath).subscribe(
       frontRepo => {
         this.frontRepo = frontRepo
 
@@ -100,13 +100,13 @@ export class MetaSortingComponent implements OnInit {
 
     this.associatedMetas.forEach(
       meta => {
-        this.metaService.updateMeta(meta)
+        this.metaService.updateMeta(meta, this.dialogData.GONG__StackPath)
           .subscribe(meta => {
             this.metaService.MetaServiceChanged.next("update")
           });
       }
     )
 
-    this.dialogRef.close('Sorting of ' + this.dialogData.ReversePointer +' done');
+    this.dialogRef.close('Sorting of ' + this.dialogData.ReversePointer + ' done');
   }
 }

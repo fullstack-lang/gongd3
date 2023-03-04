@@ -47,11 +47,23 @@ type MetaReferenceInput struct {
 // default: genericError
 //
 //	200: metareferenceDBResponse
-func GetMetaReferences(c *gin.Context) {
-	db := orm.BackRepo.BackRepoMetaReference.GetDB()
+func (controller *Controller) GetMetaReferences(c *gin.Context) {
 
 	// source slice
 	var metareferenceDBs []orm.MetaReferenceDB
+
+	values := c.Request.URL.Query()
+	stackPath := ""
+	if len(values) == 1 {
+		value := values["GONG__StackPath"]
+		if len(value) == 1 {
+			stackPath = value[0]
+			log.Println("GetMetaReferences", "GONG__StackPath", stackPath)
+		}
+	}
+	backRepo := controller.Map_BackRepos[stackPath]
+	db := backRepo.BackRepoMetaReference.GetDB()
+
 	query := db.Find(&metareferenceDBs)
 	if query.Error != nil {
 		var returnError GenericError
@@ -95,8 +107,19 @@ func GetMetaReferences(c *gin.Context) {
 //
 //	Responses:
 //	  200: nodeDBResponse
-func PostMetaReference(c *gin.Context) {
-	db := orm.BackRepo.BackRepoMetaReference.GetDB()
+func (controller *Controller) PostMetaReference(c *gin.Context) {
+
+	values := c.Request.URL.Query()
+	stackPath := ""
+	if len(values) == 1 {
+		value := values["GONG__StackPath"]
+		if len(value) == 1 {
+			stackPath = value[0]
+			log.Println("PostMetaReferences", "GONG__StackPath", stackPath)
+		}
+	}
+	backRepo := controller.Map_BackRepos[stackPath]
+	db := backRepo.BackRepoMetaReference.GetDB()
 
 	// Validate input
 	var input orm.MetaReferenceAPI
@@ -127,16 +150,16 @@ func PostMetaReference(c *gin.Context) {
 	}
 
 	// get an instance (not staged) from DB instance, and call callback function
-	orm.BackRepo.BackRepoMetaReference.CheckoutPhaseOneInstance(&metareferenceDB)
-	metareference := (*orm.BackRepo.BackRepoMetaReference.Map_MetaReferenceDBID_MetaReferencePtr)[metareferenceDB.ID]
+	backRepo.BackRepoMetaReference.CheckoutPhaseOneInstance(&metareferenceDB)
+	metareference := (*backRepo.BackRepoMetaReference.Map_MetaReferenceDBID_MetaReferencePtr)[metareferenceDB.ID]
 
 	if metareference != nil {
-		models.AfterCreateFromFront(&models.Stage, metareference)
+		models.AfterCreateFromFront(backRepo.GetStage(), metareference)
 	}
 
 	// a POST is equivalent to a back repo commit increase
 	// (this will be improved with implementation of unit of work design pattern)
-	orm.BackRepo.IncrementPushFromFrontNb()
+	backRepo.IncrementPushFromFrontNb()
 
 	c.JSON(http.StatusOK, metareferenceDB)
 }
@@ -151,8 +174,19 @@ func PostMetaReference(c *gin.Context) {
 // default: genericError
 //
 //	200: metareferenceDBResponse
-func GetMetaReference(c *gin.Context) {
-	db := orm.BackRepo.BackRepoMetaReference.GetDB()
+func (controller *Controller) GetMetaReference(c *gin.Context) {
+
+	values := c.Request.URL.Query()
+	stackPath := ""
+	if len(values) == 1 {
+		value := values["GONG__StackPath"]
+		if len(value) == 1 {
+			stackPath = value[0]
+			log.Println("GetMetaReference", "GONG__StackPath", stackPath)
+		}
+	}
+	backRepo := controller.Map_BackRepos[stackPath]
+	db := backRepo.BackRepoMetaReference.GetDB()
 
 	// Get metareferenceDB in DB
 	var metareferenceDB orm.MetaReferenceDB
@@ -183,8 +217,27 @@ func GetMetaReference(c *gin.Context) {
 // default: genericError
 //
 //	200: metareferenceDBResponse
-func UpdateMetaReference(c *gin.Context) {
-	db := orm.BackRepo.BackRepoMetaReference.GetDB()
+func (controller *Controller) UpdateMetaReference(c *gin.Context) {
+
+	values := c.Request.URL.Query()
+	stackPath := ""
+	if len(values) == 1 {
+		value := values["GONG__StackPath"]
+		if len(value) == 1 {
+			stackPath = value[0]
+			log.Println("UpdateMetaReference", "GONG__StackPath", stackPath)
+		}
+	}
+	backRepo := controller.Map_BackRepos[stackPath]
+	db := backRepo.BackRepoMetaReference.GetDB()
+
+	// Validate input
+	var input orm.MetaReferenceAPI
+	if err := c.ShouldBindJSON(&input); err != nil {
+		log.Println(err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 
 	// Get model if exist
 	var metareferenceDB orm.MetaReferenceDB
@@ -198,14 +251,6 @@ func UpdateMetaReference(c *gin.Context) {
 		returnError.Body.Message = query.Error.Error()
 		log.Println(query.Error.Error())
 		c.JSON(http.StatusBadRequest, returnError.Body)
-		return
-	}
-
-	// Validate input
-	var input orm.MetaReferenceAPI
-	if err := c.ShouldBindJSON(&input); err != nil {
-		log.Println(err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -228,16 +273,16 @@ func UpdateMetaReference(c *gin.Context) {
 	metareferenceDB.CopyBasicFieldsToMetaReference(metareferenceNew)
 
 	// get stage instance from DB instance, and call callback function
-	metareferenceOld := (*orm.BackRepo.BackRepoMetaReference.Map_MetaReferenceDBID_MetaReferencePtr)[metareferenceDB.ID]
+	metareferenceOld := (*backRepo.BackRepoMetaReference.Map_MetaReferenceDBID_MetaReferencePtr)[metareferenceDB.ID]
 	if metareferenceOld != nil {
-		models.AfterUpdateFromFront(&models.Stage, metareferenceOld, metareferenceNew)
+		models.AfterUpdateFromFront(backRepo.GetStage(), metareferenceOld, metareferenceNew)
 	}
 
 	// an UPDATE generates a back repo commit increase
 	// (this will be improved with implementation of unit of work design pattern)
 	// in some cases, with the marshalling of the stage, this operation might
 	// generates a checkout
-	orm.BackRepo.IncrementPushFromFrontNb()
+	backRepo.IncrementPushFromFrontNb()
 
 	// return status OK with the marshalling of the the metareferenceDB
 	c.JSON(http.StatusOK, metareferenceDB)
@@ -252,8 +297,19 @@ func UpdateMetaReference(c *gin.Context) {
 // default: genericError
 //
 //	200: metareferenceDBResponse
-func DeleteMetaReference(c *gin.Context) {
-	db := orm.BackRepo.BackRepoMetaReference.GetDB()
+func (controller *Controller) DeleteMetaReference(c *gin.Context) {
+
+	values := c.Request.URL.Query()
+	stackPath := ""
+	if len(values) == 1 {
+		value := values["GONG__StackPath"]
+		if len(value) == 1 {
+			stackPath = value[0]
+			log.Println("DeleteMetaReference", "GONG__StackPath", stackPath)
+		}
+	}
+	backRepo := controller.Map_BackRepos[stackPath]
+	db := backRepo.BackRepoMetaReference.GetDB()
 
 	// Get model if exist
 	var metareferenceDB orm.MetaReferenceDB
@@ -274,14 +330,14 @@ func DeleteMetaReference(c *gin.Context) {
 	metareferenceDB.CopyBasicFieldsToMetaReference(metareferenceDeleted)
 
 	// get stage instance from DB instance, and call callback function
-	metareferenceStaged := (*orm.BackRepo.BackRepoMetaReference.Map_MetaReferenceDBID_MetaReferencePtr)[metareferenceDB.ID]
+	metareferenceStaged := (*backRepo.BackRepoMetaReference.Map_MetaReferenceDBID_MetaReferencePtr)[metareferenceDB.ID]
 	if metareferenceStaged != nil {
-		models.AfterDeleteFromFront(&models.Stage, metareferenceStaged, metareferenceDeleted)
+		models.AfterDeleteFromFront(backRepo.GetStage(), metareferenceStaged, metareferenceDeleted)
 	}
 
 	// a DELETE generates a back repo commit increase
 	// (this will be improved with implementation of unit of work design pattern)
-	orm.BackRepo.IncrementPushFromFrontNb()
+	backRepo.IncrementPushFromFrontNb()
 
 	c.JSON(http.StatusOK, gin.H{"data": true})
 }

@@ -19,58 +19,58 @@ var ___dummy__Time time.Time
 // }
 
 // stageInjection will stage objects of database "stage"
-func stageInjection() {
+func stageInjection(stage *models.StageStruct) {
 
 	// Declaration of instances to stage
 
 	// Declarations of staged instances of Bar
-	__Bar__000000_Bar_Stars_per_Framework := (&models.Bar{Name: `Bar Stars per Framework`}).Stage()
-	__Bar__000001_Random_X_Y := (&models.Bar{Name: `Random X & Y`}).Stage()
+	__Bar__000000_Bar_Stars_per_Framework := (&models.Bar{Name: `Bar Stars per Framework`}).Stage(stage)
+	__Bar__000001_Random_X_Y := (&models.Bar{Name: `Random X & Y`}).Stage(stage)
 
 	// Declarations of staged instances of Key
-	__Key__000000_Framework_not_hardcoded := (&models.Key{Name: `Framework not hardcoded`}).Stage()
-	__Key__000001_Released_not_hardcoded := (&models.Key{Name: `Released not hardcoded`}).Stage()
-	__Key__000002_Stars_not_hardcoded := (&models.Key{Name: `Stars not hardcoded`}).Stage()
-	__Key__000003_X := (&models.Key{Name: `X`}).Stage()
-	__Key__000004_Y := (&models.Key{Name: `Y`}).Stage()
+	__Key__000000_Framework_not_hardcoded := (&models.Key{Name: `Framework not hardcoded`}).Stage(stage)
+	__Key__000001_Released_not_hardcoded := (&models.Key{Name: `Released not hardcoded`}).Stage(stage)
+	__Key__000002_Stars_not_hardcoded := (&models.Key{Name: `Stars not hardcoded`}).Stage(stage)
+	__Key__000003_X := (&models.Key{Name: `X`}).Stage(stage)
+	__Key__000004_Y := (&models.Key{Name: `Y`}).Stage(stage)
 
 	// Declarations of staged instances of Pie
-	__Pie__000000_Pie_Stars_per_Framework := (&models.Pie{Name: `Pie Stars per Framework`}).Stage()
+	__Pie__000000_Pie_Stars_per_Framework := (&models.Pie{Name: `Pie Stars per Framework`}).Stage(stage)
 
 	// Declarations of staged instances of Scatter
-	__Scatter__000000_Scatter_Stars_per_Framework := (&models.Scatter{Name: `Scatter Stars per Framework`}).Stage()
+	__Scatter__000000_Scatter_Stars_per_Framework := (&models.Scatter{Name: `Scatter Stars per Framework`}).Stage(stage)
 
 	// Declarations of staged instances of Serie
-	__Serie__000000_FrameworkSerie := (&models.Serie{Name: `FrameworkSerie`}).Stage()
-	__Serie__000001_Released := (&models.Serie{Name: `Released`}).Stage()
-	__Serie__000002_Stars := (&models.Serie{Name: `Stars`}).Stage()
-	__Serie__000003_XSerie := (&models.Serie{Name: `XSerie`}).Stage()
-	__Serie__000004_YSerie := (&models.Serie{Name: `YSerie`}).Stage()
+	__Serie__000000_FrameworkSerie := (&models.Serie{Name: `FrameworkSerie`}).Stage(stage)
+	__Serie__000001_Released := (&models.Serie{Name: `Released`}).Stage(stage)
+	__Serie__000002_Stars := (&models.Serie{Name: `Stars`}).Stage(stage)
+	__Serie__000003_XSerie := (&models.Serie{Name: `XSerie`}).Stage(stage)
+	__Serie__000004_YSerie := (&models.Serie{Name: `YSerie`}).Stage(stage)
 
 	// Declarations of staged instances of Value
-	__Value__000000_14_2 := (&models.Value{Name: `14.2`}).Stage()
-	__Value__000001_150 := (&models.Value{Name: `150`}).Stage()
-	__Value__000002_150793 := (&models.Value{Name: `150793`}).Stage()
-	__Value__000003_160 := (&models.Value{Name: `160`}).Stage()
-	__Value__000004_166443 := (&models.Value{Name: `166443`}).Stage()
-	__Value__000005_170 := (&models.Value{Name: `170`}).Stage()
-	__Value__000006_180 := (&models.Value{Name: `180`}).Stage()
-	__Value__000007_2010 := (&models.Value{Name: `2010`}).Stage()
-	__Value__000008_2011 := (&models.Value{Name: `2011`}).Stage()
-	__Value__000009_2013 := (&models.Value{Name: `2013`}).Stage()
-	__Value__000010_2014 := (&models.Value{Name: `2014`}).Stage()
-	__Value__000011_2016 := (&models.Value{Name: `2016`}).Stage()
-	__Value__000012_21471 := (&models.Value{Name: `21471`}).Stage()
-	__Value__000013_22_4 := (&models.Value{Name: `22.4`}).Stage()
-	__Value__000014_25_2 := (&models.Value{Name: `25.2`}).Stage()
-	__Value__000015_26_3 := (&models.Value{Name: `26.3`}).Stage()
-	__Value__000016_27647 := (&models.Value{Name: `27647`}).Stage()
-	__Value__000017_62342 := (&models.Value{Name: `62342`}).Stage()
-	__Value__000018_Angular := (&models.Value{Name: `Angular`}).Stage()
-	__Value__000019_Backbone := (&models.Value{Name: `Backbone`}).Stage()
-	__Value__000020_Ember := (&models.Value{Name: `Ember`}).Stage()
-	__Value__000021_React := (&models.Value{Name: `React`}).Stage()
-	__Value__000022_Vue := (&models.Value{Name: `Vue`}).Stage()
+	__Value__000000_14_2 := (&models.Value{Name: `14.2`}).Stage(stage)
+	__Value__000001_150 := (&models.Value{Name: `150`}).Stage(stage)
+	__Value__000002_150793 := (&models.Value{Name: `150793`}).Stage(stage)
+	__Value__000003_160 := (&models.Value{Name: `160`}).Stage(stage)
+	__Value__000004_166443 := (&models.Value{Name: `166443`}).Stage(stage)
+	__Value__000005_170 := (&models.Value{Name: `170`}).Stage(stage)
+	__Value__000006_180 := (&models.Value{Name: `180`}).Stage(stage)
+	__Value__000007_2010 := (&models.Value{Name: `2010`}).Stage(stage)
+	__Value__000008_2011 := (&models.Value{Name: `2011`}).Stage(stage)
+	__Value__000009_2013 := (&models.Value{Name: `2013`}).Stage(stage)
+	__Value__000010_2014 := (&models.Value{Name: `2014`}).Stage(stage)
+	__Value__000011_2016 := (&models.Value{Name: `2016`}).Stage(stage)
+	__Value__000012_21471 := (&models.Value{Name: `21471`}).Stage(stage)
+	__Value__000013_22_4 := (&models.Value{Name: `22.4`}).Stage(stage)
+	__Value__000014_25_2 := (&models.Value{Name: `25.2`}).Stage(stage)
+	__Value__000015_26_3 := (&models.Value{Name: `26.3`}).Stage(stage)
+	__Value__000016_27647 := (&models.Value{Name: `27647`}).Stage(stage)
+	__Value__000017_62342 := (&models.Value{Name: `62342`}).Stage(stage)
+	__Value__000018_Angular := (&models.Value{Name: `Angular`}).Stage(stage)
+	__Value__000019_Backbone := (&models.Value{Name: `Backbone`}).Stage(stage)
+	__Value__000020_Ember := (&models.Value{Name: `Ember`}).Stage(stage)
+	__Value__000021_React := (&models.Value{Name: `React`}).Stage(stage)
+	__Value__000022_Vue := (&models.Value{Name: `Vue`}).Stage(stage)
 
 	// Setup of values
 
@@ -267,5 +267,3 @@ func stageInjection() {
 	__Serie__000004_YSerie.Values = append(__Serie__000004_YSerie.Values, __Value__000013_22_4)
 	__Serie__000004_YSerie.Values = append(__Serie__000004_YSerie.Values, __Value__000000_14_2)
 }
-
-

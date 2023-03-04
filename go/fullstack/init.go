@@ -4,6 +4,7 @@ import (
 	// gongd3 stack for model analysis
 
 	gongd3_controllers "gongd3/go/controllers"
+	gongd3_models "gongd3/go/models"
 	gongd3_orm "gongd3/go/orm"
 	"github.com/gin-gonic/gin"
 
@@ -19,7 +20,7 @@ func Init(r *gin.Engine, filenames ...string) {
 		filenames = append(filenames, ":memory:")
 	}
 
-	db_inMemory := gongd3_orm.SetupModels(false, filenames[0])
+	db_inMemory := gongd3_orm.SetupModels(&gongd3_models.Stage, false, filenames[0])
 
 	// since gongd3sim is a multi threaded application. It is important to set up
 	// only one open connexion at a time

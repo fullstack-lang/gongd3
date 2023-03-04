@@ -100,7 +100,7 @@ export class KeySortingComponent implements OnInit {
 
     this.associatedKeys.forEach(
       key => {
-        this.keyService.updateKey(key)
+        this.keyService.updateKey(key, this.dialogData.GONG__StackPath)
           .subscribe(key => {
             this.keyService.KeyServiceChanged.next("update")
           });

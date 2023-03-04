@@ -100,7 +100,7 @@ export class PieSortingComponent implements OnInit {
 
     this.associatedPies.forEach(
       pie => {
-        this.pieService.updatePie(pie)
+        this.pieService.updatePie(pie, this.dialogData.GONG__StackPath)
           .subscribe(pie => {
             this.pieService.PieServiceChanged.next("update")
           });

@@ -21,10 +21,6 @@ import { SerieDB } from './serie-db'
 })
 export class ValueService {
 
-  httpOptions = {
-    headers: new HttpHeaders({ 'Content-Type': 'application/json' })
-  };
-
   // Kamar Raïmo: Adding a way to communicate between components that share information
   // so that they are notified of a change.
   ValueServiceChanged: BehaviorSubject<string> = new BehaviorSubject("");
@@ -33,7 +29,6 @@ export class ValueService {
 
   constructor(
     private http: HttpClient,
-    private location: Location,
     @Inject(DOCUMENT) private document: Document
   ) {
     // path to the service share the same origin with the path to the document
@@ -68,16 +63,20 @@ export class ValueService {
     );
   }
 
-  //////// Save methods //////////
-
   /** POST: add a new value to the server */
-  postValue(valuedb: ValueDB): Observable<ValueDB> {
+  postValue(valuedb: ValueDB, GONG__StackPath: string): Observable<ValueDB> {
 
     // insertion point for reset of pointers and reverse pointers (to avoid circular JSON)
     let _Serie_Values_reverse = valuedb.Serie_Values_reverse
     valuedb.Serie_Values_reverse = new SerieDB
 
-    return this.http.post<ValueDB>(this.valuesUrl, valuedb, this.httpOptions).pipe(
+    let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
+    let httpOptions = {
+      headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
+      params: params
+    }
+
+	return this.http.post<ValueDB>(this.valuesUrl, valuedb, httpOptions).pipe(
       tap(_ => {
         // insertion point for restoration of reverse pointers
         valuedb.Serie_Values_reverse = _Serie_Values_reverse
@@ -88,18 +87,24 @@ export class ValueService {
   }
 
   /** DELETE: delete the valuedb from the server */
-  deleteValue(valuedb: ValueDB | number): Observable<ValueDB> {
+  deleteValue(valuedb: ValueDB | number, GONG__StackPath: string): Observable<ValueDB> {
     const id = typeof valuedb === 'number' ? valuedb : valuedb.ID;
     const url = `${this.valuesUrl}/${id}`;
 
-    return this.http.delete<ValueDB>(url, this.httpOptions).pipe(
+    let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
+    let httpOptions = {
+      headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
+      params: params
+    };
+
+    return this.http.delete<ValueDB>(url, httpOptions).pipe(
       tap(_ => this.log(`deleted valuedb id=${id}`)),
       catchError(this.handleError<ValueDB>('deleteValue'))
     );
   }
 
   /** PUT: update the valuedb on the server */
-  updateValue(valuedb: ValueDB): Observable<ValueDB> {
+  updateValue(valuedb: ValueDB, GONG__StackPath: string): Observable<ValueDB> {
     const id = typeof valuedb === 'number' ? valuedb : valuedb.ID;
     const url = `${this.valuesUrl}/${id}`;
 
@@ -107,7 +112,13 @@ export class ValueService {
     let _Serie_Values_reverse = valuedb.Serie_Values_reverse
     valuedb.Serie_Values_reverse = new SerieDB
 
-    return this.http.put<ValueDB>(url, valuedb, this.httpOptions).pipe(
+    let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
+    let httpOptions = {
+      headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
+      params: params
+    };
+
+    return this.http.put<ValueDB>(url, valuedb, httpOptions).pipe(
       tap(_ => {
         // insertion point for restoration of reverse pointers
         valuedb.Serie_Values_reverse = _Serie_Values_reverse

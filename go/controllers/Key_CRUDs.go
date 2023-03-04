@@ -47,23 +47,22 @@ type KeyInput struct {
 // default: genericError
 //
 //	200: keyDBResponse
-func GetKeys(c *gin.Context) {
-	db := orm.BackRepo.BackRepoKey.GetDB()
+func (controller *Controller) GetKeys(c *gin.Context) {
 
 	// source slice
 	var keyDBs []orm.KeyDB
 
-	// type Values map[string][]string
 	values := c.Request.URL.Query()
+	stackPath := ""
 	if len(values) == 1 {
 		value := values["GONG__StackPath"]
 		if len(value) == 1 {
-			// we have a single parameter
-			// we assume it is the stack
-			stackParam := value[0]
-			log.Println("GONG__StackPath", stackParam)
+			stackPath = value[0]
+			log.Println("GetKeys", "GONG__StackPath", stackPath)
 		}
 	}
+	backRepo := controller.Map_BackRepos[stackPath]
+	db := backRepo.BackRepoKey.GetDB()
 
 	query := db.Find(&keyDBs)
 	if query.Error != nil {
@@ -108,7 +107,19 @@ func GetKeys(c *gin.Context) {
 //
 //	Responses:
 //	  200: nodeDBResponse
-func PostKey(c *gin.Context) {
+func (controller *Controller) PostKey(c *gin.Context) {
+
+	values := c.Request.URL.Query()
+	stackPath := ""
+	if len(values) == 1 {
+		value := values["GONG__StackPath"]
+		if len(value) == 1 {
+			stackPath = value[0]
+			log.Println("PostKeys", "GONG__StackPath", stackPath)
+		}
+	}
+	backRepo := controller.Map_BackRepos[stackPath]
+	db := backRepo.BackRepoKey.GetDB()
 
 	// Validate input
 	var input orm.KeyAPI
@@ -128,7 +139,6 @@ func PostKey(c *gin.Context) {
 	keyDB.KeyPointersEnconding = input.KeyPointersEnconding
 	keyDB.CopyBasicFieldsFromKey(&input.Key)
 
-	db := orm.BackRepo.BackRepoKey.GetDB()
 	query := db.Create(&keyDB)
 	if query.Error != nil {
 		var returnError GenericError
@@ -140,16 +150,16 @@ func PostKey(c *gin.Context) {
 	}
 
 	// get an instance (not staged) from DB instance, and call callback function
-	orm.BackRepo.BackRepoKey.CheckoutPhaseOneInstance(&keyDB)
-	key := (*orm.BackRepo.BackRepoKey.Map_KeyDBID_KeyPtr)[keyDB.ID]
+	backRepo.BackRepoKey.CheckoutPhaseOneInstance(&keyDB)
+	key := (*backRepo.BackRepoKey.Map_KeyDBID_KeyPtr)[keyDB.ID]
 
 	if key != nil {
-		models.AfterCreateFromFront(&models.Stage, key)
+		models.AfterCreateFromFront(backRepo.GetStage(), key)
 	}
 
 	// a POST is equivalent to a back repo commit increase
 	// (this will be improved with implementation of unit of work design pattern)
-	orm.BackRepo.IncrementPushFromFrontNb()
+	backRepo.IncrementPushFromFrontNb()
 
 	c.JSON(http.StatusOK, keyDB)
 }
@@ -164,21 +174,19 @@ func PostKey(c *gin.Context) {
 // default: genericError
 //
 //	200: keyDBResponse
-func GetKey(c *gin.Context) {
+func (controller *Controller) GetKey(c *gin.Context) {
 
-	// type Values map[string][]string
 	values := c.Request.URL.Query()
+	stackPath := ""
 	if len(values) == 1 {
-		value := values["stack"]
+		value := values["GONG__StackPath"]
 		if len(value) == 1 {
-			// we have a single parameter
-			// we assume it is the stack
-			stackParam := value[0]
-			log.Println("GET params", stackParam)
+			stackPath = value[0]
+			log.Println("GetKey", "GONG__StackPath", stackPath)
 		}
 	}
-
-	db := orm.BackRepo.BackRepoKey.GetDB()
+	backRepo := controller.Map_BackRepos[stackPath]
+	db := backRepo.BackRepoKey.GetDB()
 
 	// Get keyDB in DB
 	var keyDB orm.KeyDB
@@ -209,7 +217,19 @@ func GetKey(c *gin.Context) {
 // default: genericError
 //
 //	200: keyDBResponse
-func UpdateKey(c *gin.Context) {
+func (controller *Controller) UpdateKey(c *gin.Context) {
+
+	values := c.Request.URL.Query()
+	stackPath := ""
+	if len(values) == 1 {
+		value := values["GONG__StackPath"]
+		if len(value) == 1 {
+			stackPath = value[0]
+			log.Println("UpdateKey", "GONG__StackPath", stackPath)
+		}
+	}
+	backRepo := controller.Map_BackRepos[stackPath]
+	db := backRepo.BackRepoKey.GetDB()
 
 	// Validate input
 	var input orm.KeyAPI
@@ -218,8 +238,6 @@ func UpdateKey(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-
-	db := orm.BackRepo.BackRepoKey.GetDB()
 
 	// Get model if exist
 	var keyDB orm.KeyDB
@@ -255,16 +273,16 @@ func UpdateKey(c *gin.Context) {
 	keyDB.CopyBasicFieldsToKey(keyNew)
 
 	// get stage instance from DB instance, and call callback function
-	keyOld := (*orm.BackRepo.BackRepoKey.Map_KeyDBID_KeyPtr)[keyDB.ID]
+	keyOld := (*backRepo.BackRepoKey.Map_KeyDBID_KeyPtr)[keyDB.ID]
 	if keyOld != nil {
-		models.AfterUpdateFromFront(&models.Stage, keyOld, keyNew)
+		models.AfterUpdateFromFront(backRepo.GetStage(), keyOld, keyNew)
 	}
 
 	// an UPDATE generates a back repo commit increase
 	// (this will be improved with implementation of unit of work design pattern)
 	// in some cases, with the marshalling of the stage, this operation might
 	// generates a checkout
-	orm.BackRepo.IncrementPushFromFrontNb()
+	backRepo.IncrementPushFromFrontNb()
 
 	// return status OK with the marshalling of the the keyDB
 	c.JSON(http.StatusOK, keyDB)
@@ -279,8 +297,19 @@ func UpdateKey(c *gin.Context) {
 // default: genericError
 //
 //	200: keyDBResponse
-func DeleteKey(c *gin.Context) {
-	db := orm.BackRepo.BackRepoKey.GetDB()
+func (controller *Controller) DeleteKey(c *gin.Context) {
+
+	values := c.Request.URL.Query()
+	stackPath := ""
+	if len(values) == 1 {
+		value := values["GONG__StackPath"]
+		if len(value) == 1 {
+			stackPath = value[0]
+			log.Println("DeleteKey", "GONG__StackPath", stackPath)
+		}
+	}
+	backRepo := controller.Map_BackRepos[stackPath]
+	db := backRepo.BackRepoKey.GetDB()
 
 	// Get model if exist
 	var keyDB orm.KeyDB
@@ -301,14 +330,14 @@ func DeleteKey(c *gin.Context) {
 	keyDB.CopyBasicFieldsToKey(keyDeleted)
 
 	// get stage instance from DB instance, and call callback function
-	keyStaged := (*orm.BackRepo.BackRepoKey.Map_KeyDBID_KeyPtr)[keyDB.ID]
+	keyStaged := (*backRepo.BackRepoKey.Map_KeyDBID_KeyPtr)[keyDB.ID]
 	if keyStaged != nil {
-		models.AfterDeleteFromFront(&models.Stage, keyStaged, keyDeleted)
+		models.AfterDeleteFromFront(backRepo.GetStage(), keyStaged, keyDeleted)
 	}
 
 	// a DELETE generates a back repo commit increase
 	// (this will be improved with implementation of unit of work design pattern)
-	orm.BackRepo.IncrementPushFromFrontNb()
+	backRepo.IncrementPushFromFrontNb()
 
 	c.JSON(http.StatusOK, gin.H{"data": true})
 }

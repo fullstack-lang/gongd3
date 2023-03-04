@@ -21,23 +21,25 @@ type BackRepoStruct struct {
 	// insertion point for per struct back repo declarations
 	BackRepoClassdiagram BackRepoClassdiagramStruct
 
-	BackRepoClassshape BackRepoClassshapeStruct
-
 	BackRepoDiagramPackage BackRepoDiagramPackageStruct
 
 	BackRepoField BackRepoFieldStruct
+
+	BackRepoGongEnumShape BackRepoGongEnumShapeStruct
+
+	BackRepoGongEnumValueEntry BackRepoGongEnumValueEntryStruct
+
+	BackRepoGongStructShape BackRepoGongStructShapeStruct
 
 	BackRepoLink BackRepoLinkStruct
 
 	BackRepoNode BackRepoNodeStruct
 
-	BackRepoNoteLink BackRepoNoteLinkStruct
-
 	BackRepoNoteShape BackRepoNoteShapeStruct
 
-	BackRepoPosition BackRepoPositionStruct
+	BackRepoNoteShapeLink BackRepoNoteShapeLinkStruct
 
-	BackRepoReference BackRepoReferenceStruct
+	BackRepoPosition BackRepoPositionStruct
 
 	BackRepoTree BackRepoTreeStruct
 
@@ -50,6 +52,13 @@ type BackRepoStruct struct {
 	CommitFromBackNb uint // this ng is updated at the BackRepo level but also at the BackRepo<GongStruct> level
 
 	PushFromFrontNb uint // records increments from push from front
+
+	stage *models.StageStruct
+}
+
+func (backRepo *BackRepoStruct) GetStage() (stage *models.StageStruct) {
+	stage = backRepo.stage
+	return
 }
 
 func (backRepo *BackRepoStruct) GetLastCommitFromBackNb() uint {
@@ -61,61 +70,64 @@ func (backRepo *BackRepoStruct) GetLastPushFromFrontNb() uint {
 }
 
 func (backRepo *BackRepoStruct) IncrementCommitFromBackNb() uint {
-	if models.Stage.OnInitCommitCallback != nil {
-		models.Stage.OnInitCommitCallback.BeforeCommit(&models.Stage)
+	if backRepo.stage.OnInitCommitCallback != nil {
+		backRepo.stage.OnInitCommitCallback.BeforeCommit(backRepo.stage)
 	}
-	if models.Stage.OnInitCommitFromBackCallback != nil {
-		models.Stage.OnInitCommitFromBackCallback.BeforeCommit(&models.Stage)
+	if backRepo.stage.OnInitCommitFromBackCallback != nil {
+		backRepo.stage.OnInitCommitFromBackCallback.BeforeCommit(backRepo.stage)
 	}
 	backRepo.CommitFromBackNb = backRepo.CommitFromBackNb + 1
 	return backRepo.CommitFromBackNb
 }
 
 func (backRepo *BackRepoStruct) IncrementPushFromFrontNb() uint {
-	if models.Stage.OnInitCommitCallback != nil {
-		models.Stage.OnInitCommitCallback.BeforeCommit(&models.Stage)
+	if backRepo.stage.OnInitCommitCallback != nil {
+		backRepo.stage.OnInitCommitCallback.BeforeCommit(backRepo.stage)
 	}
-	if models.Stage.OnInitCommitFromFrontCallback != nil {
-		models.Stage.OnInitCommitFromFrontCallback.BeforeCommit(&models.Stage)
+	if backRepo.stage.OnInitCommitFromFrontCallback != nil {
+		backRepo.stage.OnInitCommitFromFrontCallback.BeforeCommit(backRepo.stage)
 	}
 	backRepo.PushFromFrontNb = backRepo.PushFromFrontNb + 1
 	return backRepo.CommitFromBackNb
 }
 
 // Init the BackRepoStruct inner variables and link to the database
-func (backRepo *BackRepoStruct) init(db *gorm.DB) {
+func (backRepo *BackRepoStruct) init(stage *models.StageStruct, db *gorm.DB) {
 	// insertion point for per struct back repo declarations
-	backRepo.BackRepoClassdiagram.Init(db)
-	backRepo.BackRepoClassshape.Init(db)
-	backRepo.BackRepoDiagramPackage.Init(db)
-	backRepo.BackRepoField.Init(db)
-	backRepo.BackRepoLink.Init(db)
-	backRepo.BackRepoNode.Init(db)
-	backRepo.BackRepoNoteLink.Init(db)
-	backRepo.BackRepoNoteShape.Init(db)
-	backRepo.BackRepoPosition.Init(db)
-	backRepo.BackRepoReference.Init(db)
-	backRepo.BackRepoTree.Init(db)
-	backRepo.BackRepoUmlState.Init(db)
-	backRepo.BackRepoUmlsc.Init(db)
-	backRepo.BackRepoVertice.Init(db)
+	backRepo.BackRepoClassdiagram.Init(stage, db)
+	backRepo.BackRepoDiagramPackage.Init(stage, db)
+	backRepo.BackRepoField.Init(stage, db)
+	backRepo.BackRepoGongEnumShape.Init(stage, db)
+	backRepo.BackRepoGongEnumValueEntry.Init(stage, db)
+	backRepo.BackRepoGongStructShape.Init(stage, db)
+	backRepo.BackRepoLink.Init(stage, db)
+	backRepo.BackRepoNode.Init(stage, db)
+	backRepo.BackRepoNoteShape.Init(stage, db)
+	backRepo.BackRepoNoteShapeLink.Init(stage, db)
+	backRepo.BackRepoPosition.Init(stage, db)
+	backRepo.BackRepoTree.Init(stage, db)
+	backRepo.BackRepoUmlState.Init(stage, db)
+	backRepo.BackRepoUmlsc.Init(stage, db)
+	backRepo.BackRepoVertice.Init(stage, db)
 
-	models.Stage.BackRepo = backRepo
+	stage.BackRepo = backRepo
+	backRepo.stage = stage
 }
 
 // Commit the BackRepoStruct inner variables and link to the database
 func (backRepo *BackRepoStruct) Commit(stage *models.StageStruct) {
 	// insertion point for per struct back repo phase one commit
 	backRepo.BackRepoClassdiagram.CommitPhaseOne(stage)
-	backRepo.BackRepoClassshape.CommitPhaseOne(stage)
 	backRepo.BackRepoDiagramPackage.CommitPhaseOne(stage)
 	backRepo.BackRepoField.CommitPhaseOne(stage)
+	backRepo.BackRepoGongEnumShape.CommitPhaseOne(stage)
+	backRepo.BackRepoGongEnumValueEntry.CommitPhaseOne(stage)
+	backRepo.BackRepoGongStructShape.CommitPhaseOne(stage)
 	backRepo.BackRepoLink.CommitPhaseOne(stage)
 	backRepo.BackRepoNode.CommitPhaseOne(stage)
-	backRepo.BackRepoNoteLink.CommitPhaseOne(stage)
 	backRepo.BackRepoNoteShape.CommitPhaseOne(stage)
+	backRepo.BackRepoNoteShapeLink.CommitPhaseOne(stage)
 	backRepo.BackRepoPosition.CommitPhaseOne(stage)
-	backRepo.BackRepoReference.CommitPhaseOne(stage)
 	backRepo.BackRepoTree.CommitPhaseOne(stage)
 	backRepo.BackRepoUmlState.CommitPhaseOne(stage)
 	backRepo.BackRepoUmlsc.CommitPhaseOne(stage)
@@ -123,15 +135,16 @@ func (backRepo *BackRepoStruct) Commit(stage *models.StageStruct) {
 
 	// insertion point for per struct back repo phase two commit
 	backRepo.BackRepoClassdiagram.CommitPhaseTwo(backRepo)
-	backRepo.BackRepoClassshape.CommitPhaseTwo(backRepo)
 	backRepo.BackRepoDiagramPackage.CommitPhaseTwo(backRepo)
 	backRepo.BackRepoField.CommitPhaseTwo(backRepo)
+	backRepo.BackRepoGongEnumShape.CommitPhaseTwo(backRepo)
+	backRepo.BackRepoGongEnumValueEntry.CommitPhaseTwo(backRepo)
+	backRepo.BackRepoGongStructShape.CommitPhaseTwo(backRepo)
 	backRepo.BackRepoLink.CommitPhaseTwo(backRepo)
 	backRepo.BackRepoNode.CommitPhaseTwo(backRepo)
-	backRepo.BackRepoNoteLink.CommitPhaseTwo(backRepo)
 	backRepo.BackRepoNoteShape.CommitPhaseTwo(backRepo)
+	backRepo.BackRepoNoteShapeLink.CommitPhaseTwo(backRepo)
 	backRepo.BackRepoPosition.CommitPhaseTwo(backRepo)
-	backRepo.BackRepoReference.CommitPhaseTwo(backRepo)
 	backRepo.BackRepoTree.CommitPhaseTwo(backRepo)
 	backRepo.BackRepoUmlState.CommitPhaseTwo(backRepo)
 	backRepo.BackRepoUmlsc.CommitPhaseTwo(backRepo)
@@ -144,15 +157,16 @@ func (backRepo *BackRepoStruct) Commit(stage *models.StageStruct) {
 func (backRepo *BackRepoStruct) Checkout(stage *models.StageStruct) {
 	// insertion point for per struct back repo phase one commit
 	backRepo.BackRepoClassdiagram.CheckoutPhaseOne()
-	backRepo.BackRepoClassshape.CheckoutPhaseOne()
 	backRepo.BackRepoDiagramPackage.CheckoutPhaseOne()
 	backRepo.BackRepoField.CheckoutPhaseOne()
+	backRepo.BackRepoGongEnumShape.CheckoutPhaseOne()
+	backRepo.BackRepoGongEnumValueEntry.CheckoutPhaseOne()
+	backRepo.BackRepoGongStructShape.CheckoutPhaseOne()
 	backRepo.BackRepoLink.CheckoutPhaseOne()
 	backRepo.BackRepoNode.CheckoutPhaseOne()
-	backRepo.BackRepoNoteLink.CheckoutPhaseOne()
 	backRepo.BackRepoNoteShape.CheckoutPhaseOne()
+	backRepo.BackRepoNoteShapeLink.CheckoutPhaseOne()
 	backRepo.BackRepoPosition.CheckoutPhaseOne()
-	backRepo.BackRepoReference.CheckoutPhaseOne()
 	backRepo.BackRepoTree.CheckoutPhaseOne()
 	backRepo.BackRepoUmlState.CheckoutPhaseOne()
 	backRepo.BackRepoUmlsc.CheckoutPhaseOne()
@@ -160,15 +174,16 @@ func (backRepo *BackRepoStruct) Checkout(stage *models.StageStruct) {
 
 	// insertion point for per struct back repo phase two commit
 	backRepo.BackRepoClassdiagram.CheckoutPhaseTwo(backRepo)
-	backRepo.BackRepoClassshape.CheckoutPhaseTwo(backRepo)
 	backRepo.BackRepoDiagramPackage.CheckoutPhaseTwo(backRepo)
 	backRepo.BackRepoField.CheckoutPhaseTwo(backRepo)
+	backRepo.BackRepoGongEnumShape.CheckoutPhaseTwo(backRepo)
+	backRepo.BackRepoGongEnumValueEntry.CheckoutPhaseTwo(backRepo)
+	backRepo.BackRepoGongStructShape.CheckoutPhaseTwo(backRepo)
 	backRepo.BackRepoLink.CheckoutPhaseTwo(backRepo)
 	backRepo.BackRepoNode.CheckoutPhaseTwo(backRepo)
-	backRepo.BackRepoNoteLink.CheckoutPhaseTwo(backRepo)
 	backRepo.BackRepoNoteShape.CheckoutPhaseTwo(backRepo)
+	backRepo.BackRepoNoteShapeLink.CheckoutPhaseTwo(backRepo)
 	backRepo.BackRepoPosition.CheckoutPhaseTwo(backRepo)
-	backRepo.BackRepoReference.CheckoutPhaseTwo(backRepo)
 	backRepo.BackRepoTree.CheckoutPhaseTwo(backRepo)
 	backRepo.BackRepoUmlState.CheckoutPhaseTwo(backRepo)
 	backRepo.BackRepoUmlsc.CheckoutPhaseTwo(backRepo)
@@ -191,15 +206,16 @@ func (backRepo *BackRepoStruct) Backup(stage *models.StageStruct, dirPath string
 
 	// insertion point for per struct backup
 	backRepo.BackRepoClassdiagram.Backup(dirPath)
-	backRepo.BackRepoClassshape.Backup(dirPath)
 	backRepo.BackRepoDiagramPackage.Backup(dirPath)
 	backRepo.BackRepoField.Backup(dirPath)
+	backRepo.BackRepoGongEnumShape.Backup(dirPath)
+	backRepo.BackRepoGongEnumValueEntry.Backup(dirPath)
+	backRepo.BackRepoGongStructShape.Backup(dirPath)
 	backRepo.BackRepoLink.Backup(dirPath)
 	backRepo.BackRepoNode.Backup(dirPath)
-	backRepo.BackRepoNoteLink.Backup(dirPath)
 	backRepo.BackRepoNoteShape.Backup(dirPath)
+	backRepo.BackRepoNoteShapeLink.Backup(dirPath)
 	backRepo.BackRepoPosition.Backup(dirPath)
-	backRepo.BackRepoReference.Backup(dirPath)
 	backRepo.BackRepoTree.Backup(dirPath)
 	backRepo.BackRepoUmlState.Backup(dirPath)
 	backRepo.BackRepoUmlsc.Backup(dirPath)
@@ -215,15 +231,16 @@ func (backRepo *BackRepoStruct) BackupXL(stage *models.StageStruct, dirPath stri
 
 	// insertion point for per struct backup
 	backRepo.BackRepoClassdiagram.BackupXL(file)
-	backRepo.BackRepoClassshape.BackupXL(file)
 	backRepo.BackRepoDiagramPackage.BackupXL(file)
 	backRepo.BackRepoField.BackupXL(file)
+	backRepo.BackRepoGongEnumShape.BackupXL(file)
+	backRepo.BackRepoGongEnumValueEntry.BackupXL(file)
+	backRepo.BackRepoGongStructShape.BackupXL(file)
 	backRepo.BackRepoLink.BackupXL(file)
 	backRepo.BackRepoNode.BackupXL(file)
-	backRepo.BackRepoNoteLink.BackupXL(file)
 	backRepo.BackRepoNoteShape.BackupXL(file)
+	backRepo.BackRepoNoteShapeLink.BackupXL(file)
 	backRepo.BackRepoPosition.BackupXL(file)
-	backRepo.BackRepoReference.BackupXL(file)
 	backRepo.BackRepoTree.BackupXL(file)
 	backRepo.BackRepoUmlState.BackupXL(file)
 	backRepo.BackRepoUmlsc.BackupXL(file)
@@ -243,9 +260,9 @@ func (backRepo *BackRepoStruct) BackupXL(stage *models.StageStruct, dirPath stri
 
 // Restore the database into the back repo
 func (backRepo *BackRepoStruct) Restore(stage *models.StageStruct, dirPath string) {
-	models.Stage.Commit()
-	models.Stage.Reset()
-	models.Stage.Checkout()
+	backRepo.stage.Commit()
+	backRepo.stage.Reset()
+	backRepo.stage.Checkout()
 
 	//
 	// restauration first phase (create DB instance with new IDs)
@@ -253,15 +270,16 @@ func (backRepo *BackRepoStruct) Restore(stage *models.StageStruct, dirPath strin
 
 	// insertion point for per struct backup
 	backRepo.BackRepoClassdiagram.RestorePhaseOne(dirPath)
-	backRepo.BackRepoClassshape.RestorePhaseOne(dirPath)
 	backRepo.BackRepoDiagramPackage.RestorePhaseOne(dirPath)
 	backRepo.BackRepoField.RestorePhaseOne(dirPath)
+	backRepo.BackRepoGongEnumShape.RestorePhaseOne(dirPath)
+	backRepo.BackRepoGongEnumValueEntry.RestorePhaseOne(dirPath)
+	backRepo.BackRepoGongStructShape.RestorePhaseOne(dirPath)
 	backRepo.BackRepoLink.RestorePhaseOne(dirPath)
 	backRepo.BackRepoNode.RestorePhaseOne(dirPath)
-	backRepo.BackRepoNoteLink.RestorePhaseOne(dirPath)
 	backRepo.BackRepoNoteShape.RestorePhaseOne(dirPath)
+	backRepo.BackRepoNoteShapeLink.RestorePhaseOne(dirPath)
 	backRepo.BackRepoPosition.RestorePhaseOne(dirPath)
-	backRepo.BackRepoReference.RestorePhaseOne(dirPath)
 	backRepo.BackRepoTree.RestorePhaseOne(dirPath)
 	backRepo.BackRepoUmlState.RestorePhaseOne(dirPath)
 	backRepo.BackRepoUmlsc.RestorePhaseOne(dirPath)
@@ -273,35 +291,37 @@ func (backRepo *BackRepoStruct) Restore(stage *models.StageStruct, dirPath strin
 
 	// insertion point for per struct backup
 	backRepo.BackRepoClassdiagram.RestorePhaseTwo()
-	backRepo.BackRepoClassshape.RestorePhaseTwo()
 	backRepo.BackRepoDiagramPackage.RestorePhaseTwo()
 	backRepo.BackRepoField.RestorePhaseTwo()
+	backRepo.BackRepoGongEnumShape.RestorePhaseTwo()
+	backRepo.BackRepoGongEnumValueEntry.RestorePhaseTwo()
+	backRepo.BackRepoGongStructShape.RestorePhaseTwo()
 	backRepo.BackRepoLink.RestorePhaseTwo()
 	backRepo.BackRepoNode.RestorePhaseTwo()
-	backRepo.BackRepoNoteLink.RestorePhaseTwo()
 	backRepo.BackRepoNoteShape.RestorePhaseTwo()
+	backRepo.BackRepoNoteShapeLink.RestorePhaseTwo()
 	backRepo.BackRepoPosition.RestorePhaseTwo()
-	backRepo.BackRepoReference.RestorePhaseTwo()
 	backRepo.BackRepoTree.RestorePhaseTwo()
 	backRepo.BackRepoUmlState.RestorePhaseTwo()
 	backRepo.BackRepoUmlsc.RestorePhaseTwo()
 	backRepo.BackRepoVertice.RestorePhaseTwo()
 
-	models.Stage.Checkout()
+	backRepo.stage.Checkout()
 }
 
 // Restore the database into the back repo
 func (backRepo *BackRepoStruct) RestoreXL(stage *models.StageStruct, dirPath string) {
 
 	// clean the stage
-	models.Stage.Reset()
+	backRepo.stage.Reset()
 
 	// commit the cleaned stage
-	models.Stage.Commit()
+	backRepo.stage.Commit()
 
 	// open an existing file
 	filename := filepath.Join(dirPath, "bckp.xlsx")
 	file, err := xlsx.OpenFile(filename)
+	_ = file
 
 	if err != nil {
 		log.Panic("Cannot read the XL file", err.Error())
@@ -313,20 +333,21 @@ func (backRepo *BackRepoStruct) RestoreXL(stage *models.StageStruct, dirPath str
 
 	// insertion point for per struct backup
 	backRepo.BackRepoClassdiagram.RestoreXLPhaseOne(file)
-	backRepo.BackRepoClassshape.RestoreXLPhaseOne(file)
 	backRepo.BackRepoDiagramPackage.RestoreXLPhaseOne(file)
 	backRepo.BackRepoField.RestoreXLPhaseOne(file)
+	backRepo.BackRepoGongEnumShape.RestoreXLPhaseOne(file)
+	backRepo.BackRepoGongEnumValueEntry.RestoreXLPhaseOne(file)
+	backRepo.BackRepoGongStructShape.RestoreXLPhaseOne(file)
 	backRepo.BackRepoLink.RestoreXLPhaseOne(file)
 	backRepo.BackRepoNode.RestoreXLPhaseOne(file)
-	backRepo.BackRepoNoteLink.RestoreXLPhaseOne(file)
 	backRepo.BackRepoNoteShape.RestoreXLPhaseOne(file)
+	backRepo.BackRepoNoteShapeLink.RestoreXLPhaseOne(file)
 	backRepo.BackRepoPosition.RestoreXLPhaseOne(file)
-	backRepo.BackRepoReference.RestoreXLPhaseOne(file)
 	backRepo.BackRepoTree.RestoreXLPhaseOne(file)
 	backRepo.BackRepoUmlState.RestoreXLPhaseOne(file)
 	backRepo.BackRepoUmlsc.RestoreXLPhaseOne(file)
 	backRepo.BackRepoVertice.RestoreXLPhaseOne(file)
 
 	// commit the restored stage
-	models.Stage.Commit()
+	backRepo.stage.Commit()
 }

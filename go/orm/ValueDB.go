@@ -108,6 +108,13 @@ type BackRepoValueStruct struct {
 	Map_ValueDBID_ValuePtr *map[uint]*models.Value
 
 	db *gorm.DB
+
+	stage *models.StageStruct
+}
+
+func (backRepoValue *BackRepoValueStruct) GetStage() (stage *models.StageStruct) {
+	stage = backRepoValue.stage
+	return
 }
 
 func (backRepoValue *BackRepoValueStruct) GetDB() *gorm.DB {
@@ -122,7 +129,7 @@ func (backRepoValue *BackRepoValueStruct) GetValueDBFromValuePtr(value *models.V
 }
 
 // BackRepoValue.Init set up the BackRepo of the Value
-func (backRepoValue *BackRepoValueStruct) Init(db *gorm.DB) (Error error) {
+func (backRepoValue *BackRepoValueStruct) Init(stage *models.StageStruct, db *gorm.DB) (Error error) {
 
 	if backRepoValue.Map_ValueDBID_ValuePtr != nil {
 		err := errors.New("In Init, backRepoValue.Map_ValueDBID_ValuePtr should be nil")
@@ -149,6 +156,7 @@ func (backRepoValue *BackRepoValueStruct) Init(db *gorm.DB) (Error error) {
 	backRepoValue.Map_ValuePtr_ValueDBID = &tmpID
 
 	backRepoValue.db = db
+	backRepoValue.stage = stage
 	return
 }
 
@@ -267,7 +275,7 @@ func (backRepoValue *BackRepoValueStruct) CheckoutPhaseOne() (Error error) {
 	// list of instances to be removed
 	// start from the initial map on the stage and remove instances that have been checked out
 	valueInstancesToBeRemovedFromTheStage := make(map[*models.Value]any)
-	for key, value := range models.Stage.Values {
+	for key, value := range backRepoValue.stage.Values {
 		valueInstancesToBeRemovedFromTheStage[key] = value
 	}
 
@@ -285,7 +293,7 @@ func (backRepoValue *BackRepoValueStruct) CheckoutPhaseOne() (Error error) {
 
 	// remove from stage and back repo's 3 maps all values that are not in the checkout
 	for value := range valueInstancesToBeRemovedFromTheStage {
-		value.Unstage()
+		value.Unstage(backRepoValue.GetStage())
 
 		// remove instance from the back repo 3 maps
 		valueID := (*backRepoValue.Map_ValuePtr_ValueDBID)[value]
@@ -310,12 +318,12 @@ func (backRepoValue *BackRepoValueStruct) CheckoutPhaseOneInstance(valueDB *Valu
 
 		// append model store with the new element
 		value.Name = valueDB.Name_Data.String
-		value.Stage()
+		value.Stage(backRepoValue.GetStage())
 	}
 	valueDB.CopyBasicFieldsToValue(value)
 
 	// in some cases, the instance might have been unstaged. It is necessary to stage it again
-	value.Stage()
+	value.Stage(backRepoValue.GetStage())
 
 	// preserve pointer to valueDB. Otherwise, pointer will is recycled and the map of pointers
 	// Map_ValueDBID_ValueDB)[valueDB hold variable pointers

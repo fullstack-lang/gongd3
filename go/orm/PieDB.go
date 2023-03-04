@@ -128,6 +128,13 @@ type BackRepoPieStruct struct {
 	Map_PieDBID_PiePtr *map[uint]*models.Pie
 
 	db *gorm.DB
+
+	stage *models.StageStruct
+}
+
+func (backRepoPie *BackRepoPieStruct) GetStage() (stage *models.StageStruct) {
+	stage = backRepoPie.stage
+	return
 }
 
 func (backRepoPie *BackRepoPieStruct) GetDB() *gorm.DB {
@@ -142,7 +149,7 @@ func (backRepoPie *BackRepoPieStruct) GetPieDBFromPiePtr(pie *models.Pie) (pieDB
 }
 
 // BackRepoPie.Init set up the BackRepo of the Pie
-func (backRepoPie *BackRepoPieStruct) Init(db *gorm.DB) (Error error) {
+func (backRepoPie *BackRepoPieStruct) Init(stage *models.StageStruct, db *gorm.DB) (Error error) {
 
 	if backRepoPie.Map_PieDBID_PiePtr != nil {
 		err := errors.New("In Init, backRepoPie.Map_PieDBID_PiePtr should be nil")
@@ -169,6 +176,7 @@ func (backRepoPie *BackRepoPieStruct) Init(db *gorm.DB) (Error error) {
 	backRepoPie.Map_PiePtr_PieDBID = &tmpID
 
 	backRepoPie.db = db
+	backRepoPie.stage = stage
 	return
 }
 
@@ -324,7 +332,7 @@ func (backRepoPie *BackRepoPieStruct) CheckoutPhaseOne() (Error error) {
 	// list of instances to be removed
 	// start from the initial map on the stage and remove instances that have been checked out
 	pieInstancesToBeRemovedFromTheStage := make(map[*models.Pie]any)
-	for key, value := range models.Stage.Pies {
+	for key, value := range backRepoPie.stage.Pies {
 		pieInstancesToBeRemovedFromTheStage[key] = value
 	}
 
@@ -342,7 +350,7 @@ func (backRepoPie *BackRepoPieStruct) CheckoutPhaseOne() (Error error) {
 
 	// remove from stage and back repo's 3 maps all pies that are not in the checkout
 	for pie := range pieInstancesToBeRemovedFromTheStage {
-		pie.Unstage()
+		pie.Unstage(backRepoPie.GetStage())
 
 		// remove instance from the back repo 3 maps
 		pieID := (*backRepoPie.Map_PiePtr_PieDBID)[pie]
@@ -367,12 +375,12 @@ func (backRepoPie *BackRepoPieStruct) CheckoutPhaseOneInstance(pieDB *PieDB) (Er
 
 		// append model store with the new element
 		pie.Name = pieDB.Name_Data.String
-		pie.Stage()
+		pie.Stage(backRepoPie.GetStage())
 	}
 	pieDB.CopyBasicFieldsToPie(pie)
 
 	// in some cases, the instance might have been unstaged. It is necessary to stage it again
-	pie.Stage()
+	pie.Stage(backRepoPie.GetStage())
 
 	// preserve pointer to pieDB. Otherwise, pointer will is recycled and the map of pointers
 	// Map_PieDBID_PieDB)[pieDB hold variable pointers

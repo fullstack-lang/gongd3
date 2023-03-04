@@ -46,11 +46,11 @@ type NoteShapeAPI struct {
 type NoteShapePointersEnconding struct {
 	// insertion for pointer fields encoding declaration
 
-	// Implementation of a reverse ID for field Classdiagram{}.Notes []*NoteShape
-	Classdiagram_NotesDBID sql.NullInt64
+	// Implementation of a reverse ID for field Classdiagram{}.NoteShapes []*NoteShape
+	Classdiagram_NoteShapesDBID sql.NullInt64
 
 	// implementation of the index of the withing the slice
-	Classdiagram_NotesDBID_Index sql.NullInt64
+	Classdiagram_NoteShapesDBID_Index sql.NullInt64
 }
 
 // NoteShapeDB describes a noteshape in the database
@@ -67,8 +67,14 @@ type NoteShapeDB struct {
 	// Declation for basic field noteshapeDB.Name
 	Name_Data sql.NullString
 
+	// Declation for basic field noteshapeDB.Identifier
+	Identifier_Data sql.NullString
+
 	// Declation for basic field noteshapeDB.Body
 	Body_Data sql.NullString
+
+	// Declation for basic field noteshapeDB.BodyHTML
+	BodyHTML_Data sql.NullString
 
 	// Declation for basic field noteshapeDB.X
 	X_Data sql.NullFloat64
@@ -108,17 +114,21 @@ type NoteShapeWOP struct {
 
 	Name string `xlsx:"1"`
 
-	Body string `xlsx:"2"`
+	Identifier string `xlsx:"2"`
 
-	X float64 `xlsx:"3"`
+	Body string `xlsx:"3"`
 
-	Y float64 `xlsx:"4"`
+	BodyHTML string `xlsx:"4"`
 
-	Width float64 `xlsx:"5"`
+	X float64 `xlsx:"5"`
 
-	Heigth float64 `xlsx:"6"`
+	Y float64 `xlsx:"6"`
 
-	Matched bool `xlsx:"7"`
+	Width float64 `xlsx:"7"`
+
+	Heigth float64 `xlsx:"8"`
+
+	Matched bool `xlsx:"9"`
 	// insertion for WOP pointer fields
 }
 
@@ -126,7 +136,9 @@ var NoteShape_Fields = []string{
 	// insertion for WOP basic fields
 	"ID",
 	"Name",
+	"Identifier",
 	"Body",
+	"BodyHTML",
 	"X",
 	"Y",
 	"Width",
@@ -145,6 +157,13 @@ type BackRepoNoteShapeStruct struct {
 	Map_NoteShapeDBID_NoteShapePtr *map[uint]*models.NoteShape
 
 	db *gorm.DB
+
+	stage *models.StageStruct
+}
+
+func (backRepoNoteShape *BackRepoNoteShapeStruct) GetStage() (stage *models.StageStruct) {
+	stage = backRepoNoteShape.stage
+	return
 }
 
 func (backRepoNoteShape *BackRepoNoteShapeStruct) GetDB() *gorm.DB {
@@ -159,7 +178,7 @@ func (backRepoNoteShape *BackRepoNoteShapeStruct) GetNoteShapeDBFromNoteShapePtr
 }
 
 // BackRepoNoteShape.Init set up the BackRepo of the NoteShape
-func (backRepoNoteShape *BackRepoNoteShapeStruct) Init(db *gorm.DB) (Error error) {
+func (backRepoNoteShape *BackRepoNoteShapeStruct) Init(stage *models.StageStruct, db *gorm.DB) (Error error) {
 
 	if backRepoNoteShape.Map_NoteShapeDBID_NoteShapePtr != nil {
 		err := errors.New("In Init, backRepoNoteShape.Map_NoteShapeDBID_NoteShapePtr should be nil")
@@ -186,6 +205,7 @@ func (backRepoNoteShape *BackRepoNoteShapeStruct) Init(db *gorm.DB) (Error error
 	backRepoNoteShape.Map_NoteShapePtr_NoteShapeDBID = &tmpID
 
 	backRepoNoteShape.db = db
+	backRepoNoteShape.stage = stage
 	return
 }
 
@@ -275,21 +295,21 @@ func (backRepoNoteShape *BackRepoNoteShapeStruct) CommitPhaseTwoInstance(backRep
 		noteshapeDB.CopyBasicFieldsFromNoteShape(noteshape)
 
 		// insertion point for translating pointers encodings into actual pointers
-		// This loop encodes the slice of pointers noteshape.NoteLinks into the back repo.
+		// This loop encodes the slice of pointers noteshape.NoteShapeLinks into the back repo.
 		// Each back repo instance at the end of the association encode the ID of the association start
 		// into a dedicated field for coding the association. The back repo instance is then saved to the db
-		for idx, notelinkAssocEnd := range noteshape.NoteLinks {
+		for idx, noteshapelinkAssocEnd := range noteshape.NoteShapeLinks {
 
 			// get the back repo instance at the association end
-			notelinkAssocEnd_DB :=
-				backRepo.BackRepoNoteLink.GetNoteLinkDBFromNoteLinkPtr(notelinkAssocEnd)
+			noteshapelinkAssocEnd_DB :=
+				backRepo.BackRepoNoteShapeLink.GetNoteShapeLinkDBFromNoteShapeLinkPtr(noteshapelinkAssocEnd)
 
 			// encode reverse pointer in the association end back repo instance
-			notelinkAssocEnd_DB.NoteShape_NoteLinksDBID.Int64 = int64(noteshapeDB.ID)
-			notelinkAssocEnd_DB.NoteShape_NoteLinksDBID.Valid = true
-			notelinkAssocEnd_DB.NoteShape_NoteLinksDBID_Index.Int64 = int64(idx)
-			notelinkAssocEnd_DB.NoteShape_NoteLinksDBID_Index.Valid = true
-			if q := backRepoNoteShape.db.Save(notelinkAssocEnd_DB); q.Error != nil {
+			noteshapelinkAssocEnd_DB.NoteShape_NoteShapeLinksDBID.Int64 = int64(noteshapeDB.ID)
+			noteshapelinkAssocEnd_DB.NoteShape_NoteShapeLinksDBID.Valid = true
+			noteshapelinkAssocEnd_DB.NoteShape_NoteShapeLinksDBID_Index.Int64 = int64(idx)
+			noteshapelinkAssocEnd_DB.NoteShape_NoteShapeLinksDBID_Index.Valid = true
+			if q := backRepoNoteShape.db.Save(noteshapelinkAssocEnd_DB); q.Error != nil {
 				return q.Error
 			}
 		}
@@ -311,8 +331,7 @@ func (backRepoNoteShape *BackRepoNoteShapeStruct) CommitPhaseTwoInstance(backRep
 // BackRepoNoteShape.CheckoutPhaseOne Checkouts all BackRepo instances to the Stage
 //
 // Phase One will result in having instances on the stage aligned with the back repo
-// pointers are not initialized yet (this is for pahse two)
-//
+// pointers are not initialized yet (this is for phase two)
 func (backRepoNoteShape *BackRepoNoteShapeStruct) CheckoutPhaseOne() (Error error) {
 
 	noteshapeDBArray := make([]NoteShapeDB, 0)
@@ -324,7 +343,7 @@ func (backRepoNoteShape *BackRepoNoteShapeStruct) CheckoutPhaseOne() (Error erro
 	// list of instances to be removed
 	// start from the initial map on the stage and remove instances that have been checked out
 	noteshapeInstancesToBeRemovedFromTheStage := make(map[*models.NoteShape]any)
-	for key, value := range models.Stage.NoteShapes {
+	for key, value := range backRepoNoteShape.stage.NoteShapes {
 		noteshapeInstancesToBeRemovedFromTheStage[key] = value
 	}
 
@@ -342,7 +361,7 @@ func (backRepoNoteShape *BackRepoNoteShapeStruct) CheckoutPhaseOne() (Error erro
 
 	// remove from stage and back repo's 3 maps all noteshapes that are not in the checkout
 	for noteshape := range noteshapeInstancesToBeRemovedFromTheStage {
-		noteshape.Unstage()
+		noteshape.Unstage(backRepoNoteShape.GetStage())
 
 		// remove instance from the back repo 3 maps
 		noteshapeID := (*backRepoNoteShape.Map_NoteShapePtr_NoteShapeDBID)[noteshape]
@@ -367,9 +386,12 @@ func (backRepoNoteShape *BackRepoNoteShapeStruct) CheckoutPhaseOneInstance(notes
 
 		// append model store with the new element
 		noteshape.Name = noteshapeDB.Name_Data.String
-		noteshape.Stage()
+		noteshape.Stage(backRepoNoteShape.GetStage())
 	}
 	noteshapeDB.CopyBasicFieldsToNoteShape(noteshape)
+
+	// in some cases, the instance might have been unstaged. It is necessary to stage it again
+	noteshape.Stage(backRepoNoteShape.GetStage())
 
 	// preserve pointer to noteshapeDB. Otherwise, pointer will is recycled and the map of pointers
 	// Map_NoteShapeDBID_NoteShapeDB)[noteshapeDB hold variable pointers
@@ -399,31 +421,31 @@ func (backRepoNoteShape *BackRepoNoteShapeStruct) CheckoutPhaseTwoInstance(backR
 	_ = noteshape // sometimes, there is no code generated. This lines voids the "unused variable" compilation error
 
 	// insertion point for checkout of pointer encoding
-	// This loop redeem noteshape.NoteLinks in the stage from the encode in the back repo
-	// It parses all NoteLinkDB in the back repo and if the reverse pointer encoding matches the back repo ID
+	// This loop redeem noteshape.NoteShapeLinks in the stage from the encode in the back repo
+	// It parses all NoteShapeLinkDB in the back repo and if the reverse pointer encoding matches the back repo ID
 	// it appends the stage instance
 	// 1. reset the slice
-	noteshape.NoteLinks = noteshape.NoteLinks[:0]
+	noteshape.NoteShapeLinks = noteshape.NoteShapeLinks[:0]
 	// 2. loop all instances in the type in the association end
-	for _, notelinkDB_AssocEnd := range *backRepo.BackRepoNoteLink.Map_NoteLinkDBID_NoteLinkDB {
+	for _, noteshapelinkDB_AssocEnd := range *backRepo.BackRepoNoteShapeLink.Map_NoteShapeLinkDBID_NoteShapeLinkDB {
 		// 3. Does the ID encoding at the end and the ID at the start matches ?
-		if notelinkDB_AssocEnd.NoteShape_NoteLinksDBID.Int64 == int64(noteshapeDB.ID) {
+		if noteshapelinkDB_AssocEnd.NoteShape_NoteShapeLinksDBID.Int64 == int64(noteshapeDB.ID) {
 			// 4. fetch the associated instance in the stage
-			notelink_AssocEnd := (*backRepo.BackRepoNoteLink.Map_NoteLinkDBID_NoteLinkPtr)[notelinkDB_AssocEnd.ID]
+			noteshapelink_AssocEnd := (*backRepo.BackRepoNoteShapeLink.Map_NoteShapeLinkDBID_NoteShapeLinkPtr)[noteshapelinkDB_AssocEnd.ID]
 			// 5. append it the association slice
-			noteshape.NoteLinks = append(noteshape.NoteLinks, notelink_AssocEnd)
+			noteshape.NoteShapeLinks = append(noteshape.NoteShapeLinks, noteshapelink_AssocEnd)
 		}
 	}
 
 	// sort the array according to the order
-	sort.Slice(noteshape.NoteLinks, func(i, j int) bool {
-		notelinkDB_i_ID := (*backRepo.BackRepoNoteLink.Map_NoteLinkPtr_NoteLinkDBID)[noteshape.NoteLinks[i]]
-		notelinkDB_j_ID := (*backRepo.BackRepoNoteLink.Map_NoteLinkPtr_NoteLinkDBID)[noteshape.NoteLinks[j]]
+	sort.Slice(noteshape.NoteShapeLinks, func(i, j int) bool {
+		noteshapelinkDB_i_ID := (*backRepo.BackRepoNoteShapeLink.Map_NoteShapeLinkPtr_NoteShapeLinkDBID)[noteshape.NoteShapeLinks[i]]
+		noteshapelinkDB_j_ID := (*backRepo.BackRepoNoteShapeLink.Map_NoteShapeLinkPtr_NoteShapeLinkDBID)[noteshape.NoteShapeLinks[j]]
 
-		notelinkDB_i := (*backRepo.BackRepoNoteLink.Map_NoteLinkDBID_NoteLinkDB)[notelinkDB_i_ID]
-		notelinkDB_j := (*backRepo.BackRepoNoteLink.Map_NoteLinkDBID_NoteLinkDB)[notelinkDB_j_ID]
+		noteshapelinkDB_i := (*backRepo.BackRepoNoteShapeLink.Map_NoteShapeLinkDBID_NoteShapeLinkDB)[noteshapelinkDB_i_ID]
+		noteshapelinkDB_j := (*backRepo.BackRepoNoteShapeLink.Map_NoteShapeLinkDBID_NoteShapeLinkDB)[noteshapelinkDB_j_ID]
 
-		return notelinkDB_i.NoteShape_NoteLinksDBID_Index.Int64 < notelinkDB_j.NoteShape_NoteLinksDBID_Index.Int64
+		return noteshapelinkDB_i.NoteShape_NoteShapeLinksDBID_Index.Int64 < noteshapelinkDB_j.NoteShape_NoteShapeLinksDBID_Index.Int64
 	})
 
 	return
@@ -463,8 +485,14 @@ func (noteshapeDB *NoteShapeDB) CopyBasicFieldsFromNoteShape(noteshape *models.N
 	noteshapeDB.Name_Data.String = noteshape.Name
 	noteshapeDB.Name_Data.Valid = true
 
+	noteshapeDB.Identifier_Data.String = noteshape.Identifier
+	noteshapeDB.Identifier_Data.Valid = true
+
 	noteshapeDB.Body_Data.String = noteshape.Body
 	noteshapeDB.Body_Data.Valid = true
+
+	noteshapeDB.BodyHTML_Data.String = noteshape.BodyHTML
+	noteshapeDB.BodyHTML_Data.Valid = true
 
 	noteshapeDB.X_Data.Float64 = noteshape.X
 	noteshapeDB.X_Data.Valid = true
@@ -489,8 +517,14 @@ func (noteshapeDB *NoteShapeDB) CopyBasicFieldsFromNoteShapeWOP(noteshape *NoteS
 	noteshapeDB.Name_Data.String = noteshape.Name
 	noteshapeDB.Name_Data.Valid = true
 
+	noteshapeDB.Identifier_Data.String = noteshape.Identifier
+	noteshapeDB.Identifier_Data.Valid = true
+
 	noteshapeDB.Body_Data.String = noteshape.Body
 	noteshapeDB.Body_Data.Valid = true
+
+	noteshapeDB.BodyHTML_Data.String = noteshape.BodyHTML
+	noteshapeDB.BodyHTML_Data.Valid = true
 
 	noteshapeDB.X_Data.Float64 = noteshape.X
 	noteshapeDB.X_Data.Valid = true
@@ -512,7 +546,9 @@ func (noteshapeDB *NoteShapeDB) CopyBasicFieldsFromNoteShapeWOP(noteshape *NoteS
 func (noteshapeDB *NoteShapeDB) CopyBasicFieldsToNoteShape(noteshape *models.NoteShape) {
 	// insertion point for checkout of basic fields (back repo to stage)
 	noteshape.Name = noteshapeDB.Name_Data.String
+	noteshape.Identifier = noteshapeDB.Identifier_Data.String
 	noteshape.Body = noteshapeDB.Body_Data.String
+	noteshape.BodyHTML = noteshapeDB.BodyHTML_Data.String
 	noteshape.X = noteshapeDB.X_Data.Float64
 	noteshape.Y = noteshapeDB.Y_Data.Float64
 	noteshape.Width = noteshapeDB.Width_Data.Float64
@@ -525,7 +561,9 @@ func (noteshapeDB *NoteShapeDB) CopyBasicFieldsToNoteShapeWOP(noteshape *NoteSha
 	noteshape.ID = int(noteshapeDB.ID)
 	// insertion point for checkout of basic fields (back repo to stage)
 	noteshape.Name = noteshapeDB.Name_Data.String
+	noteshape.Identifier = noteshapeDB.Identifier_Data.String
 	noteshape.Body = noteshapeDB.Body_Data.String
+	noteshape.BodyHTML = noteshapeDB.BodyHTML_Data.String
 	noteshape.X = noteshapeDB.X_Data.Float64
 	noteshape.Y = noteshapeDB.Y_Data.Float64
 	noteshape.Width = noteshapeDB.Width_Data.Float64
@@ -688,10 +726,10 @@ func (backRepoNoteShape *BackRepoNoteShapeStruct) RestorePhaseTwo() {
 		_ = noteshapeDB
 
 		// insertion point for reindexing pointers encoding
-		// This reindex noteshape.Notes
-		if noteshapeDB.Classdiagram_NotesDBID.Int64 != 0 {
-			noteshapeDB.Classdiagram_NotesDBID.Int64 =
-				int64(BackRepoClassdiagramid_atBckpTime_newID[uint(noteshapeDB.Classdiagram_NotesDBID.Int64)])
+		// This reindex noteshape.NoteShapes
+		if noteshapeDB.Classdiagram_NoteShapesDBID.Int64 != 0 {
+			noteshapeDB.Classdiagram_NoteShapesDBID.Int64 =
+				int64(BackRepoClassdiagramid_atBckpTime_newID[uint(noteshapeDB.Classdiagram_NoteShapesDBID.Int64)])
 		}
 
 		// update databse with new index encoding

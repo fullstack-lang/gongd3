@@ -46,7 +46,7 @@ export class UmlscSortingComponent implements OnInit {
   }
 
   getUmlscs(): void {
-    this.frontRepoService.pull().subscribe(
+    this.frontRepoService.pull(this.dialogData.GONG__StackPath).subscribe(
       frontRepo => {
         this.frontRepo = frontRepo
 
@@ -100,13 +100,13 @@ export class UmlscSortingComponent implements OnInit {
 
     this.associatedUmlscs.forEach(
       umlsc => {
-        this.umlscService.updateUmlsc(umlsc)
+        this.umlscService.updateUmlsc(umlsc, this.dialogData.GONG__StackPath)
           .subscribe(umlsc => {
             this.umlscService.UmlscServiceChanged.next("update")
           });
       }
     )
 
-    this.dialogRef.close('Sorting of ' + this.dialogData.ReversePointer +' done');
+    this.dialogRef.close('Sorting of ' + this.dialogData.ReversePointer + ' done');
   }
 }

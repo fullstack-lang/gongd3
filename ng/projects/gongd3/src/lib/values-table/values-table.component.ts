@@ -166,7 +166,7 @@ export class ValuesTableComponent implements OnInit {
 
   ngOnInit(): void {
     let stackPath = this.activatedRoute.snapshot.paramMap.get('GONG__StackPath')
-    if ( stackPath != undefined) {
+    if (stackPath != undefined) {
       this.GONG__StackPath = stackPath
     }
 
@@ -202,10 +202,14 @@ export class ValuesTableComponent implements OnInit {
           let mapOfSourceInstances = this.frontRepo[this.dialogData.SourceStruct + "s" as keyof FrontRepo] as Map<number, ValueDB>
           let sourceInstance = mapOfSourceInstances.get(this.dialogData.ID)!
 
-          let sourceField = sourceInstance[this.dialogData.SourceField as keyof typeof sourceInstance]! as unknown as ValueDB[]
-          for (let associationInstance of sourceField) {
-            let value = associationInstance[this.dialogData.IntermediateStructField as keyof typeof associationInstance] as unknown as ValueDB
-            this.initialSelection.push(value)
+          // we associates on sourceInstance of type SourceStruct with a MANY MANY associations to ValueDB
+          // the field name is sourceField
+          let sourceFieldArray = sourceInstance[this.dialogData.SourceField as keyof typeof sourceInstance]! as unknown as ValueDB[]
+          if (sourceFieldArray != null) {
+            for (let associationInstance of sourceFieldArray) {
+              let value = associationInstance[this.dialogData.IntermediateStructField as keyof typeof associationInstance] as unknown as ValueDB
+              this.initialSelection.push(value)
+            }
           }
 
           this.selection = new SelectionModel<ValueDB>(allowMultiSelect, this.initialSelection);
@@ -226,7 +230,7 @@ export class ValuesTableComponent implements OnInit {
     // list of values is truncated of value before the delete
     this.values = this.values.filter(h => h !== value);
 
-    this.valueService.deleteValue(valueID).subscribe(
+    this.valueService.deleteValue(valueID, this.GONG__StackPath).subscribe(
       value => {
         this.valueService.ValueServiceChanged.next("delete")
       }
@@ -292,7 +296,7 @@ export class ValuesTableComponent implements OnInit {
 
       // update all value (only update selection & initial selection)
       for (let value of toUpdate) {
-        this.valueService.updateValue(value)
+        this.valueService.updateValue(value, this.GONG__StackPath)
           .subscribe(value => {
             this.valueService.ValueServiceChanged.next("update")
           });

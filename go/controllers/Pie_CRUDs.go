@@ -47,23 +47,22 @@ type PieInput struct {
 // default: genericError
 //
 //	200: pieDBResponse
-func GetPies(c *gin.Context) {
-	db := orm.BackRepo.BackRepoPie.GetDB()
+func (controller *Controller) GetPies(c *gin.Context) {
 
 	// source slice
 	var pieDBs []orm.PieDB
 
-	// type Values map[string][]string
 	values := c.Request.URL.Query()
+	stackPath := ""
 	if len(values) == 1 {
 		value := values["GONG__StackPath"]
 		if len(value) == 1 {
-			// we have a single parameter
-			// we assume it is the stack
-			stackParam := value[0]
-			log.Println("GONG__StackPath", stackParam)
+			stackPath = value[0]
+			log.Println("GetPies", "GONG__StackPath", stackPath)
 		}
 	}
+	backRepo := controller.Map_BackRepos[stackPath]
+	db := backRepo.BackRepoPie.GetDB()
 
 	query := db.Find(&pieDBs)
 	if query.Error != nil {
@@ -108,7 +107,19 @@ func GetPies(c *gin.Context) {
 //
 //	Responses:
 //	  200: nodeDBResponse
-func PostPie(c *gin.Context) {
+func (controller *Controller) PostPie(c *gin.Context) {
+
+	values := c.Request.URL.Query()
+	stackPath := ""
+	if len(values) == 1 {
+		value := values["GONG__StackPath"]
+		if len(value) == 1 {
+			stackPath = value[0]
+			log.Println("PostPies", "GONG__StackPath", stackPath)
+		}
+	}
+	backRepo := controller.Map_BackRepos[stackPath]
+	db := backRepo.BackRepoPie.GetDB()
 
 	// Validate input
 	var input orm.PieAPI
@@ -128,7 +139,6 @@ func PostPie(c *gin.Context) {
 	pieDB.PiePointersEnconding = input.PiePointersEnconding
 	pieDB.CopyBasicFieldsFromPie(&input.Pie)
 
-	db := orm.BackRepo.BackRepoPie.GetDB()
 	query := db.Create(&pieDB)
 	if query.Error != nil {
 		var returnError GenericError
@@ -140,16 +150,16 @@ func PostPie(c *gin.Context) {
 	}
 
 	// get an instance (not staged) from DB instance, and call callback function
-	orm.BackRepo.BackRepoPie.CheckoutPhaseOneInstance(&pieDB)
-	pie := (*orm.BackRepo.BackRepoPie.Map_PieDBID_PiePtr)[pieDB.ID]
+	backRepo.BackRepoPie.CheckoutPhaseOneInstance(&pieDB)
+	pie := (*backRepo.BackRepoPie.Map_PieDBID_PiePtr)[pieDB.ID]
 
 	if pie != nil {
-		models.AfterCreateFromFront(&models.Stage, pie)
+		models.AfterCreateFromFront(backRepo.GetStage(), pie)
 	}
 
 	// a POST is equivalent to a back repo commit increase
 	// (this will be improved with implementation of unit of work design pattern)
-	orm.BackRepo.IncrementPushFromFrontNb()
+	backRepo.IncrementPushFromFrontNb()
 
 	c.JSON(http.StatusOK, pieDB)
 }
@@ -164,21 +174,19 @@ func PostPie(c *gin.Context) {
 // default: genericError
 //
 //	200: pieDBResponse
-func GetPie(c *gin.Context) {
+func (controller *Controller) GetPie(c *gin.Context) {
 
-	// type Values map[string][]string
 	values := c.Request.URL.Query()
+	stackPath := ""
 	if len(values) == 1 {
-		value := values["stack"]
+		value := values["GONG__StackPath"]
 		if len(value) == 1 {
-			// we have a single parameter
-			// we assume it is the stack
-			stackParam := value[0]
-			log.Println("GET params", stackParam)
+			stackPath = value[0]
+			log.Println("GetPie", "GONG__StackPath", stackPath)
 		}
 	}
-
-	db := orm.BackRepo.BackRepoPie.GetDB()
+	backRepo := controller.Map_BackRepos[stackPath]
+	db := backRepo.BackRepoPie.GetDB()
 
 	// Get pieDB in DB
 	var pieDB orm.PieDB
@@ -209,7 +217,19 @@ func GetPie(c *gin.Context) {
 // default: genericError
 //
 //	200: pieDBResponse
-func UpdatePie(c *gin.Context) {
+func (controller *Controller) UpdatePie(c *gin.Context) {
+
+	values := c.Request.URL.Query()
+	stackPath := ""
+	if len(values) == 1 {
+		value := values["GONG__StackPath"]
+		if len(value) == 1 {
+			stackPath = value[0]
+			log.Println("UpdatePie", "GONG__StackPath", stackPath)
+		}
+	}
+	backRepo := controller.Map_BackRepos[stackPath]
+	db := backRepo.BackRepoPie.GetDB()
 
 	// Validate input
 	var input orm.PieAPI
@@ -218,8 +238,6 @@ func UpdatePie(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-
-	db := orm.BackRepo.BackRepoPie.GetDB()
 
 	// Get model if exist
 	var pieDB orm.PieDB
@@ -255,16 +273,16 @@ func UpdatePie(c *gin.Context) {
 	pieDB.CopyBasicFieldsToPie(pieNew)
 
 	// get stage instance from DB instance, and call callback function
-	pieOld := (*orm.BackRepo.BackRepoPie.Map_PieDBID_PiePtr)[pieDB.ID]
+	pieOld := (*backRepo.BackRepoPie.Map_PieDBID_PiePtr)[pieDB.ID]
 	if pieOld != nil {
-		models.AfterUpdateFromFront(&models.Stage, pieOld, pieNew)
+		models.AfterUpdateFromFront(backRepo.GetStage(), pieOld, pieNew)
 	}
 
 	// an UPDATE generates a back repo commit increase
 	// (this will be improved with implementation of unit of work design pattern)
 	// in some cases, with the marshalling of the stage, this operation might
 	// generates a checkout
-	orm.BackRepo.IncrementPushFromFrontNb()
+	backRepo.IncrementPushFromFrontNb()
 
 	// return status OK with the marshalling of the the pieDB
 	c.JSON(http.StatusOK, pieDB)
@@ -279,8 +297,19 @@ func UpdatePie(c *gin.Context) {
 // default: genericError
 //
 //	200: pieDBResponse
-func DeletePie(c *gin.Context) {
-	db := orm.BackRepo.BackRepoPie.GetDB()
+func (controller *Controller) DeletePie(c *gin.Context) {
+
+	values := c.Request.URL.Query()
+	stackPath := ""
+	if len(values) == 1 {
+		value := values["GONG__StackPath"]
+		if len(value) == 1 {
+			stackPath = value[0]
+			log.Println("DeletePie", "GONG__StackPath", stackPath)
+		}
+	}
+	backRepo := controller.Map_BackRepos[stackPath]
+	db := backRepo.BackRepoPie.GetDB()
 
 	// Get model if exist
 	var pieDB orm.PieDB
@@ -301,14 +330,14 @@ func DeletePie(c *gin.Context) {
 	pieDB.CopyBasicFieldsToPie(pieDeleted)
 
 	// get stage instance from DB instance, and call callback function
-	pieStaged := (*orm.BackRepo.BackRepoPie.Map_PieDBID_PiePtr)[pieDB.ID]
+	pieStaged := (*backRepo.BackRepoPie.Map_PieDBID_PiePtr)[pieDB.ID]
 	if pieStaged != nil {
-		models.AfterDeleteFromFront(&models.Stage, pieStaged, pieDeleted)
+		models.AfterDeleteFromFront(backRepo.GetStage(), pieStaged, pieDeleted)
 	}
 
 	// a DELETE generates a back repo commit increase
 	// (this will be improved with implementation of unit of work design pattern)
-	orm.BackRepo.IncrementPushFromFrontNb()
+	backRepo.IncrementPushFromFrontNb()
 
 	c.JSON(http.StatusOK, gin.H{"data": true})
 }

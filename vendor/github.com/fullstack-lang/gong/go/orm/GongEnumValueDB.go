@@ -114,6 +114,13 @@ type BackRepoGongEnumValueStruct struct {
 	Map_GongEnumValueDBID_GongEnumValuePtr *map[uint]*models.GongEnumValue
 
 	db *gorm.DB
+
+	stage *models.StageStruct
+}
+
+func (backRepoGongEnumValue *BackRepoGongEnumValueStruct) GetStage() (stage *models.StageStruct) {
+	stage = backRepoGongEnumValue.stage
+	return
 }
 
 func (backRepoGongEnumValue *BackRepoGongEnumValueStruct) GetDB() *gorm.DB {
@@ -128,7 +135,7 @@ func (backRepoGongEnumValue *BackRepoGongEnumValueStruct) GetGongEnumValueDBFrom
 }
 
 // BackRepoGongEnumValue.Init set up the BackRepo of the GongEnumValue
-func (backRepoGongEnumValue *BackRepoGongEnumValueStruct) Init(db *gorm.DB) (Error error) {
+func (backRepoGongEnumValue *BackRepoGongEnumValueStruct) Init(stage *models.StageStruct, db *gorm.DB) (Error error) {
 
 	if backRepoGongEnumValue.Map_GongEnumValueDBID_GongEnumValuePtr != nil {
 		err := errors.New("In Init, backRepoGongEnumValue.Map_GongEnumValueDBID_GongEnumValuePtr should be nil")
@@ -155,6 +162,7 @@ func (backRepoGongEnumValue *BackRepoGongEnumValueStruct) Init(db *gorm.DB) (Err
 	backRepoGongEnumValue.Map_GongEnumValuePtr_GongEnumValueDBID = &tmpID
 
 	backRepoGongEnumValue.db = db
+	backRepoGongEnumValue.stage = stage
 	return
 }
 
@@ -261,8 +269,7 @@ func (backRepoGongEnumValue *BackRepoGongEnumValueStruct) CommitPhaseTwoInstance
 // BackRepoGongEnumValue.CheckoutPhaseOne Checkouts all BackRepo instances to the Stage
 //
 // Phase One will result in having instances on the stage aligned with the back repo
-// pointers are not initialized yet (this is for pahse two)
-//
+// pointers are not initialized yet (this is for phase two)
 func (backRepoGongEnumValue *BackRepoGongEnumValueStruct) CheckoutPhaseOne() (Error error) {
 
 	gongenumvalueDBArray := make([]GongEnumValueDB, 0)
@@ -274,7 +281,7 @@ func (backRepoGongEnumValue *BackRepoGongEnumValueStruct) CheckoutPhaseOne() (Er
 	// list of instances to be removed
 	// start from the initial map on the stage and remove instances that have been checked out
 	gongenumvalueInstancesToBeRemovedFromTheStage := make(map[*models.GongEnumValue]any)
-	for key, value := range models.Stage.GongEnumValues {
+	for key, value := range backRepoGongEnumValue.stage.GongEnumValues {
 		gongenumvalueInstancesToBeRemovedFromTheStage[key] = value
 	}
 
@@ -292,7 +299,7 @@ func (backRepoGongEnumValue *BackRepoGongEnumValueStruct) CheckoutPhaseOne() (Er
 
 	// remove from stage and back repo's 3 maps all gongenumvalues that are not in the checkout
 	for gongenumvalue := range gongenumvalueInstancesToBeRemovedFromTheStage {
-		gongenumvalue.Unstage()
+		gongenumvalue.Unstage(backRepoGongEnumValue.GetStage())
 
 		// remove instance from the back repo 3 maps
 		gongenumvalueID := (*backRepoGongEnumValue.Map_GongEnumValuePtr_GongEnumValueDBID)[gongenumvalue]
@@ -317,9 +324,12 @@ func (backRepoGongEnumValue *BackRepoGongEnumValueStruct) CheckoutPhaseOneInstan
 
 		// append model store with the new element
 		gongenumvalue.Name = gongenumvalueDB.Name_Data.String
-		gongenumvalue.Stage()
+		gongenumvalue.Stage(backRepoGongEnumValue.GetStage())
 	}
 	gongenumvalueDB.CopyBasicFieldsToGongEnumValue(gongenumvalue)
+
+	// in some cases, the instance might have been unstaged. It is necessary to stage it again
+	gongenumvalue.Stage(backRepoGongEnumValue.GetStage())
 
 	// preserve pointer to gongenumvalueDB. Otherwise, pointer will is recycled and the map of pointers
 	// Map_GongEnumValueDBID_GongEnumValueDB)[gongenumvalueDB hold variable pointers

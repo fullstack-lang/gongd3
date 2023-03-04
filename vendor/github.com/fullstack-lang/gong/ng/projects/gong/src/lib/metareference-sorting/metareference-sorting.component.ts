@@ -46,7 +46,7 @@ export class MetaReferenceSortingComponent implements OnInit {
   }
 
   getMetaReferences(): void {
-    this.frontRepoService.pull().subscribe(
+    this.frontRepoService.pull(this.dialogData.GONG__StackPath).subscribe(
       frontRepo => {
         this.frontRepo = frontRepo
 
@@ -100,13 +100,13 @@ export class MetaReferenceSortingComponent implements OnInit {
 
     this.associatedMetaReferences.forEach(
       metareference => {
-        this.metareferenceService.updateMetaReference(metareference)
+        this.metareferenceService.updateMetaReference(metareference, this.dialogData.GONG__StackPath)
           .subscribe(metareference => {
             this.metareferenceService.MetaReferenceServiceChanged.next("update")
           });
       }
     )
 
-    this.dialogRef.close('Sorting of ' + this.dialogData.ReversePointer +' done');
+    this.dialogRef.close('Sorting of ' + this.dialogData.ReversePointer + ' done');
   }
 }

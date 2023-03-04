@@ -243,7 +243,7 @@ export class BarsTableComponent implements OnInit {
 
   ngOnInit(): void {
     let stackPath = this.activatedRoute.snapshot.paramMap.get('GONG__StackPath')
-    if ( stackPath != undefined) {
+    if (stackPath != undefined) {
       this.GONG__StackPath = stackPath
     }
 
@@ -279,10 +279,14 @@ export class BarsTableComponent implements OnInit {
           let mapOfSourceInstances = this.frontRepo[this.dialogData.SourceStruct + "s" as keyof FrontRepo] as Map<number, BarDB>
           let sourceInstance = mapOfSourceInstances.get(this.dialogData.ID)!
 
-          let sourceField = sourceInstance[this.dialogData.SourceField as keyof typeof sourceInstance]! as unknown as BarDB[]
-          for (let associationInstance of sourceField) {
-            let bar = associationInstance[this.dialogData.IntermediateStructField as keyof typeof associationInstance] as unknown as BarDB
-            this.initialSelection.push(bar)
+          // we associates on sourceInstance of type SourceStruct with a MANY MANY associations to BarDB
+          // the field name is sourceField
+          let sourceFieldArray = sourceInstance[this.dialogData.SourceField as keyof typeof sourceInstance]! as unknown as BarDB[]
+          if (sourceFieldArray != null) {
+            for (let associationInstance of sourceFieldArray) {
+              let bar = associationInstance[this.dialogData.IntermediateStructField as keyof typeof associationInstance] as unknown as BarDB
+              this.initialSelection.push(bar)
+            }
           }
 
           this.selection = new SelectionModel<BarDB>(allowMultiSelect, this.initialSelection);
@@ -303,7 +307,7 @@ export class BarsTableComponent implements OnInit {
     // list of bars is truncated of bar before the delete
     this.bars = this.bars.filter(h => h !== bar);
 
-    this.barService.deleteBar(barID).subscribe(
+    this.barService.deleteBar(barID, this.GONG__StackPath).subscribe(
       bar => {
         this.barService.BarServiceChanged.next("delete")
       }
@@ -369,7 +373,7 @@ export class BarsTableComponent implements OnInit {
 
       // update all bar (only update selection & initial selection)
       for (let bar of toUpdate) {
-        this.barService.updateBar(bar)
+        this.barService.updateBar(bar, this.GONG__StackPath)
           .subscribe(bar => {
             this.barService.BarServiceChanged.next("update")
           });

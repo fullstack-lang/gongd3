@@ -12,7 +12,7 @@ import { MapOfSortingComponents } from '../map-components'
 // insertion point for imports
 import { GongStructDB } from '../gongstruct-db'
 
-import { Router, RouterState, ActivatedRoute } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 
 import { MatDialog, MAT_DIALOG_DATA, MatDialogRef, MatDialogConfig } from '@angular/material/dialog';
 
@@ -58,23 +58,34 @@ export class SliceOfPointerToGongStructFieldDetailComponent implements OnInit {
 	originStruct: string = ""
 	originStructFieldName: string = ""
 
+	GONG__StackPath: string = ""
+
 	constructor(
 		private sliceofpointertogongstructfieldService: SliceOfPointerToGongStructFieldService,
 		private frontRepoService: FrontRepoService,
 		public dialog: MatDialog,
-		private route: ActivatedRoute,
+		private activatedRoute: ActivatedRoute,
 		private router: Router,
 	) {
 	}
 
 	ngOnInit(): void {
+		this.GONG__StackPath = this.activatedRoute.snapshot.paramMap.get('GONG__StackPath')!;
+
+		this.activatedRoute.params.subscribe(params => {
+			this.onChangedActivatedRoute()
+		});
+	}
+	onChangedActivatedRoute(): void {
 
 		// compute state
-		this.id = +this.route.snapshot.paramMap.get('id')!;
-		this.originStruct = this.route.snapshot.paramMap.get('originStruct')!;
-		this.originStructFieldName = this.route.snapshot.paramMap.get('originStructFieldName')!;
+		this.id = +this.activatedRoute.snapshot.paramMap.get('id')!;
+		this.originStruct = this.activatedRoute.snapshot.paramMap.get('originStruct')!;
+		this.originStructFieldName = this.activatedRoute.snapshot.paramMap.get('originStructFieldName')!;
 
-		const association = this.route.snapshot.paramMap.get('association');
+		this.GONG__StackPath = this.activatedRoute.snapshot.paramMap.get('GONG__StackPath')!;
+
+		const association = this.activatedRoute.snapshot.paramMap.get('association');
 		if (this.id == 0) {
 			this.state = SliceOfPointerToGongStructFieldDetailComponentState.CREATE_INSTANCE
 		} else {
@@ -109,7 +120,7 @@ export class SliceOfPointerToGongStructFieldDetailComponent implements OnInit {
 
 	getSliceOfPointerToGongStructField(): void {
 
-		this.frontRepoService.pull().subscribe(
+		this.frontRepoService.pull(this.GONG__StackPath).subscribe(
 			frontRepo => {
 				this.frontRepo = frontRepo
 
@@ -173,13 +184,13 @@ export class SliceOfPointerToGongStructFieldDetailComponent implements OnInit {
 
 		switch (this.state) {
 			case SliceOfPointerToGongStructFieldDetailComponentState.UPDATE_INSTANCE:
-				this.sliceofpointertogongstructfieldService.updateSliceOfPointerToGongStructField(this.sliceofpointertogongstructfield)
+				this.sliceofpointertogongstructfieldService.updateSliceOfPointerToGongStructField(this.sliceofpointertogongstructfield, this.GONG__StackPath)
 					.subscribe(sliceofpointertogongstructfield => {
 						this.sliceofpointertogongstructfieldService.SliceOfPointerToGongStructFieldServiceChanged.next("update")
 					});
 				break;
 			default:
-				this.sliceofpointertogongstructfieldService.postSliceOfPointerToGongStructField(this.sliceofpointertogongstructfield).subscribe(sliceofpointertogongstructfield => {
+				this.sliceofpointertogongstructfieldService.postSliceOfPointerToGongStructField(this.sliceofpointertogongstructfield, this.GONG__StackPath).subscribe(sliceofpointertogongstructfield => {
 					this.sliceofpointertogongstructfieldService.SliceOfPointerToGongStructFieldServiceChanged.next("post")
 					this.sliceofpointertogongstructfield = new (SliceOfPointerToGongStructFieldDB) // reset fields
 				});
@@ -208,6 +219,7 @@ export class SliceOfPointerToGongStructFieldDetailComponent implements OnInit {
 			dialogData.ReversePointer = reverseField
 			dialogData.OrderingMode = false
 			dialogData.SelectionMode = selectionMode
+			dialogData.GONG__StackPath = this.GONG__StackPath
 
 			dialogConfig.data = dialogData
 			const dialogRef: MatDialogRef<string, any> = this.dialog.open(
@@ -224,6 +236,7 @@ export class SliceOfPointerToGongStructFieldDetailComponent implements OnInit {
 			dialogData.ReversePointer = reverseField
 			dialogData.OrderingMode = false
 			dialogData.SelectionMode = selectionMode
+			dialogData.GONG__StackPath = this.GONG__StackPath
 
 			// set up the source
 			dialogData.SourceStruct = "SliceOfPointerToGongStructField"
@@ -259,6 +272,7 @@ export class SliceOfPointerToGongStructFieldDetailComponent implements OnInit {
 			ID: this.sliceofpointertogongstructfield.ID,
 			ReversePointer: reverseField,
 			OrderingMode: true,
+			GONG__StackPath: this.GONG__StackPath,
 		};
 		const dialogRef: MatDialogRef<string, any> = this.dialog.open(
 			MapOfSortingComponents.get(AssociatedStruct).get(

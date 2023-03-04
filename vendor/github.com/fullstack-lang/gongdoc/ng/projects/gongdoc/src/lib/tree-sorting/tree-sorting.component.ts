@@ -46,7 +46,7 @@ export class TreeSortingComponent implements OnInit {
   }
 
   getTrees(): void {
-    this.frontRepoService.pull().subscribe(
+    this.frontRepoService.pull(this.dialogData.GONG__StackPath).subscribe(
       frontRepo => {
         this.frontRepo = frontRepo
 
@@ -100,13 +100,13 @@ export class TreeSortingComponent implements OnInit {
 
     this.associatedTrees.forEach(
       tree => {
-        this.treeService.updateTree(tree)
+        this.treeService.updateTree(tree, this.dialogData.GONG__StackPath)
           .subscribe(tree => {
             this.treeService.TreeServiceChanged.next("update")
           });
       }
     )
 
-    this.dialogRef.close('Sorting of ' + this.dialogData.ReversePointer +' done');
+    this.dialogRef.close('Sorting of ' + this.dialogData.ReversePointer + ' done');
   }
 }

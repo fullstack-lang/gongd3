@@ -184,13 +184,13 @@ export class BarDetailComponent implements OnInit {
 
 		switch (this.state) {
 			case BarDetailComponentState.UPDATE_INSTANCE:
-				this.barService.updateBar(this.bar)
+				this.barService.updateBar(this.bar, this.GONG__StackPath)
 					.subscribe(bar => {
 						this.barService.BarServiceChanged.next("update")
 					});
 				break;
 			default:
-				this.barService.postBar(this.bar).subscribe(bar => {
+				this.barService.postBar(this.bar, this.GONG__StackPath).subscribe(bar => {
 					this.barService.BarServiceChanged.next("post")
 					this.bar = new (BarDB) // reset fields
 				});

@@ -67,6 +67,9 @@ type GongLinkDB struct {
 	// Declation for basic field gonglinkDB.Name
 	Name_Data sql.NullString
 
+	// Declation for basic field gonglinkDB.Recv
+	Recv_Data sql.NullString
+
 	// Declation for basic field gonglinkDB.ImportPath
 	ImportPath_Data sql.NullString
 	// encoding of pointers
@@ -92,7 +95,9 @@ type GongLinkWOP struct {
 
 	Name string `xlsx:"1"`
 
-	ImportPath string `xlsx:"2"`
+	Recv string `xlsx:"2"`
+
+	ImportPath string `xlsx:"3"`
 	// insertion for WOP pointer fields
 }
 
@@ -100,6 +105,7 @@ var GongLink_Fields = []string{
 	// insertion for WOP basic fields
 	"ID",
 	"Name",
+	"Recv",
 	"ImportPath",
 }
 
@@ -114,6 +120,13 @@ type BackRepoGongLinkStruct struct {
 	Map_GongLinkDBID_GongLinkPtr *map[uint]*models.GongLink
 
 	db *gorm.DB
+
+	stage *models.StageStruct
+}
+
+func (backRepoGongLink *BackRepoGongLinkStruct) GetStage() (stage *models.StageStruct) {
+	stage = backRepoGongLink.stage
+	return
 }
 
 func (backRepoGongLink *BackRepoGongLinkStruct) GetDB() *gorm.DB {
@@ -128,7 +141,7 @@ func (backRepoGongLink *BackRepoGongLinkStruct) GetGongLinkDBFromGongLinkPtr(gon
 }
 
 // BackRepoGongLink.Init set up the BackRepo of the GongLink
-func (backRepoGongLink *BackRepoGongLinkStruct) Init(db *gorm.DB) (Error error) {
+func (backRepoGongLink *BackRepoGongLinkStruct) Init(stage *models.StageStruct, db *gorm.DB) (Error error) {
 
 	if backRepoGongLink.Map_GongLinkDBID_GongLinkPtr != nil {
 		err := errors.New("In Init, backRepoGongLink.Map_GongLinkDBID_GongLinkPtr should be nil")
@@ -155,6 +168,7 @@ func (backRepoGongLink *BackRepoGongLinkStruct) Init(db *gorm.DB) (Error error) 
 	backRepoGongLink.Map_GongLinkPtr_GongLinkDBID = &tmpID
 
 	backRepoGongLink.db = db
+	backRepoGongLink.stage = stage
 	return
 }
 
@@ -261,8 +275,7 @@ func (backRepoGongLink *BackRepoGongLinkStruct) CommitPhaseTwoInstance(backRepo 
 // BackRepoGongLink.CheckoutPhaseOne Checkouts all BackRepo instances to the Stage
 //
 // Phase One will result in having instances on the stage aligned with the back repo
-// pointers are not initialized yet (this is for pahse two)
-//
+// pointers are not initialized yet (this is for phase two)
 func (backRepoGongLink *BackRepoGongLinkStruct) CheckoutPhaseOne() (Error error) {
 
 	gonglinkDBArray := make([]GongLinkDB, 0)
@@ -274,7 +287,7 @@ func (backRepoGongLink *BackRepoGongLinkStruct) CheckoutPhaseOne() (Error error)
 	// list of instances to be removed
 	// start from the initial map on the stage and remove instances that have been checked out
 	gonglinkInstancesToBeRemovedFromTheStage := make(map[*models.GongLink]any)
-	for key, value := range models.Stage.GongLinks {
+	for key, value := range backRepoGongLink.stage.GongLinks {
 		gonglinkInstancesToBeRemovedFromTheStage[key] = value
 	}
 
@@ -292,7 +305,7 @@ func (backRepoGongLink *BackRepoGongLinkStruct) CheckoutPhaseOne() (Error error)
 
 	// remove from stage and back repo's 3 maps all gonglinks that are not in the checkout
 	for gonglink := range gonglinkInstancesToBeRemovedFromTheStage {
-		gonglink.Unstage()
+		gonglink.Unstage(backRepoGongLink.GetStage())
 
 		// remove instance from the back repo 3 maps
 		gonglinkID := (*backRepoGongLink.Map_GongLinkPtr_GongLinkDBID)[gonglink]
@@ -317,9 +330,12 @@ func (backRepoGongLink *BackRepoGongLinkStruct) CheckoutPhaseOneInstance(gonglin
 
 		// append model store with the new element
 		gonglink.Name = gonglinkDB.Name_Data.String
-		gonglink.Stage()
+		gonglink.Stage(backRepoGongLink.GetStage())
 	}
 	gonglinkDB.CopyBasicFieldsToGongLink(gonglink)
+
+	// in some cases, the instance might have been unstaged. It is necessary to stage it again
+	gonglink.Stage(backRepoGongLink.GetStage())
 
 	// preserve pointer to gonglinkDB. Otherwise, pointer will is recycled and the map of pointers
 	// Map_GongLinkDBID_GongLinkDB)[gonglinkDB hold variable pointers
@@ -386,6 +402,9 @@ func (gonglinkDB *GongLinkDB) CopyBasicFieldsFromGongLink(gonglink *models.GongL
 	gonglinkDB.Name_Data.String = gonglink.Name
 	gonglinkDB.Name_Data.Valid = true
 
+	gonglinkDB.Recv_Data.String = gonglink.Recv
+	gonglinkDB.Recv_Data.Valid = true
+
 	gonglinkDB.ImportPath_Data.String = gonglink.ImportPath
 	gonglinkDB.ImportPath_Data.Valid = true
 }
@@ -397,6 +416,9 @@ func (gonglinkDB *GongLinkDB) CopyBasicFieldsFromGongLinkWOP(gonglink *GongLinkW
 	gonglinkDB.Name_Data.String = gonglink.Name
 	gonglinkDB.Name_Data.Valid = true
 
+	gonglinkDB.Recv_Data.String = gonglink.Recv
+	gonglinkDB.Recv_Data.Valid = true
+
 	gonglinkDB.ImportPath_Data.String = gonglink.ImportPath
 	gonglinkDB.ImportPath_Data.Valid = true
 }
@@ -405,6 +427,7 @@ func (gonglinkDB *GongLinkDB) CopyBasicFieldsFromGongLinkWOP(gonglink *GongLinkW
 func (gonglinkDB *GongLinkDB) CopyBasicFieldsToGongLink(gonglink *models.GongLink) {
 	// insertion point for checkout of basic fields (back repo to stage)
 	gonglink.Name = gonglinkDB.Name_Data.String
+	gonglink.Recv = gonglinkDB.Recv_Data.String
 	gonglink.ImportPath = gonglinkDB.ImportPath_Data.String
 }
 
@@ -413,6 +436,7 @@ func (gonglinkDB *GongLinkDB) CopyBasicFieldsToGongLinkWOP(gonglink *GongLinkWOP
 	gonglink.ID = int(gonglinkDB.ID)
 	// insertion point for checkout of basic fields (back repo to stage)
 	gonglink.Name = gonglinkDB.Name_Data.String
+	gonglink.Recv = gonglinkDB.Recv_Data.String
 	gonglink.ImportPath = gonglinkDB.ImportPath_Data.String
 }
 

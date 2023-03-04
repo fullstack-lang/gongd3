@@ -20,10 +20,6 @@ import { KeyDB } from './key-db';
 })
 export class KeyService {
 
-  httpOptions = {
-    headers: new HttpHeaders({ 'Content-Type': 'application/json' })
-  };
-
   // Kamar Raïmo: Adding a way to communicate between components that share information
   // so that they are notified of a change.
   KeyServiceChanged: BehaviorSubject<string> = new BehaviorSubject("");
@@ -32,7 +28,6 @@ export class KeyService {
 
   constructor(
     private http: HttpClient,
-    private location: Location,
     @Inject(DOCUMENT) private document: Document
   ) {
     // path to the service share the same origin with the path to the document
@@ -67,14 +62,18 @@ export class KeyService {
     );
   }
 
-  //////// Save methods //////////
-
   /** POST: add a new key to the server */
-  postKey(keydb: KeyDB): Observable<KeyDB> {
+  postKey(keydb: KeyDB, GONG__StackPath: string): Observable<KeyDB> {
 
     // insertion point for reset of pointers and reverse pointers (to avoid circular JSON)
 
-    return this.http.post<KeyDB>(this.keysUrl, keydb, this.httpOptions).pipe(
+    let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
+    let httpOptions = {
+      headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
+      params: params
+    }
+
+	return this.http.post<KeyDB>(this.keysUrl, keydb, httpOptions).pipe(
       tap(_ => {
         // insertion point for restoration of reverse pointers
         this.log(`posted keydb id=${keydb.ID}`)
@@ -84,24 +83,36 @@ export class KeyService {
   }
 
   /** DELETE: delete the keydb from the server */
-  deleteKey(keydb: KeyDB | number): Observable<KeyDB> {
+  deleteKey(keydb: KeyDB | number, GONG__StackPath: string): Observable<KeyDB> {
     const id = typeof keydb === 'number' ? keydb : keydb.ID;
     const url = `${this.keysUrl}/${id}`;
 
-    return this.http.delete<KeyDB>(url, this.httpOptions).pipe(
+    let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
+    let httpOptions = {
+      headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
+      params: params
+    };
+
+    return this.http.delete<KeyDB>(url, httpOptions).pipe(
       tap(_ => this.log(`deleted keydb id=${id}`)),
       catchError(this.handleError<KeyDB>('deleteKey'))
     );
   }
 
   /** PUT: update the keydb on the server */
-  updateKey(keydb: KeyDB): Observable<KeyDB> {
+  updateKey(keydb: KeyDB, GONG__StackPath: string): Observable<KeyDB> {
     const id = typeof keydb === 'number' ? keydb : keydb.ID;
     const url = `${this.keysUrl}/${id}`;
 
     // insertion point for reset of pointers and reverse pointers (to avoid circular JSON)
 
-    return this.http.put<KeyDB>(url, keydb, this.httpOptions).pipe(
+    let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
+    let httpOptions = {
+      headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
+      params: params
+    };
+
+    return this.http.put<KeyDB>(url, keydb, httpOptions).pipe(
       tap(_ => {
         // insertion point for restoration of reverse pointers
         this.log(`updated keydb id=${keydb.ID}`)

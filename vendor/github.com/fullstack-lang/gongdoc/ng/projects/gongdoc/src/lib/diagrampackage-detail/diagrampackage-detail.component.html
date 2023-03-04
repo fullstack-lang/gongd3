@@ -1,7 +1,7 @@
 <form *ngIf="diagrampackage" class="details">
     <h2 class="details__title">diagrampackage</h2>
     <!-- insertion point for fields specific code -->
-    <mat-grid-list *ngIf='!isATextArea("Name")' cols="5" rowHeight="2:1">
+    <mat-grid-list *ngIf='!isATextArea("Name")' cols="5" rowHeight="1:1">
         <mat-grid-tile [colspan]="3">
             <mat-form-field mat-form-field class="detail-full-width">
                 <mat-label>Name</mat-label>
@@ -21,7 +21,7 @@
         <textarea name="" [ngModelOptions]="{standalone: true}" matInput [(ngModel)]="diagrampackage.Name"></textarea>
     </mat-form-field>
 
-    <mat-grid-list *ngIf='!isATextArea("Path")' cols="5" rowHeight="2:1">
+    <mat-grid-list *ngIf='!isATextArea("Path")' cols="5" rowHeight="1:1">
         <mat-grid-tile [colspan]="3">
             <mat-form-field mat-form-field class="detail-full-width">
                 <mat-label>Path</mat-label>
@@ -41,7 +41,7 @@
         <textarea name="" [ngModelOptions]="{standalone: true}" matInput [(ngModel)]="diagrampackage.Path"></textarea>
     </mat-form-field>
 
-    <mat-grid-list *ngIf='!isATextArea("GongModelPath")' cols="5" rowHeight="2:1">
+    <mat-grid-list *ngIf='!isATextArea("GongModelPath")' cols="5" rowHeight="1:1">
         <mat-grid-tile [colspan]="3">
             <mat-form-field mat-form-field class="detail-full-width">
                 <mat-label>GongModelPath</mat-label>
@@ -74,6 +74,16 @@
             </button>
         </mat-grid-tile>
     </mat-grid-list>
+    <mat-form-field class="detail-full-width">
+        <mat-label>SelectedClassdiagram</mat-label>
+        <mat-select [compareWith]="compareObjects" [(value)]="diagrampackage.SelectedClassdiagram" (selectionChange)="fillUpNameIfEmpty($event)">
+            <mat-option>None</mat-option>
+            <mat-option *ngFor="let classdiagram of frontRepo.Classdiagrams_array" [value]="classdiagram">
+                {{classdiagram.Name}}
+            </mat-option>
+        </mat-select>
+    </mat-form-field>
+
     <mat-grid-list cols="5" rowHeight="2:1">
         <mat-grid-tile [colspan]="3">
             <button mat-raised-button (click)="openReverseSelection('Umlsc', 'DiagramPackage_UmlscsDBID', 'ONE_MANY_ASSOCIATION_MODE', '', '', '')">Umlscs</button>
@@ -93,7 +103,7 @@
     <!-- -->
     <mat-checkbox [formControl]="IsReloadedFormControl">IsReloaded</mat-checkbox>
 
-    <mat-grid-list *ngIf='!isATextArea("AbsolutePathToDiagramPackage")' cols="5" rowHeight="2:1">
+    <mat-grid-list *ngIf='!isATextArea("AbsolutePathToDiagramPackage")' cols="5" rowHeight="1:1">
         <mat-grid-tile [colspan]="3">
             <mat-form-field mat-form-field class="detail-full-width">
                 <mat-label>AbsolutePathToDiagramPackage</mat-label>

@@ -46,7 +46,7 @@ export class VerticeSortingComponent implements OnInit {
   }
 
   getVertices(): void {
-    this.frontRepoService.pull().subscribe(
+    this.frontRepoService.pull(this.dialogData.GONG__StackPath).subscribe(
       frontRepo => {
         this.frontRepo = frontRepo
 
@@ -100,13 +100,13 @@ export class VerticeSortingComponent implements OnInit {
 
     this.associatedVertices.forEach(
       vertice => {
-        this.verticeService.updateVertice(vertice)
+        this.verticeService.updateVertice(vertice, this.dialogData.GONG__StackPath)
           .subscribe(vertice => {
             this.verticeService.VerticeServiceChanged.next("update")
           });
       }
     )
 
-    this.dialogRef.close('Sorting of ' + this.dialogData.ReversePointer +' done');
+    this.dialogRef.close('Sorting of ' + this.dialogData.ReversePointer + ' done');
   }
 }

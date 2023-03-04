@@ -46,7 +46,7 @@ export class GongBasicFieldSortingComponent implements OnInit {
   }
 
   getGongBasicFields(): void {
-    this.frontRepoService.pull().subscribe(
+    this.frontRepoService.pull(this.dialogData.GONG__StackPath).subscribe(
       frontRepo => {
         this.frontRepo = frontRepo
 
@@ -100,13 +100,13 @@ export class GongBasicFieldSortingComponent implements OnInit {
 
     this.associatedGongBasicFields.forEach(
       gongbasicfield => {
-        this.gongbasicfieldService.updateGongBasicField(gongbasicfield)
+        this.gongbasicfieldService.updateGongBasicField(gongbasicfield, this.dialogData.GONG__StackPath)
           .subscribe(gongbasicfield => {
             this.gongbasicfieldService.GongBasicFieldServiceChanged.next("update")
           });
       }
     )
 
-    this.dialogRef.close('Sorting of ' + this.dialogData.ReversePointer +' done');
+    this.dialogRef.close('Sorting of ' + this.dialogData.ReversePointer + ' done');
   }
 }

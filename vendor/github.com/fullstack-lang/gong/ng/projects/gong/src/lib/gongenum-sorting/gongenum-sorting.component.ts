@@ -46,7 +46,7 @@ export class GongEnumSortingComponent implements OnInit {
   }
 
   getGongEnums(): void {
-    this.frontRepoService.pull().subscribe(
+    this.frontRepoService.pull(this.dialogData.GONG__StackPath).subscribe(
       frontRepo => {
         this.frontRepo = frontRepo
 
@@ -100,13 +100,13 @@ export class GongEnumSortingComponent implements OnInit {
 
     this.associatedGongEnums.forEach(
       gongenum => {
-        this.gongenumService.updateGongEnum(gongenum)
+        this.gongenumService.updateGongEnum(gongenum, this.dialogData.GONG__StackPath)
           .subscribe(gongenum => {
             this.gongenumService.GongEnumServiceChanged.next("update")
           });
       }
     )
 
-    this.dialogRef.close('Sorting of ' + this.dialogData.ReversePointer +' done');
+    this.dialogRef.close('Sorting of ' + this.dialogData.ReversePointer + ' done');
   }
 }

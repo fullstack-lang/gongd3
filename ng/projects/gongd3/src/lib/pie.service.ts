@@ -21,10 +21,6 @@ import { KeyDB } from './key-db'
 })
 export class PieService {
 
-  httpOptions = {
-    headers: new HttpHeaders({ 'Content-Type': 'application/json' })
-  };
-
   // Kamar Raïmo: Adding a way to communicate between components that share information
   // so that they are notified of a change.
   PieServiceChanged: BehaviorSubject<string> = new BehaviorSubject("");
@@ -33,7 +29,6 @@ export class PieService {
 
   constructor(
     private http: HttpClient,
-    private location: Location,
     @Inject(DOCUMENT) private document: Document
   ) {
     // path to the service share the same origin with the path to the document
@@ -68,17 +63,21 @@ export class PieService {
     );
   }
 
-  //////// Save methods //////////
-
   /** POST: add a new pie to the server */
-  postPie(piedb: PieDB): Observable<PieDB> {
+  postPie(piedb: PieDB, GONG__StackPath: string): Observable<PieDB> {
 
     // insertion point for reset of pointers and reverse pointers (to avoid circular JSON)
     piedb.X = new KeyDB
     piedb.Y = new KeyDB
     piedb.Set = []
 
-    return this.http.post<PieDB>(this.piesUrl, piedb, this.httpOptions).pipe(
+    let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
+    let httpOptions = {
+      headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
+      params: params
+    }
+
+	return this.http.post<PieDB>(this.piesUrl, piedb, httpOptions).pipe(
       tap(_ => {
         // insertion point for restoration of reverse pointers
         this.log(`posted piedb id=${piedb.ID}`)
@@ -88,18 +87,24 @@ export class PieService {
   }
 
   /** DELETE: delete the piedb from the server */
-  deletePie(piedb: PieDB | number): Observable<PieDB> {
+  deletePie(piedb: PieDB | number, GONG__StackPath: string): Observable<PieDB> {
     const id = typeof piedb === 'number' ? piedb : piedb.ID;
     const url = `${this.piesUrl}/${id}`;
 
-    return this.http.delete<PieDB>(url, this.httpOptions).pipe(
+    let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
+    let httpOptions = {
+      headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
+      params: params
+    };
+
+    return this.http.delete<PieDB>(url, httpOptions).pipe(
       tap(_ => this.log(`deleted piedb id=${id}`)),
       catchError(this.handleError<PieDB>('deletePie'))
     );
   }
 
   /** PUT: update the piedb on the server */
-  updatePie(piedb: PieDB): Observable<PieDB> {
+  updatePie(piedb: PieDB, GONG__StackPath: string): Observable<PieDB> {
     const id = typeof piedb === 'number' ? piedb : piedb.ID;
     const url = `${this.piesUrl}/${id}`;
 
@@ -108,7 +113,13 @@ export class PieService {
     piedb.Y = new KeyDB
     piedb.Set = []
 
-    return this.http.put<PieDB>(url, piedb, this.httpOptions).pipe(
+    let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
+    let httpOptions = {
+      headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
+      params: params
+    };
+
+    return this.http.put<PieDB>(url, piedb, httpOptions).pipe(
       tap(_ => {
         // insertion point for restoration of reverse pointers
         this.log(`updated piedb id=${piedb.ID}`)

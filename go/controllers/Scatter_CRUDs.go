@@ -47,23 +47,22 @@ type ScatterInput struct {
 // default: genericError
 //
 //	200: scatterDBResponse
-func GetScatters(c *gin.Context) {
-	db := orm.BackRepo.BackRepoScatter.GetDB()
+func (controller *Controller) GetScatters(c *gin.Context) {
 
 	// source slice
 	var scatterDBs []orm.ScatterDB
 
-	// type Values map[string][]string
 	values := c.Request.URL.Query()
+	stackPath := ""
 	if len(values) == 1 {
 		value := values["GONG__StackPath"]
 		if len(value) == 1 {
-			// we have a single parameter
-			// we assume it is the stack
-			stackParam := value[0]
-			log.Println("GONG__StackPath", stackParam)
+			stackPath = value[0]
+			log.Println("GetScatters", "GONG__StackPath", stackPath)
 		}
 	}
+	backRepo := controller.Map_BackRepos[stackPath]
+	db := backRepo.BackRepoScatter.GetDB()
 
 	query := db.Find(&scatterDBs)
 	if query.Error != nil {
@@ -108,7 +107,19 @@ func GetScatters(c *gin.Context) {
 //
 //	Responses:
 //	  200: nodeDBResponse
-func PostScatter(c *gin.Context) {
+func (controller *Controller) PostScatter(c *gin.Context) {
+
+	values := c.Request.URL.Query()
+	stackPath := ""
+	if len(values) == 1 {
+		value := values["GONG__StackPath"]
+		if len(value) == 1 {
+			stackPath = value[0]
+			log.Println("PostScatters", "GONG__StackPath", stackPath)
+		}
+	}
+	backRepo := controller.Map_BackRepos[stackPath]
+	db := backRepo.BackRepoScatter.GetDB()
 
 	// Validate input
 	var input orm.ScatterAPI
@@ -128,7 +139,6 @@ func PostScatter(c *gin.Context) {
 	scatterDB.ScatterPointersEnconding = input.ScatterPointersEnconding
 	scatterDB.CopyBasicFieldsFromScatter(&input.Scatter)
 
-	db := orm.BackRepo.BackRepoScatter.GetDB()
 	query := db.Create(&scatterDB)
 	if query.Error != nil {
 		var returnError GenericError
@@ -140,16 +150,16 @@ func PostScatter(c *gin.Context) {
 	}
 
 	// get an instance (not staged) from DB instance, and call callback function
-	orm.BackRepo.BackRepoScatter.CheckoutPhaseOneInstance(&scatterDB)
-	scatter := (*orm.BackRepo.BackRepoScatter.Map_ScatterDBID_ScatterPtr)[scatterDB.ID]
+	backRepo.BackRepoScatter.CheckoutPhaseOneInstance(&scatterDB)
+	scatter := (*backRepo.BackRepoScatter.Map_ScatterDBID_ScatterPtr)[scatterDB.ID]
 
 	if scatter != nil {
-		models.AfterCreateFromFront(&models.Stage, scatter)
+		models.AfterCreateFromFront(backRepo.GetStage(), scatter)
 	}
 
 	// a POST is equivalent to a back repo commit increase
 	// (this will be improved with implementation of unit of work design pattern)
-	orm.BackRepo.IncrementPushFromFrontNb()
+	backRepo.IncrementPushFromFrontNb()
 
 	c.JSON(http.StatusOK, scatterDB)
 }
@@ -164,21 +174,19 @@ func PostScatter(c *gin.Context) {
 // default: genericError
 //
 //	200: scatterDBResponse
-func GetScatter(c *gin.Context) {
+func (controller *Controller) GetScatter(c *gin.Context) {
 
-	// type Values map[string][]string
 	values := c.Request.URL.Query()
+	stackPath := ""
 	if len(values) == 1 {
-		value := values["stack"]
+		value := values["GONG__StackPath"]
 		if len(value) == 1 {
-			// we have a single parameter
-			// we assume it is the stack
-			stackParam := value[0]
-			log.Println("GET params", stackParam)
+			stackPath = value[0]
+			log.Println("GetScatter", "GONG__StackPath", stackPath)
 		}
 	}
-
-	db := orm.BackRepo.BackRepoScatter.GetDB()
+	backRepo := controller.Map_BackRepos[stackPath]
+	db := backRepo.BackRepoScatter.GetDB()
 
 	// Get scatterDB in DB
 	var scatterDB orm.ScatterDB
@@ -209,7 +217,19 @@ func GetScatter(c *gin.Context) {
 // default: genericError
 //
 //	200: scatterDBResponse
-func UpdateScatter(c *gin.Context) {
+func (controller *Controller) UpdateScatter(c *gin.Context) {
+
+	values := c.Request.URL.Query()
+	stackPath := ""
+	if len(values) == 1 {
+		value := values["GONG__StackPath"]
+		if len(value) == 1 {
+			stackPath = value[0]
+			log.Println("UpdateScatter", "GONG__StackPath", stackPath)
+		}
+	}
+	backRepo := controller.Map_BackRepos[stackPath]
+	db := backRepo.BackRepoScatter.GetDB()
 
 	// Validate input
 	var input orm.ScatterAPI
@@ -218,8 +238,6 @@ func UpdateScatter(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-
-	db := orm.BackRepo.BackRepoScatter.GetDB()
 
 	// Get model if exist
 	var scatterDB orm.ScatterDB
@@ -255,16 +273,16 @@ func UpdateScatter(c *gin.Context) {
 	scatterDB.CopyBasicFieldsToScatter(scatterNew)
 
 	// get stage instance from DB instance, and call callback function
-	scatterOld := (*orm.BackRepo.BackRepoScatter.Map_ScatterDBID_ScatterPtr)[scatterDB.ID]
+	scatterOld := (*backRepo.BackRepoScatter.Map_ScatterDBID_ScatterPtr)[scatterDB.ID]
 	if scatterOld != nil {
-		models.AfterUpdateFromFront(&models.Stage, scatterOld, scatterNew)
+		models.AfterUpdateFromFront(backRepo.GetStage(), scatterOld, scatterNew)
 	}
 
 	// an UPDATE generates a back repo commit increase
 	// (this will be improved with implementation of unit of work design pattern)
 	// in some cases, with the marshalling of the stage, this operation might
 	// generates a checkout
-	orm.BackRepo.IncrementPushFromFrontNb()
+	backRepo.IncrementPushFromFrontNb()
 
 	// return status OK with the marshalling of the the scatterDB
 	c.JSON(http.StatusOK, scatterDB)
@@ -279,8 +297,19 @@ func UpdateScatter(c *gin.Context) {
 // default: genericError
 //
 //	200: scatterDBResponse
-func DeleteScatter(c *gin.Context) {
-	db := orm.BackRepo.BackRepoScatter.GetDB()
+func (controller *Controller) DeleteScatter(c *gin.Context) {
+
+	values := c.Request.URL.Query()
+	stackPath := ""
+	if len(values) == 1 {
+		value := values["GONG__StackPath"]
+		if len(value) == 1 {
+			stackPath = value[0]
+			log.Println("DeleteScatter", "GONG__StackPath", stackPath)
+		}
+	}
+	backRepo := controller.Map_BackRepos[stackPath]
+	db := backRepo.BackRepoScatter.GetDB()
 
 	// Get model if exist
 	var scatterDB orm.ScatterDB
@@ -301,14 +330,14 @@ func DeleteScatter(c *gin.Context) {
 	scatterDB.CopyBasicFieldsToScatter(scatterDeleted)
 
 	// get stage instance from DB instance, and call callback function
-	scatterStaged := (*orm.BackRepo.BackRepoScatter.Map_ScatterDBID_ScatterPtr)[scatterDB.ID]
+	scatterStaged := (*backRepo.BackRepoScatter.Map_ScatterDBID_ScatterPtr)[scatterDB.ID]
 	if scatterStaged != nil {
-		models.AfterDeleteFromFront(&models.Stage, scatterStaged, scatterDeleted)
+		models.AfterDeleteFromFront(backRepo.GetStage(), scatterStaged, scatterDeleted)
 	}
 
 	// a DELETE generates a back repo commit increase
 	// (this will be improved with implementation of unit of work design pattern)
-	orm.BackRepo.IncrementPushFromFrontNb()
+	backRepo.IncrementPushFromFrontNb()
 
 	c.JSON(http.StatusOK, gin.H{"data": true})
 }

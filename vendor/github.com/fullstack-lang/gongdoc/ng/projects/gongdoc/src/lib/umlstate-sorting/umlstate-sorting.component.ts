@@ -46,7 +46,7 @@ export class UmlStateSortingComponent implements OnInit {
   }
 
   getUmlStates(): void {
-    this.frontRepoService.pull().subscribe(
+    this.frontRepoService.pull(this.dialogData.GONG__StackPath).subscribe(
       frontRepo => {
         this.frontRepo = frontRepo
 
@@ -100,13 +100,13 @@ export class UmlStateSortingComponent implements OnInit {
 
     this.associatedUmlStates.forEach(
       umlstate => {
-        this.umlstateService.updateUmlState(umlstate)
+        this.umlstateService.updateUmlState(umlstate, this.dialogData.GONG__StackPath)
           .subscribe(umlstate => {
             this.umlstateService.UmlStateServiceChanged.next("update")
           });
       }
     )
 
-    this.dialogRef.close('Sorting of ' + this.dialogData.ReversePointer +' done');
+    this.dialogRef.close('Sorting of ' + this.dialogData.ReversePointer + ' done');
   }
 }

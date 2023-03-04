@@ -15,13 +15,24 @@ import (
 
 var dummy_strconv_import strconv.NumError
 
+// swagger:ignore
+type GONG__ExpressionType string
+
+const (
+	GONG__STRUCT_INSTANCE      GONG__ExpressionType = "STRUCT_INSTANCE"
+	GONG__FIELD_OR_CONST_VALUE GONG__ExpressionType = "FIELD_OR_CONST_VALUE"
+	GONG__FIELD_VALUE          GONG__ExpressionType = "FIELD_VALUE"
+	GONG__ENUM_CAST_INT        GONG__ExpressionType = "ENUM_CAST_INT"
+	GONG__ENUM_CAST_STRING     GONG__ExpressionType = "ENUM_CAST_STRING"
+	GONG__IDENTIFIER_CONST     GONG__ExpressionType = "IDENTIFIER_CONST"
+)
+
 // ParseAstFile Parse pathToFile and stages all instances
 // declared in the file
-func ParseAstFile(pathToFile string) error {
-
+func ParseAstFile(stage *StageStruct, pathToFile string) error {
 	// map to store renaming docLink
 	// to be removed after fix of [issue](https://github.com/golang/go/issues/57559)
-	Stage.Map_DocLink_Renaming = make(map[string]string, 0)
+	stage.Map_DocLink_Renaming = make(map[string]GONG__Identifier, 0)
 
 	fileOfInterest, err := filepath.Abs(pathToFile)
 	if err != nil {
@@ -37,15 +48,19 @@ func ParseAstFile(pathToFile string) error {
 		return errors.New("Unable to parser " + errParser.Error())
 	}
 
+	return ParseAstFileFromAst(stage, inFile, fset)
+}
+
+// ParseAstFile Parse pathToFile and stages all instances
+// declared in the file
+func ParseAstFileFromAst(stage *StageStruct, inFile *ast.File, fset *token.FileSet) error {
 	// if there is a meta package import, it is the third import
 	if len(inFile.Imports) > 3 {
-		log.Fatalln("Too many imports in file", fileOfInterest)
+		log.Fatalln("Too many imports in file", inFile.Name)
 	}
-	stage := &Stage
-	_ = stage
 	if len(inFile.Imports) == 3 {
-		Stage.MetaPackageImportAlias = inFile.Imports[2].Name.Name
-		Stage.MetaPackageImportPath = inFile.Imports[2].Path.Value
+		stage.MetaPackageImportAlias = inFile.Imports[2].Name.Name
+		stage.MetaPackageImportPath = inFile.Imports[2].Path.Value
 	}
 
 	// astCoordinate := "File "
@@ -99,7 +114,7 @@ func ParseAstFile(pathToFile string) error {
 						assignStmt := stmt
 						instance, id, gongstruct, fieldName :=
 							UnmarshallGongstructStaging(
-								&cmap, assignStmt, astCoordinate)
+								stage, &cmap, assignStmt, astCoordinate)
 						_ = instance
 						_ = id
 						_ = gongstruct
@@ -162,71 +177,122 @@ func ParseAstFile(pathToFile string) error {
 								key = strings.TrimPrefix(key, "\"")
 								key = strings.TrimSuffix(key, "\"")
 							}
+							var expressionType GONG__ExpressionType = GONG__STRUCT_INSTANCE
+							var docLink GONG__Identifier
 
-							var isFieldEntry bool
 							var fieldName string
 							var ue *ast.UnaryExpr
 							if ue, ok = kve.Value.(*ast.UnaryExpr); !ok {
-								isFieldEntry = true
+								expressionType = GONG__FIELD_OR_CONST_VALUE
+							}
+
+							var callExpr *ast.CallExpr
+							if callExpr, ok = kve.Value.(*ast.CallExpr); ok {
+
+								var se *ast.SelectorExpr
+								if se, ok = callExpr.Fun.(*ast.SelectorExpr); !ok {
+									log.Fatal("Expression should be a selector expression" +
+										fset.Position(callExpr.Pos()).String())
+								}
+
+								var id *ast.Ident
+								if id, ok = se.X.(*ast.Ident); !ok {
+									log.Fatal("Expression should be an ident" +
+										fset.Position(se.Pos()).String())
+								}
+
+								// check the arg type to select wether this is a int or a string enum
+								var bl *ast.BasicLit
+								if bl, ok = callExpr.Args[0].(*ast.BasicLit); ok {
+									switch bl.Kind {
+									case token.STRING:
+										expressionType = GONG__ENUM_CAST_STRING
+									case token.INT:
+										expressionType = GONG__ENUM_CAST_INT
+									}
+								} else {
+									log.Fatal("Expression should be a basic lit" +
+										fset.Position(se.Pos()).String())
+								}
+
+								docLink.Ident = id.Name + "." + se.Sel.Name
+								_ = callExpr
 							}
 
 							var se2 *ast.SelectorExpr
-							if isFieldEntry {
-								if se2, ok = kve.Value.(*ast.SelectorExpr); !ok {
-									log.Fatal("Expression should be a selector expression" +
-										fset.Position(kve.Pos()).String())
+							switch expressionType {
+							case GONG__FIELD_OR_CONST_VALUE:
+								if se2, ok = kve.Value.(*ast.SelectorExpr); ok {
+
+									var ident *ast.Ident
+									if _, ok = se2.X.(*ast.ParenExpr); ok {
+										expressionType = GONG__FIELD_VALUE
+										fieldName = se2.Sel.Name
+									} else if ident, ok = se2.X.(*ast.Ident); ok {
+										expressionType = GONG__IDENTIFIER_CONST
+										docLink.Ident = ident.Name + "." + se2.Sel.Name
+									} else {
+										log.Fatal("Expression should be a selector expression or an ident" +
+											fset.Position(kve.Pos()).String())
+									}
+								} else {
+
 								}
-								fieldName = se2.Sel.Name
 							}
 
 							var pe *ast.ParenExpr
-							if !isFieldEntry {
+							switch expressionType {
+							case GONG__STRUCT_INSTANCE:
 								if pe, ok = ue.X.(*ast.ParenExpr); !ok {
 									log.Fatal("Expression should be parenthese expression" +
 										fset.Position(ue.Pos()).String())
 								}
-							} else {
+							case GONG__FIELD_VALUE:
 								if pe, ok = se2.X.(*ast.ParenExpr); !ok {
 									log.Fatal("Expression should be parenthese expression" +
 										fset.Position(ue.Pos()).String())
 								}
 							}
+							switch expressionType {
+							case GONG__FIELD_VALUE, GONG__STRUCT_INSTANCE:
+								// expect a Composite Litteral with no Element <type>{}
+								var cl *ast.CompositeLit
+								if cl, ok = pe.X.(*ast.CompositeLit); !ok {
+									log.Fatal("Expression should be a composite lit" +
+										fset.Position(pe.Pos()).String())
+								}
 
-							// expect a Composite Litteral with no Element <type>{}
-							var cl *ast.CompositeLit
-							if cl, ok = pe.X.(*ast.CompositeLit); !ok {
-								log.Fatal("Expression should be a composite lit" +
-									fset.Position(pe.Pos()).String())
+								var se *ast.SelectorExpr
+								if se, ok = cl.Type.(*ast.SelectorExpr); !ok {
+									log.Fatal("Expression should be a selector" +
+										fset.Position(cl.Pos()).String())
+								}
+
+								var id *ast.Ident
+								if id, ok = se.X.(*ast.Ident); !ok {
+									log.Fatal("Expression should be an ident" +
+										fset.Position(se.Pos()).String())
+								}
+								docLink.Ident = id.Name + "." + se.Sel.Name
 							}
 
-							var se *ast.SelectorExpr
-							if se, ok = cl.Type.(*ast.SelectorExpr); !ok {
-								log.Fatal("Expression should be a selector" +
-									fset.Position(cl.Pos()).String())
-							}
-
-							var id *ast.Ident
-							if id, ok = se.X.(*ast.Ident); !ok {
-								log.Fatal("Expression should be an ident" +
-									fset.Position(se.Pos()).String())
-							}
-							docLink := id.Name + "." + se.Sel.Name
-
-							if isFieldEntry {
-								docLink += "." + fieldName
+							switch expressionType {
+							case GONG__FIELD_VALUE:
+								docLink.Ident += "." + fieldName
 							}
 
 							// if map_DocLink_Identifier has the same ident, this means
 							// that no renaming has occured since the last processing of the
 							// file. But it is neccessary to keep it in memory for the
 							// marshalling
-							if docLink == key {
+							if docLink.Ident == key {
 								// continue
 							}
 
 							// otherwise, one stores the new ident (after renaming) in the
 							// renaming map
-							Stage.Map_DocLink_Renaming[key] = docLink
+							docLink.Type = expressionType
+							stage.Map_DocLink_Renaming[key] = docLink
 						}
 					}
 				}
@@ -258,10 +324,7 @@ var __gong__map_SliceOfPointerToGongStructField = make(map[string]*SliceOfPointe
 // While this was introduced in go 1.19, it is not yet implemented in
 // gopls (see [issue](https://github.com/golang/go/issues/57559)
 func lookupPackage(name string) (importPath string, ok bool) {
-	if name == Stage.MetaPackageImportAlias {
-		return Stage.MetaPackageImportAlias, true
-	}
-	return comment.DefaultLookupPackage(name)
+	return name, true
 }
 func lookupSym(recv, name string) (ok bool) {
 	if recv == "" {
@@ -271,7 +334,7 @@ func lookupSym(recv, name string) (ok bool) {
 }
 
 // UnmarshallGoStaging unmarshall a go assign statement
-func UnmarshallGongstructStaging(cmap *ast.CommentMap, assignStmt *ast.AssignStmt, astCoordinate_ string) (
+func UnmarshallGongstructStaging(stage *StageStruct, cmap *ast.CommentMap, assignStmt *ast.AssignStmt, astCoordinate_ string) (
 	instance any,
 	identifier string,
 	gongstructName string,
@@ -322,8 +385,8 @@ func UnmarshallGongstructStaging(cmap *ast.CommentMap, assignStmt *ast.AssignStm
 
 						// we check wether the doc link has been renamed
 						// to be removed after fix of [issue](https://github.com/golang/go/issues/57559)
-						if renamed, ok := (Stage.Map_DocLink_Renaming)[docLinkText]; ok {
-							docLinkText = renamed
+						if renamed, ok := (stage.Map_DocLink_Renaming)[docLinkText]; ok {
+							docLinkText = renamed.Ident
 						}
 					}
 				}
@@ -428,51 +491,51 @@ func UnmarshallGongstructStaging(cmap *ast.CommentMap, assignStmt *ast.AssignStm
 									switch gongstructName {
 									// insertion point for identifiers
 									case "GongBasicField":
-										instanceGongBasicField := (&GongBasicField{Name: instanceName}).Stage()
+										instanceGongBasicField := (&GongBasicField{Name: instanceName}).Stage(stage)
 										instance = any(instanceGongBasicField)
 										__gong__map_GongBasicField[identifier] = instanceGongBasicField
 									case "GongEnum":
-										instanceGongEnum := (&GongEnum{Name: instanceName}).Stage()
+										instanceGongEnum := (&GongEnum{Name: instanceName}).Stage(stage)
 										instance = any(instanceGongEnum)
 										__gong__map_GongEnum[identifier] = instanceGongEnum
 									case "GongEnumValue":
-										instanceGongEnumValue := (&GongEnumValue{Name: instanceName}).Stage()
+										instanceGongEnumValue := (&GongEnumValue{Name: instanceName}).Stage(stage)
 										instance = any(instanceGongEnumValue)
 										__gong__map_GongEnumValue[identifier] = instanceGongEnumValue
 									case "GongLink":
-										instanceGongLink := (&GongLink{Name: instanceName}).Stage()
+										instanceGongLink := (&GongLink{Name: instanceName}).Stage(stage)
 										instance = any(instanceGongLink)
 										__gong__map_GongLink[identifier] = instanceGongLink
 									case "GongNote":
-										instanceGongNote := (&GongNote{Name: instanceName}).Stage()
+										instanceGongNote := (&GongNote{Name: instanceName}).Stage(stage)
 										instance = any(instanceGongNote)
 										__gong__map_GongNote[identifier] = instanceGongNote
 									case "GongStruct":
-										instanceGongStruct := (&GongStruct{Name: instanceName}).Stage()
+										instanceGongStruct := (&GongStruct{Name: instanceName}).Stage(stage)
 										instance = any(instanceGongStruct)
 										__gong__map_GongStruct[identifier] = instanceGongStruct
 									case "GongTimeField":
-										instanceGongTimeField := (&GongTimeField{Name: instanceName}).Stage()
+										instanceGongTimeField := (&GongTimeField{Name: instanceName}).Stage(stage)
 										instance = any(instanceGongTimeField)
 										__gong__map_GongTimeField[identifier] = instanceGongTimeField
 									case "Meta":
-										instanceMeta := (&Meta{Name: instanceName}).Stage()
+										instanceMeta := (&Meta{Name: instanceName}).Stage(stage)
 										instance = any(instanceMeta)
 										__gong__map_Meta[identifier] = instanceMeta
 									case "MetaReference":
-										instanceMetaReference := (&MetaReference{Name: instanceName}).Stage()
+										instanceMetaReference := (&MetaReference{Name: instanceName}).Stage(stage)
 										instance = any(instanceMetaReference)
 										__gong__map_MetaReference[identifier] = instanceMetaReference
 									case "ModelPkg":
-										instanceModelPkg := (&ModelPkg{Name: instanceName}).Stage()
+										instanceModelPkg := (&ModelPkg{Name: instanceName}).Stage(stage)
 										instance = any(instanceModelPkg)
 										__gong__map_ModelPkg[identifier] = instanceModelPkg
 									case "PointerToGongStructField":
-										instancePointerToGongStructField := (&PointerToGongStructField{Name: instanceName}).Stage()
+										instancePointerToGongStructField := (&PointerToGongStructField{Name: instanceName}).Stage(stage)
 										instance = any(instancePointerToGongStructField)
 										__gong__map_PointerToGongStructField[identifier] = instancePointerToGongStructField
 									case "SliceOfPointerToGongStructField":
-										instanceSliceOfPointerToGongStructField := (&SliceOfPointerToGongStructField{Name: instanceName}).Stage()
+										instanceSliceOfPointerToGongStructField := (&SliceOfPointerToGongStructField{Name: instanceName}).Stage(stage)
 										instance = any(instanceSliceOfPointerToGongStructField)
 										__gong__map_SliceOfPointerToGongStructField[identifier] = instanceSliceOfPointerToGongStructField
 									}
@@ -764,6 +827,10 @@ func UnmarshallGongstructStaging(cmap *ast.CommentMap, assignStmt *ast.AssignStm
 					// remove first and last char
 					fielValue := basicLit.Value[1 : len(basicLit.Value)-1]
 					__gong__map_GongLink[identifier].Name = fielValue
+				case "Recv":
+					// remove first and last char
+					fielValue := basicLit.Value[1 : len(basicLit.Value)-1]
+					__gong__map_GongLink[identifier].Recv = fielValue
 				case "ImportPath":
 					// remove first and last char
 					fielValue := basicLit.Value[1 : len(basicLit.Value)-1]
@@ -780,6 +847,10 @@ func UnmarshallGongstructStaging(cmap *ast.CommentMap, assignStmt *ast.AssignStm
 					// remove first and last char
 					fielValue := basicLit.Value[1 : len(basicLit.Value)-1]
 					__gong__map_GongNote[identifier].Body = fielValue
+				case "BodyHTML":
+					// remove first and last char
+					fielValue := basicLit.Value[1 : len(basicLit.Value)-1]
+					__gong__map_GongNote[identifier].BodyHTML = fielValue
 				}
 			case "GongStruct":
 				switch fieldName {

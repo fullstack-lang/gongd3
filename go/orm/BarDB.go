@@ -192,6 +192,13 @@ type BackRepoBarStruct struct {
 	Map_BarDBID_BarPtr *map[uint]*models.Bar
 
 	db *gorm.DB
+
+	stage *models.StageStruct
+}
+
+func (backRepoBar *BackRepoBarStruct) GetStage() (stage *models.StageStruct) {
+	stage = backRepoBar.stage
+	return
 }
 
 func (backRepoBar *BackRepoBarStruct) GetDB() *gorm.DB {
@@ -206,7 +213,7 @@ func (backRepoBar *BackRepoBarStruct) GetBarDBFromBarPtr(bar *models.Bar) (barDB
 }
 
 // BackRepoBar.Init set up the BackRepo of the Bar
-func (backRepoBar *BackRepoBarStruct) Init(db *gorm.DB) (Error error) {
+func (backRepoBar *BackRepoBarStruct) Init(stage *models.StageStruct, db *gorm.DB) (Error error) {
 
 	if backRepoBar.Map_BarDBID_BarPtr != nil {
 		err := errors.New("In Init, backRepoBar.Map_BarDBID_BarPtr should be nil")
@@ -233,6 +240,7 @@ func (backRepoBar *BackRepoBarStruct) Init(db *gorm.DB) (Error error) {
 	backRepoBar.Map_BarPtr_BarDBID = &tmpID
 
 	backRepoBar.db = db
+	backRepoBar.stage = stage
 	return
 }
 
@@ -388,7 +396,7 @@ func (backRepoBar *BackRepoBarStruct) CheckoutPhaseOne() (Error error) {
 	// list of instances to be removed
 	// start from the initial map on the stage and remove instances that have been checked out
 	barInstancesToBeRemovedFromTheStage := make(map[*models.Bar]any)
-	for key, value := range models.Stage.Bars {
+	for key, value := range backRepoBar.stage.Bars {
 		barInstancesToBeRemovedFromTheStage[key] = value
 	}
 
@@ -406,7 +414,7 @@ func (backRepoBar *BackRepoBarStruct) CheckoutPhaseOne() (Error error) {
 
 	// remove from stage and back repo's 3 maps all bars that are not in the checkout
 	for bar := range barInstancesToBeRemovedFromTheStage {
-		bar.Unstage()
+		bar.Unstage(backRepoBar.GetStage())
 
 		// remove instance from the back repo 3 maps
 		barID := (*backRepoBar.Map_BarPtr_BarDBID)[bar]
@@ -431,12 +439,12 @@ func (backRepoBar *BackRepoBarStruct) CheckoutPhaseOneInstance(barDB *BarDB) (Er
 
 		// append model store with the new element
 		bar.Name = barDB.Name_Data.String
-		bar.Stage()
+		bar.Stage(backRepoBar.GetStage())
 	}
 	barDB.CopyBasicFieldsToBar(bar)
 
 	// in some cases, the instance might have been unstaged. It is necessary to stage it again
-	bar.Stage()
+	bar.Stage(backRepoBar.GetStage())
 
 	// preserve pointer to barDB. Otherwise, pointer will is recycled and the map of pointers
 	// Map_BarDBID_BarDB)[barDB hold variable pointers

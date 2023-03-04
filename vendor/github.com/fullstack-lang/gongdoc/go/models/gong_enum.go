@@ -2,154 +2,58 @@
 package models
 
 // insertion point of enum utility functions
-// Utility function for GongdocNodeType
+// Utility function for GongEnumShapeType
 // if enum values are string, it is stored with the value
 // if enum values are int, they are stored with the code of the value
-func (gongdocnodetype GongdocNodeType) ToString() (res string) {
+func (gongenumshapetype GongEnumShapeType) ToInt() (res int) {
 
 	// migration of former implementation of enum
-	switch gongdocnodetype {
+	switch gongenumshapetype {
 	// insertion code per enum code
-	case ROOT_OF_DIAGRAMS:
-		res = "ROOT_OF_DIAGRAMS"
-	case ROOT_OF_CLASS_DIAGRAMS:
-		res = "ROOT_OF_CLASS_DIAGRAMS"
-	case ROOT_OF_STATE_DIAGRAMS:
-		res = "ROOT_OF_STATE_DIAGRAMS"
-	case CLASS_DIAGRAM:
-		res = "CLASS_DIAGRAM"
-	case STATE_DIAGRAM:
-		res = "STATE_DIAGRAM"
-	case ROOT_OF_GONG_STRUCTS:
-		res = "ROOT_OF_GONG_STRUCTS"
-	case GONG_STRUCT:
-		res = "GONG_STRUCT"
-	case GONG_STRUCT_FIELD:
-		res = "GONG_STRUCT_FIELD"
-	case ROOT_OF_GONG_ENUMS:
-		res = "ROOT_OF_GONG_ENUMS"
-	case GONG_ENUM:
-		res = "GONG_ENUM"
-	case GONG_ENUM_VALUE:
-		res = "GONG_ENUM_VALUE"
-	case ROOT_OF_GONG_NOTES:
-		res = "ROOT_OF_GONG_NOTES"
-	case GONG_NOTE:
-		res = "GONG_NOTE"
-	case GONG_NOTE_LINK:
-		res = "GONG_NOTE_LINK"
+	case Int:
+		res = 0
+	case String:
+		res = 1
 	}
 	return
 }
 
-func (gongdocnodetype *GongdocNodeType) FromString(input string) (err error) {
+func (gongenumshapetype *GongEnumShapeType) FromInt(input int) (err error) {
 
 	switch input {
 	// insertion code per enum code
-	case "ROOT_OF_DIAGRAMS":
-		*gongdocnodetype = ROOT_OF_DIAGRAMS
-	case "ROOT_OF_CLASS_DIAGRAMS":
-		*gongdocnodetype = ROOT_OF_CLASS_DIAGRAMS
-	case "ROOT_OF_STATE_DIAGRAMS":
-		*gongdocnodetype = ROOT_OF_STATE_DIAGRAMS
-	case "CLASS_DIAGRAM":
-		*gongdocnodetype = CLASS_DIAGRAM
-	case "STATE_DIAGRAM":
-		*gongdocnodetype = STATE_DIAGRAM
-	case "ROOT_OF_GONG_STRUCTS":
-		*gongdocnodetype = ROOT_OF_GONG_STRUCTS
-	case "GONG_STRUCT":
-		*gongdocnodetype = GONG_STRUCT
-	case "GONG_STRUCT_FIELD":
-		*gongdocnodetype = GONG_STRUCT_FIELD
-	case "ROOT_OF_GONG_ENUMS":
-		*gongdocnodetype = ROOT_OF_GONG_ENUMS
-	case "GONG_ENUM":
-		*gongdocnodetype = GONG_ENUM
-	case "GONG_ENUM_VALUE":
-		*gongdocnodetype = GONG_ENUM_VALUE
-	case "ROOT_OF_GONG_NOTES":
-		*gongdocnodetype = ROOT_OF_GONG_NOTES
-	case "GONG_NOTE":
-		*gongdocnodetype = GONG_NOTE
-	case "GONG_NOTE_LINK":
-		*gongdocnodetype = GONG_NOTE_LINK
+	case 0:
+		*gongenumshapetype = Int
+	case 1:
+		*gongenumshapetype = String
 	default:
 		return errUnkownEnum
 	}
 	return
 }
 
-func (gongdocnodetype *GongdocNodeType) FromCodeString(input string) (err error) {
+func (gongenumshapetype *GongEnumShapeType) FromCodeString(input string) (err error) {
 
 	switch input {
 	// insertion code per enum code
-	case "ROOT_OF_DIAGRAMS":
-		*gongdocnodetype = ROOT_OF_DIAGRAMS
-	case "ROOT_OF_CLASS_DIAGRAMS":
-		*gongdocnodetype = ROOT_OF_CLASS_DIAGRAMS
-	case "ROOT_OF_STATE_DIAGRAMS":
-		*gongdocnodetype = ROOT_OF_STATE_DIAGRAMS
-	case "CLASS_DIAGRAM":
-		*gongdocnodetype = CLASS_DIAGRAM
-	case "STATE_DIAGRAM":
-		*gongdocnodetype = STATE_DIAGRAM
-	case "ROOT_OF_GONG_STRUCTS":
-		*gongdocnodetype = ROOT_OF_GONG_STRUCTS
-	case "GONG_STRUCT":
-		*gongdocnodetype = GONG_STRUCT
-	case "GONG_STRUCT_FIELD":
-		*gongdocnodetype = GONG_STRUCT_FIELD
-	case "ROOT_OF_GONG_ENUMS":
-		*gongdocnodetype = ROOT_OF_GONG_ENUMS
-	case "GONG_ENUM":
-		*gongdocnodetype = GONG_ENUM
-	case "GONG_ENUM_VALUE":
-		*gongdocnodetype = GONG_ENUM_VALUE
-	case "ROOT_OF_GONG_NOTES":
-		*gongdocnodetype = ROOT_OF_GONG_NOTES
-	case "GONG_NOTE":
-		*gongdocnodetype = GONG_NOTE
-	case "GONG_NOTE_LINK":
-		*gongdocnodetype = GONG_NOTE_LINK
+	case "Int":
+		*gongenumshapetype = Int
+	case "String":
+		*gongenumshapetype = String
 	default:
 		return errUnkownEnum
 	}
 	return
 }
 
-func (gongdocnodetype *GongdocNodeType) ToCodeString() (res string) {
+func (gongenumshapetype *GongEnumShapeType) ToCodeString() (res string) {
 
-	switch *gongdocnodetype {
+	switch *gongenumshapetype {
 	// insertion code per enum code
-	case ROOT_OF_DIAGRAMS:
-		res = "ROOT_OF_DIAGRAMS"
-	case ROOT_OF_CLASS_DIAGRAMS:
-		res = "ROOT_OF_CLASS_DIAGRAMS"
-	case ROOT_OF_STATE_DIAGRAMS:
-		res = "ROOT_OF_STATE_DIAGRAMS"
-	case CLASS_DIAGRAM:
-		res = "CLASS_DIAGRAM"
-	case STATE_DIAGRAM:
-		res = "STATE_DIAGRAM"
-	case ROOT_OF_GONG_STRUCTS:
-		res = "ROOT_OF_GONG_STRUCTS"
-	case GONG_STRUCT:
-		res = "GONG_STRUCT"
-	case GONG_STRUCT_FIELD:
-		res = "GONG_STRUCT_FIELD"
-	case ROOT_OF_GONG_ENUMS:
-		res = "ROOT_OF_GONG_ENUMS"
-	case GONG_ENUM:
-		res = "GONG_ENUM"
-	case GONG_ENUM_VALUE:
-		res = "GONG_ENUM_VALUE"
-	case ROOT_OF_GONG_NOTES:
-		res = "ROOT_OF_GONG_NOTES"
-	case GONG_NOTE:
-		res = "GONG_NOTE"
-	case GONG_NOTE_LINK:
-		res = "GONG_NOTE_LINK"
+	case Int:
+		res = "Int"
+	case String:
+		res = "String"
 	}
 	return
 }
@@ -218,170 +122,58 @@ func (multiplicitytype *MultiplicityType) ToCodeString() (res string) {
 	return
 }
 
-// Utility function for NoteLinkType
+// Utility function for NoteShapeLinkType
 // if enum values are string, it is stored with the value
 // if enum values are int, they are stored with the code of the value
-func (notelinktype NoteLinkType) ToString() (res string) {
+func (noteshapelinktype NoteShapeLinkType) ToString() (res string) {
 
 	// migration of former implementation of enum
-	switch notelinktype {
+	switch noteshapelinktype {
 	// insertion code per enum code
-	case NOTE_LINK_TO_A_CLASSSHAPE:
-		res = "NOTE_LINK_TO_A_CLASSSHAPE"
-	case NOTE_LINK_TO_A_LINK:
-		res = "NOTE_LINK_TO_A_LINK"
+	case NOTE_SHAPE_LINK_TO_GONG_STRUCT_OR_ENUM_SHAPE:
+		res = "NOTE_SHAPE_LINK_TO_GONG_STRUCT_OR_ENUM_SHAPE"
+	case NOTE_SHAPE_LINK_TO_GONG_FIELD:
+		res = "NOTE_SHAPE_LINK_TO_GONG_FIELD"
 	}
 	return
 }
 
-func (notelinktype *NoteLinkType) FromString(input string) (err error) {
+func (noteshapelinktype *NoteShapeLinkType) FromString(input string) (err error) {
 
 	switch input {
 	// insertion code per enum code
-	case "NOTE_LINK_TO_A_CLASSSHAPE":
-		*notelinktype = NOTE_LINK_TO_A_CLASSSHAPE
-	case "NOTE_LINK_TO_A_LINK":
-		*notelinktype = NOTE_LINK_TO_A_LINK
+	case "NOTE_SHAPE_LINK_TO_GONG_STRUCT_OR_ENUM_SHAPE":
+		*noteshapelinktype = NOTE_SHAPE_LINK_TO_GONG_STRUCT_OR_ENUM_SHAPE
+	case "NOTE_SHAPE_LINK_TO_GONG_FIELD":
+		*noteshapelinktype = NOTE_SHAPE_LINK_TO_GONG_FIELD
 	default:
 		return errUnkownEnum
 	}
 	return
 }
 
-func (notelinktype *NoteLinkType) FromCodeString(input string) (err error) {
+func (noteshapelinktype *NoteShapeLinkType) FromCodeString(input string) (err error) {
 
 	switch input {
 	// insertion code per enum code
-	case "NOTE_LINK_TO_A_CLASSSHAPE":
-		*notelinktype = NOTE_LINK_TO_A_CLASSSHAPE
-	case "NOTE_LINK_TO_A_LINK":
-		*notelinktype = NOTE_LINK_TO_A_LINK
+	case "NOTE_SHAPE_LINK_TO_GONG_STRUCT_OR_ENUM_SHAPE":
+		*noteshapelinktype = NOTE_SHAPE_LINK_TO_GONG_STRUCT_OR_ENUM_SHAPE
+	case "NOTE_SHAPE_LINK_TO_GONG_FIELD":
+		*noteshapelinktype = NOTE_SHAPE_LINK_TO_GONG_FIELD
 	default:
 		return errUnkownEnum
 	}
 	return
 }
 
-func (notelinktype *NoteLinkType) ToCodeString() (res string) {
+func (noteshapelinktype *NoteShapeLinkType) ToCodeString() (res string) {
 
-	switch *notelinktype {
+	switch *noteshapelinktype {
 	// insertion code per enum code
-	case NOTE_LINK_TO_A_CLASSSHAPE:
-		res = "NOTE_LINK_TO_A_CLASSSHAPE"
-	case NOTE_LINK_TO_A_LINK:
-		res = "NOTE_LINK_TO_A_LINK"
-	}
-	return
-}
-
-// Utility function for ReferenceType
-// if enum values are string, it is stored with the value
-// if enum values are int, they are stored with the code of the value
-func (referencetype ReferenceType) ToString() (res string) {
-
-	// migration of former implementation of enum
-	switch referencetype {
-	// insertion code per enum code
-	case REFERENCE_GONG_STRUCT:
-		res = "REFERENCE_GONG_STRUCT"
-	case REFERENCE_GONG_ENUM:
-		res = "REFERENCE_GONG_ENUM"
-	}
-	return
-}
-
-func (referencetype *ReferenceType) FromString(input string) (err error) {
-
-	switch input {
-	// insertion code per enum code
-	case "REFERENCE_GONG_STRUCT":
-		*referencetype = REFERENCE_GONG_STRUCT
-	case "REFERENCE_GONG_ENUM":
-		*referencetype = REFERENCE_GONG_ENUM
-	default:
-		return errUnkownEnum
-	}
-	return
-}
-
-func (referencetype *ReferenceType) FromCodeString(input string) (err error) {
-
-	switch input {
-	// insertion code per enum code
-	case "REFERENCE_GONG_STRUCT":
-		*referencetype = REFERENCE_GONG_STRUCT
-	case "REFERENCE_GONG_ENUM":
-		*referencetype = REFERENCE_GONG_ENUM
-	default:
-		return errUnkownEnum
-	}
-	return
-}
-
-func (referencetype *ReferenceType) ToCodeString() (res string) {
-
-	switch *referencetype {
-	// insertion code per enum code
-	case REFERENCE_GONG_STRUCT:
-		res = "REFERENCE_GONG_STRUCT"
-	case REFERENCE_GONG_ENUM:
-		res = "REFERENCE_GONG_ENUM"
-	}
-	return
-}
-
-// Utility function for TreeType
-// if enum values are string, it is stored with the value
-// if enum values are int, they are stored with the code of the value
-func (treetype TreeType) ToString() (res string) {
-
-	// migration of former implementation of enum
-	switch treetype {
-	// insertion code per enum code
-	case TREE_OF_DIAGRAMS:
-		res = "TREE_OF_DIAGRAMS"
-	case TREE_OF_IDENTIFIERS:
-		res = "TREE_OF_IDENTIFIERS"
-	}
-	return
-}
-
-func (treetype *TreeType) FromString(input string) (err error) {
-
-	switch input {
-	// insertion code per enum code
-	case "TREE_OF_DIAGRAMS":
-		*treetype = TREE_OF_DIAGRAMS
-	case "TREE_OF_IDENTIFIERS":
-		*treetype = TREE_OF_IDENTIFIERS
-	default:
-		return errUnkownEnum
-	}
-	return
-}
-
-func (treetype *TreeType) FromCodeString(input string) (err error) {
-
-	switch input {
-	// insertion code per enum code
-	case "TREE_OF_DIAGRAMS":
-		*treetype = TREE_OF_DIAGRAMS
-	case "TREE_OF_IDENTIFIERS":
-		*treetype = TREE_OF_IDENTIFIERS
-	default:
-		return errUnkownEnum
-	}
-	return
-}
-
-func (treetype *TreeType) ToCodeString() (res string) {
-
-	switch *treetype {
-	// insertion code per enum code
-	case TREE_OF_DIAGRAMS:
-		res = "TREE_OF_DIAGRAMS"
-	case TREE_OF_IDENTIFIERS:
-		res = "TREE_OF_IDENTIFIERS"
+	case NOTE_SHAPE_LINK_TO_GONG_STRUCT_OR_ENUM_SHAPE:
+		res = "NOTE_SHAPE_LINK_TO_GONG_STRUCT_OR_ENUM_SHAPE"
+	case NOTE_SHAPE_LINK_TO_GONG_FIELD:
+		res = "NOTE_SHAPE_LINK_TO_GONG_FIELD"
 	}
 	return
 }

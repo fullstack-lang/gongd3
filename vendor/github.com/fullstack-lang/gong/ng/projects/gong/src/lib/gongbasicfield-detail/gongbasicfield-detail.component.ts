@@ -12,7 +12,7 @@ import { MapOfSortingComponents } from '../map-components'
 // insertion point for imports
 import { GongStructDB } from '../gongstruct-db'
 
-import { Router, RouterState, ActivatedRoute } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 
 import { MatDialog, MAT_DIALOG_DATA, MatDialogRef, MatDialogConfig } from '@angular/material/dialog';
 
@@ -35,6 +35,7 @@ enum GongBasicFieldDetailComponentState {
 export class GongBasicFieldDetailComponent implements OnInit {
 
 	// insertion point for declarations
+	IsDocLinkFormControl: UntypedFormControl = new UntypedFormControl(false);
 
 	// the GongBasicFieldDB of interest
 	gongbasicfield: GongBasicFieldDB = new GongBasicFieldDB
@@ -58,23 +59,34 @@ export class GongBasicFieldDetailComponent implements OnInit {
 	originStruct: string = ""
 	originStructFieldName: string = ""
 
+	GONG__StackPath: string = ""
+
 	constructor(
 		private gongbasicfieldService: GongBasicFieldService,
 		private frontRepoService: FrontRepoService,
 		public dialog: MatDialog,
-		private route: ActivatedRoute,
+		private activatedRoute: ActivatedRoute,
 		private router: Router,
 	) {
 	}
 
 	ngOnInit(): void {
+		this.GONG__StackPath = this.activatedRoute.snapshot.paramMap.get('GONG__StackPath')!;
+
+		this.activatedRoute.params.subscribe(params => {
+			this.onChangedActivatedRoute()
+		});
+	}
+	onChangedActivatedRoute(): void {
 
 		// compute state
-		this.id = +this.route.snapshot.paramMap.get('id')!;
-		this.originStruct = this.route.snapshot.paramMap.get('originStruct')!;
-		this.originStructFieldName = this.route.snapshot.paramMap.get('originStructFieldName')!;
+		this.id = +this.activatedRoute.snapshot.paramMap.get('id')!;
+		this.originStruct = this.activatedRoute.snapshot.paramMap.get('originStruct')!;
+		this.originStructFieldName = this.activatedRoute.snapshot.paramMap.get('originStructFieldName')!;
 
-		const association = this.route.snapshot.paramMap.get('association');
+		this.GONG__StackPath = this.activatedRoute.snapshot.paramMap.get('GONG__StackPath')!;
+
+		const association = this.activatedRoute.snapshot.paramMap.get('association');
 		if (this.id == 0) {
 			this.state = GongBasicFieldDetailComponentState.CREATE_INSTANCE
 		} else {
@@ -109,7 +121,7 @@ export class GongBasicFieldDetailComponent implements OnInit {
 
 	getGongBasicField(): void {
 
-		this.frontRepoService.pull().subscribe(
+		this.frontRepoService.pull(this.GONG__StackPath).subscribe(
 			frontRepo => {
 				this.frontRepo = frontRepo
 
@@ -132,6 +144,7 @@ export class GongBasicFieldDetailComponent implements OnInit {
 				}
 
 				// insertion point for recovery of form controls value for bool fields
+				this.IsDocLinkFormControl.setValue(this.gongbasicfield.IsDocLink)
 			}
 		)
 
@@ -154,6 +167,7 @@ export class GongBasicFieldDetailComponent implements OnInit {
 			this.gongbasicfield.GongEnumID.Int64 = 0
 			this.gongbasicfield.GongEnumID.Valid = true
 		}
+		this.gongbasicfield.IsDocLink = this.IsDocLinkFormControl.value
 
 		// save from the front pointer space to the non pointer space for serialization
 
@@ -173,13 +187,13 @@ export class GongBasicFieldDetailComponent implements OnInit {
 
 		switch (this.state) {
 			case GongBasicFieldDetailComponentState.UPDATE_INSTANCE:
-				this.gongbasicfieldService.updateGongBasicField(this.gongbasicfield)
+				this.gongbasicfieldService.updateGongBasicField(this.gongbasicfield, this.GONG__StackPath)
 					.subscribe(gongbasicfield => {
 						this.gongbasicfieldService.GongBasicFieldServiceChanged.next("update")
 					});
 				break;
 			default:
-				this.gongbasicfieldService.postGongBasicField(this.gongbasicfield).subscribe(gongbasicfield => {
+				this.gongbasicfieldService.postGongBasicField(this.gongbasicfield, this.GONG__StackPath).subscribe(gongbasicfield => {
 					this.gongbasicfieldService.GongBasicFieldServiceChanged.next("post")
 					this.gongbasicfield = new (GongBasicFieldDB) // reset fields
 				});
@@ -208,6 +222,7 @@ export class GongBasicFieldDetailComponent implements OnInit {
 			dialogData.ReversePointer = reverseField
 			dialogData.OrderingMode = false
 			dialogData.SelectionMode = selectionMode
+			dialogData.GONG__StackPath = this.GONG__StackPath
 
 			dialogConfig.data = dialogData
 			const dialogRef: MatDialogRef<string, any> = this.dialog.open(
@@ -224,6 +239,7 @@ export class GongBasicFieldDetailComponent implements OnInit {
 			dialogData.ReversePointer = reverseField
 			dialogData.OrderingMode = false
 			dialogData.SelectionMode = selectionMode
+			dialogData.GONG__StackPath = this.GONG__StackPath
 
 			// set up the source
 			dialogData.SourceStruct = "GongBasicField"
@@ -259,6 +275,7 @@ export class GongBasicFieldDetailComponent implements OnInit {
 			ID: this.gongbasicfield.ID,
 			ReversePointer: reverseField,
 			OrderingMode: true,
+			GONG__StackPath: this.GONG__StackPath,
 		};
 		const dialogRef: MatDialogRef<string, any> = this.dialog.open(
 			MapOfSortingComponents.get(AssociatedStruct).get(

@@ -153,7 +153,7 @@ export class KeysTableComponent implements OnInit {
 
   ngOnInit(): void {
     let stackPath = this.activatedRoute.snapshot.paramMap.get('GONG__StackPath')
-    if ( stackPath != undefined) {
+    if (stackPath != undefined) {
       this.GONG__StackPath = stackPath
     }
 
@@ -189,10 +189,14 @@ export class KeysTableComponent implements OnInit {
           let mapOfSourceInstances = this.frontRepo[this.dialogData.SourceStruct + "s" as keyof FrontRepo] as Map<number, KeyDB>
           let sourceInstance = mapOfSourceInstances.get(this.dialogData.ID)!
 
-          let sourceField = sourceInstance[this.dialogData.SourceField as keyof typeof sourceInstance]! as unknown as KeyDB[]
-          for (let associationInstance of sourceField) {
-            let key = associationInstance[this.dialogData.IntermediateStructField as keyof typeof associationInstance] as unknown as KeyDB
-            this.initialSelection.push(key)
+          // we associates on sourceInstance of type SourceStruct with a MANY MANY associations to KeyDB
+          // the field name is sourceField
+          let sourceFieldArray = sourceInstance[this.dialogData.SourceField as keyof typeof sourceInstance]! as unknown as KeyDB[]
+          if (sourceFieldArray != null) {
+            for (let associationInstance of sourceFieldArray) {
+              let key = associationInstance[this.dialogData.IntermediateStructField as keyof typeof associationInstance] as unknown as KeyDB
+              this.initialSelection.push(key)
+            }
           }
 
           this.selection = new SelectionModel<KeyDB>(allowMultiSelect, this.initialSelection);
@@ -213,7 +217,7 @@ export class KeysTableComponent implements OnInit {
     // list of keys is truncated of key before the delete
     this.keys = this.keys.filter(h => h !== key);
 
-    this.keyService.deleteKey(keyID).subscribe(
+    this.keyService.deleteKey(keyID, this.GONG__StackPath).subscribe(
       key => {
         this.keyService.KeyServiceChanged.next("delete")
       }
@@ -279,7 +283,7 @@ export class KeysTableComponent implements OnInit {
 
       // update all key (only update selection & initial selection)
       for (let key of toUpdate) {
-        this.keyService.updateKey(key)
+        this.keyService.updateKey(key, this.GONG__StackPath)
           .subscribe(key => {
             this.keyService.KeyServiceChanged.next("update")
           });

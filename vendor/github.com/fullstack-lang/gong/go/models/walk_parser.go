@@ -153,6 +153,11 @@ func WalkParser(parserPkgs map[string]*ast.Package, modelPkg *ModelPkg) {
 								log.Fatal("Invalid definition of a Gongstruct ", typeSpec.Name.Name, " type ", _type.Name)
 							}
 
+							hasIgnoreStatement := map_StructName_hasIgnoreStatement[typeSpec.Name.Name]
+							if hasIgnoreStatement {
+								continue
+							}
+
 							modelEnum := &GongEnum{
 								Name: typeSpec.Name.Name,
 								Type: enumType,
@@ -172,7 +177,7 @@ func WalkParser(parserPkgs map[string]*ast.Package, modelPkg *ModelPkg) {
 							hasIgnoreStatement := map_StructName_hasIgnoreStatement[typeSpec.Name.Name]
 
 							if hasNameField && !hasIgnoreStatement {
-								gongstruct := (&GongStruct{Name: typeSpec.Name.Name}).Stage()
+								gongstruct := (&GongStruct{Name: typeSpec.Name.Name}).Stage(modelPkg.Stage_)
 								modelPkg.GongStructs[modelPkg.PkgPath+"."+typeSpec.Name.Name] = gongstruct
 							} else {
 								map_Structname_fieldList[typeSpec.Name.Name] = &_type.Fields.List

@@ -46,7 +46,7 @@ export class NoteShapeSortingComponent implements OnInit {
   }
 
   getNoteShapes(): void {
-    this.frontRepoService.pull().subscribe(
+    this.frontRepoService.pull(this.dialogData.GONG__StackPath).subscribe(
       frontRepo => {
         this.frontRepo = frontRepo
 
@@ -100,13 +100,13 @@ export class NoteShapeSortingComponent implements OnInit {
 
     this.associatedNoteShapes.forEach(
       noteshape => {
-        this.noteshapeService.updateNoteShape(noteshape)
+        this.noteshapeService.updateNoteShape(noteshape, this.dialogData.GONG__StackPath)
           .subscribe(noteshape => {
             this.noteshapeService.NoteShapeServiceChanged.next("update")
           });
       }
     )
 
-    this.dialogRef.close('Sorting of ' + this.dialogData.ReversePointer +' done');
+    this.dialogRef.close('Sorting of ' + this.dialogData.ReversePointer + ' done');
   }
 }

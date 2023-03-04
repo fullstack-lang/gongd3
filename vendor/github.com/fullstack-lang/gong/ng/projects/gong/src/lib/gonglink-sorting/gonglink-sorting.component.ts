@@ -46,7 +46,7 @@ export class GongLinkSortingComponent implements OnInit {
   }
 
   getGongLinks(): void {
-    this.frontRepoService.pull().subscribe(
+    this.frontRepoService.pull(this.dialogData.GONG__StackPath).subscribe(
       frontRepo => {
         this.frontRepo = frontRepo
 
@@ -100,13 +100,13 @@ export class GongLinkSortingComponent implements OnInit {
 
     this.associatedGongLinks.forEach(
       gonglink => {
-        this.gonglinkService.updateGongLink(gonglink)
+        this.gonglinkService.updateGongLink(gonglink, this.dialogData.GONG__StackPath)
           .subscribe(gonglink => {
             this.gonglinkService.GongLinkServiceChanged.next("update")
           });
       }
     )
 
-    this.dialogRef.close('Sorting of ' + this.dialogData.ReversePointer +' done');
+    this.dialogRef.close('Sorting of ' + this.dialogData.ReversePointer + ' done');
   }
 }

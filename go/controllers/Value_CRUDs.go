@@ -47,23 +47,22 @@ type ValueInput struct {
 // default: genericError
 //
 //	200: valueDBResponse
-func GetValues(c *gin.Context) {
-	db := orm.BackRepo.BackRepoValue.GetDB()
+func (controller *Controller) GetValues(c *gin.Context) {
 
 	// source slice
 	var valueDBs []orm.ValueDB
 
-	// type Values map[string][]string
 	values := c.Request.URL.Query()
+	stackPath := ""
 	if len(values) == 1 {
 		value := values["GONG__StackPath"]
 		if len(value) == 1 {
-			// we have a single parameter
-			// we assume it is the stack
-			stackParam := value[0]
-			log.Println("GONG__StackPath", stackParam)
+			stackPath = value[0]
+			log.Println("GetValues", "GONG__StackPath", stackPath)
 		}
 	}
+	backRepo := controller.Map_BackRepos[stackPath]
+	db := backRepo.BackRepoValue.GetDB()
 
 	query := db.Find(&valueDBs)
 	if query.Error != nil {
@@ -108,7 +107,19 @@ func GetValues(c *gin.Context) {
 //
 //	Responses:
 //	  200: nodeDBResponse
-func PostValue(c *gin.Context) {
+func (controller *Controller) PostValue(c *gin.Context) {
+
+	values := c.Request.URL.Query()
+	stackPath := ""
+	if len(values) == 1 {
+		value := values["GONG__StackPath"]
+		if len(value) == 1 {
+			stackPath = value[0]
+			log.Println("PostValues", "GONG__StackPath", stackPath)
+		}
+	}
+	backRepo := controller.Map_BackRepos[stackPath]
+	db := backRepo.BackRepoValue.GetDB()
 
 	// Validate input
 	var input orm.ValueAPI
@@ -128,7 +139,6 @@ func PostValue(c *gin.Context) {
 	valueDB.ValuePointersEnconding = input.ValuePointersEnconding
 	valueDB.CopyBasicFieldsFromValue(&input.Value)
 
-	db := orm.BackRepo.BackRepoValue.GetDB()
 	query := db.Create(&valueDB)
 	if query.Error != nil {
 		var returnError GenericError
@@ -140,16 +150,16 @@ func PostValue(c *gin.Context) {
 	}
 
 	// get an instance (not staged) from DB instance, and call callback function
-	orm.BackRepo.BackRepoValue.CheckoutPhaseOneInstance(&valueDB)
-	value := (*orm.BackRepo.BackRepoValue.Map_ValueDBID_ValuePtr)[valueDB.ID]
+	backRepo.BackRepoValue.CheckoutPhaseOneInstance(&valueDB)
+	value := (*backRepo.BackRepoValue.Map_ValueDBID_ValuePtr)[valueDB.ID]
 
 	if value != nil {
-		models.AfterCreateFromFront(&models.Stage, value)
+		models.AfterCreateFromFront(backRepo.GetStage(), value)
 	}
 
 	// a POST is equivalent to a back repo commit increase
 	// (this will be improved with implementation of unit of work design pattern)
-	orm.BackRepo.IncrementPushFromFrontNb()
+	backRepo.IncrementPushFromFrontNb()
 
 	c.JSON(http.StatusOK, valueDB)
 }
@@ -164,21 +174,19 @@ func PostValue(c *gin.Context) {
 // default: genericError
 //
 //	200: valueDBResponse
-func GetValue(c *gin.Context) {
+func (controller *Controller) GetValue(c *gin.Context) {
 
-	// type Values map[string][]string
 	values := c.Request.URL.Query()
+	stackPath := ""
 	if len(values) == 1 {
-		value := values["stack"]
+		value := values["GONG__StackPath"]
 		if len(value) == 1 {
-			// we have a single parameter
-			// we assume it is the stack
-			stackParam := value[0]
-			log.Println("GET params", stackParam)
+			stackPath = value[0]
+			log.Println("GetValue", "GONG__StackPath", stackPath)
 		}
 	}
-
-	db := orm.BackRepo.BackRepoValue.GetDB()
+	backRepo := controller.Map_BackRepos[stackPath]
+	db := backRepo.BackRepoValue.GetDB()
 
 	// Get valueDB in DB
 	var valueDB orm.ValueDB
@@ -209,7 +217,19 @@ func GetValue(c *gin.Context) {
 // default: genericError
 //
 //	200: valueDBResponse
-func UpdateValue(c *gin.Context) {
+func (controller *Controller) UpdateValue(c *gin.Context) {
+
+	values := c.Request.URL.Query()
+	stackPath := ""
+	if len(values) == 1 {
+		value := values["GONG__StackPath"]
+		if len(value) == 1 {
+			stackPath = value[0]
+			log.Println("UpdateValue", "GONG__StackPath", stackPath)
+		}
+	}
+	backRepo := controller.Map_BackRepos[stackPath]
+	db := backRepo.BackRepoValue.GetDB()
 
 	// Validate input
 	var input orm.ValueAPI
@@ -218,8 +238,6 @@ func UpdateValue(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-
-	db := orm.BackRepo.BackRepoValue.GetDB()
 
 	// Get model if exist
 	var valueDB orm.ValueDB
@@ -255,16 +273,16 @@ func UpdateValue(c *gin.Context) {
 	valueDB.CopyBasicFieldsToValue(valueNew)
 
 	// get stage instance from DB instance, and call callback function
-	valueOld := (*orm.BackRepo.BackRepoValue.Map_ValueDBID_ValuePtr)[valueDB.ID]
+	valueOld := (*backRepo.BackRepoValue.Map_ValueDBID_ValuePtr)[valueDB.ID]
 	if valueOld != nil {
-		models.AfterUpdateFromFront(&models.Stage, valueOld, valueNew)
+		models.AfterUpdateFromFront(backRepo.GetStage(), valueOld, valueNew)
 	}
 
 	// an UPDATE generates a back repo commit increase
 	// (this will be improved with implementation of unit of work design pattern)
 	// in some cases, with the marshalling of the stage, this operation might
 	// generates a checkout
-	orm.BackRepo.IncrementPushFromFrontNb()
+	backRepo.IncrementPushFromFrontNb()
 
 	// return status OK with the marshalling of the the valueDB
 	c.JSON(http.StatusOK, valueDB)
@@ -279,8 +297,19 @@ func UpdateValue(c *gin.Context) {
 // default: genericError
 //
 //	200: valueDBResponse
-func DeleteValue(c *gin.Context) {
-	db := orm.BackRepo.BackRepoValue.GetDB()
+func (controller *Controller) DeleteValue(c *gin.Context) {
+
+	values := c.Request.URL.Query()
+	stackPath := ""
+	if len(values) == 1 {
+		value := values["GONG__StackPath"]
+		if len(value) == 1 {
+			stackPath = value[0]
+			log.Println("DeleteValue", "GONG__StackPath", stackPath)
+		}
+	}
+	backRepo := controller.Map_BackRepos[stackPath]
+	db := backRepo.BackRepoValue.GetDB()
 
 	// Get model if exist
 	var valueDB orm.ValueDB
@@ -301,14 +330,14 @@ func DeleteValue(c *gin.Context) {
 	valueDB.CopyBasicFieldsToValue(valueDeleted)
 
 	// get stage instance from DB instance, and call callback function
-	valueStaged := (*orm.BackRepo.BackRepoValue.Map_ValueDBID_ValuePtr)[valueDB.ID]
+	valueStaged := (*backRepo.BackRepoValue.Map_ValueDBID_ValuePtr)[valueDB.ID]
 	if valueStaged != nil {
-		models.AfterDeleteFromFront(&models.Stage, valueStaged, valueDeleted)
+		models.AfterDeleteFromFront(backRepo.GetStage(), valueStaged, valueDeleted)
 	}
 
 	// a DELETE generates a back repo commit increase
 	// (this will be improved with implementation of unit of work design pattern)
-	orm.BackRepo.IncrementPushFromFrontNb()
+	backRepo.IncrementPushFromFrontNb()
 
 	c.JSON(http.StatusOK, gin.H{"data": true})
 }

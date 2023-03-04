@@ -1,7 +1,7 @@
 <form *ngIf="gongnote" class="details">
     <h2 class="details__title">gongnote</h2>
     <!-- insertion point for fields specific code -->
-    <mat-grid-list *ngIf='!isATextArea("Name")' cols="5" rowHeight="2:1">
+    <mat-grid-list *ngIf='!isATextArea("Name")' cols="5" rowHeight="1:1">
         <mat-grid-tile [colspan]="3">
             <mat-form-field mat-form-field class="detail-full-width">
                 <mat-label>Name</mat-label>
@@ -21,7 +21,7 @@
         <textarea name="" [ngModelOptions]="{standalone: true}" matInput [(ngModel)]="gongnote.Name"></textarea>
     </mat-form-field>
 
-    <mat-grid-list *ngIf='!isATextArea("Body")' cols="5" rowHeight="2:1">
+    <mat-grid-list *ngIf='!isATextArea("Body")' cols="5" rowHeight="1:1">
         <mat-grid-tile [colspan]="3">
             <mat-form-field mat-form-field class="detail-full-width">
                 <mat-label>Body</mat-label>
@@ -39,6 +39,26 @@
     <mat-form-field *ngIf='isATextArea("Body")' mat-form-field class="detail-full-width">
         <mat-label>Body</mat-label>
         <textarea name="" [ngModelOptions]="{standalone: true}" matInput [(ngModel)]="gongnote.Body"></textarea>
+    </mat-form-field>
+
+    <mat-grid-list *ngIf='!isATextArea("BodyHTML")' cols="5" rowHeight="1:1">
+        <mat-grid-tile [colspan]="3">
+            <mat-form-field mat-form-field class="detail-full-width">
+                <mat-label>BodyHTML</mat-label>
+                <input name="" [ngModelOptions]="{standalone: true}" matInput [(ngModel)]="gongnote.BodyHTML">
+            </mat-form-field>
+        </mat-grid-tile>
+        <mat-grid-tile>
+            <button mat-raised-button (click)="toggleTextArea('BodyHTML')">
+                <mat-icon>
+                    expand_more
+                </mat-icon>
+            </button>
+        </mat-grid-tile>
+    </mat-grid-list>
+    <mat-form-field *ngIf='isATextArea("BodyHTML")' mat-form-field class="detail-full-width">
+        <mat-label>BodyHTML</mat-label>
+        <textarea name="" [ngModelOptions]="{standalone: true}" matInput [(ngModel)]="gongnote.BodyHTML"></textarea>
     </mat-form-field>
 
     <mat-grid-list cols="5" rowHeight="2:1">

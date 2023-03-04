@@ -46,7 +46,7 @@ export class ModelPkgSortingComponent implements OnInit {
   }
 
   getModelPkgs(): void {
-    this.frontRepoService.pull().subscribe(
+    this.frontRepoService.pull(this.dialogData.GONG__StackPath).subscribe(
       frontRepo => {
         this.frontRepo = frontRepo
 
@@ -100,13 +100,13 @@ export class ModelPkgSortingComponent implements OnInit {
 
     this.associatedModelPkgs.forEach(
       modelpkg => {
-        this.modelpkgService.updateModelPkg(modelpkg)
+        this.modelpkgService.updateModelPkg(modelpkg, this.dialogData.GONG__StackPath)
           .subscribe(modelpkg => {
             this.modelpkgService.ModelPkgServiceChanged.next("update")
           });
       }
     )
 
-    this.dialogRef.close('Sorting of ' + this.dialogData.ReversePointer +' done');
+    this.dialogRef.close('Sorting of ' + this.dialogData.ReversePointer + ' done');
   }
 }

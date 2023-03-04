@@ -46,7 +46,7 @@ export class PositionSortingComponent implements OnInit {
   }
 
   getPositions(): void {
-    this.frontRepoService.pull().subscribe(
+    this.frontRepoService.pull(this.dialogData.GONG__StackPath).subscribe(
       frontRepo => {
         this.frontRepo = frontRepo
 
@@ -100,13 +100,13 @@ export class PositionSortingComponent implements OnInit {
 
     this.associatedPositions.forEach(
       position => {
-        this.positionService.updatePosition(position)
+        this.positionService.updatePosition(position, this.dialogData.GONG__StackPath)
           .subscribe(position => {
             this.positionService.PositionServiceChanged.next("update")
           });
       }
     )
 
-    this.dialogRef.close('Sorting of ' + this.dialogData.ReversePointer +' done');
+    this.dialogRef.close('Sorting of ' + this.dialogData.ReversePointer + ' done');
   }
 }

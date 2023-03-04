@@ -47,23 +47,22 @@ type SerieInput struct {
 // default: genericError
 //
 //	200: serieDBResponse
-func GetSeries(c *gin.Context) {
-	db := orm.BackRepo.BackRepoSerie.GetDB()
+func (controller *Controller) GetSeries(c *gin.Context) {
 
 	// source slice
 	var serieDBs []orm.SerieDB
 
-	// type Values map[string][]string
 	values := c.Request.URL.Query()
+	stackPath := ""
 	if len(values) == 1 {
 		value := values["GONG__StackPath"]
 		if len(value) == 1 {
-			// we have a single parameter
-			// we assume it is the stack
-			stackParam := value[0]
-			log.Println("GONG__StackPath", stackParam)
+			stackPath = value[0]
+			log.Println("GetSeries", "GONG__StackPath", stackPath)
 		}
 	}
+	backRepo := controller.Map_BackRepos[stackPath]
+	db := backRepo.BackRepoSerie.GetDB()
 
 	query := db.Find(&serieDBs)
 	if query.Error != nil {
@@ -108,7 +107,19 @@ func GetSeries(c *gin.Context) {
 //
 //	Responses:
 //	  200: nodeDBResponse
-func PostSerie(c *gin.Context) {
+func (controller *Controller) PostSerie(c *gin.Context) {
+
+	values := c.Request.URL.Query()
+	stackPath := ""
+	if len(values) == 1 {
+		value := values["GONG__StackPath"]
+		if len(value) == 1 {
+			stackPath = value[0]
+			log.Println("PostSeries", "GONG__StackPath", stackPath)
+		}
+	}
+	backRepo := controller.Map_BackRepos[stackPath]
+	db := backRepo.BackRepoSerie.GetDB()
 
 	// Validate input
 	var input orm.SerieAPI
@@ -128,7 +139,6 @@ func PostSerie(c *gin.Context) {
 	serieDB.SeriePointersEnconding = input.SeriePointersEnconding
 	serieDB.CopyBasicFieldsFromSerie(&input.Serie)
 
-	db := orm.BackRepo.BackRepoSerie.GetDB()
 	query := db.Create(&serieDB)
 	if query.Error != nil {
 		var returnError GenericError
@@ -140,16 +150,16 @@ func PostSerie(c *gin.Context) {
 	}
 
 	// get an instance (not staged) from DB instance, and call callback function
-	orm.BackRepo.BackRepoSerie.CheckoutPhaseOneInstance(&serieDB)
-	serie := (*orm.BackRepo.BackRepoSerie.Map_SerieDBID_SeriePtr)[serieDB.ID]
+	backRepo.BackRepoSerie.CheckoutPhaseOneInstance(&serieDB)
+	serie := (*backRepo.BackRepoSerie.Map_SerieDBID_SeriePtr)[serieDB.ID]
 
 	if serie != nil {
-		models.AfterCreateFromFront(&models.Stage, serie)
+		models.AfterCreateFromFront(backRepo.GetStage(), serie)
 	}
 
 	// a POST is equivalent to a back repo commit increase
 	// (this will be improved with implementation of unit of work design pattern)
-	orm.BackRepo.IncrementPushFromFrontNb()
+	backRepo.IncrementPushFromFrontNb()
 
 	c.JSON(http.StatusOK, serieDB)
 }
@@ -164,21 +174,19 @@ func PostSerie(c *gin.Context) {
 // default: genericError
 //
 //	200: serieDBResponse
-func GetSerie(c *gin.Context) {
+func (controller *Controller) GetSerie(c *gin.Context) {
 
-	// type Values map[string][]string
 	values := c.Request.URL.Query()
+	stackPath := ""
 	if len(values) == 1 {
-		value := values["stack"]
+		value := values["GONG__StackPath"]
 		if len(value) == 1 {
-			// we have a single parameter
-			// we assume it is the stack
-			stackParam := value[0]
-			log.Println("GET params", stackParam)
+			stackPath = value[0]
+			log.Println("GetSerie", "GONG__StackPath", stackPath)
 		}
 	}
-
-	db := orm.BackRepo.BackRepoSerie.GetDB()
+	backRepo := controller.Map_BackRepos[stackPath]
+	db := backRepo.BackRepoSerie.GetDB()
 
 	// Get serieDB in DB
 	var serieDB orm.SerieDB
@@ -209,7 +217,19 @@ func GetSerie(c *gin.Context) {
 // default: genericError
 //
 //	200: serieDBResponse
-func UpdateSerie(c *gin.Context) {
+func (controller *Controller) UpdateSerie(c *gin.Context) {
+
+	values := c.Request.URL.Query()
+	stackPath := ""
+	if len(values) == 1 {
+		value := values["GONG__StackPath"]
+		if len(value) == 1 {
+			stackPath = value[0]
+			log.Println("UpdateSerie", "GONG__StackPath", stackPath)
+		}
+	}
+	backRepo := controller.Map_BackRepos[stackPath]
+	db := backRepo.BackRepoSerie.GetDB()
 
 	// Validate input
 	var input orm.SerieAPI
@@ -218,8 +238,6 @@ func UpdateSerie(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-
-	db := orm.BackRepo.BackRepoSerie.GetDB()
 
 	// Get model if exist
 	var serieDB orm.SerieDB
@@ -255,16 +273,16 @@ func UpdateSerie(c *gin.Context) {
 	serieDB.CopyBasicFieldsToSerie(serieNew)
 
 	// get stage instance from DB instance, and call callback function
-	serieOld := (*orm.BackRepo.BackRepoSerie.Map_SerieDBID_SeriePtr)[serieDB.ID]
+	serieOld := (*backRepo.BackRepoSerie.Map_SerieDBID_SeriePtr)[serieDB.ID]
 	if serieOld != nil {
-		models.AfterUpdateFromFront(&models.Stage, serieOld, serieNew)
+		models.AfterUpdateFromFront(backRepo.GetStage(), serieOld, serieNew)
 	}
 
 	// an UPDATE generates a back repo commit increase
 	// (this will be improved with implementation of unit of work design pattern)
 	// in some cases, with the marshalling of the stage, this operation might
 	// generates a checkout
-	orm.BackRepo.IncrementPushFromFrontNb()
+	backRepo.IncrementPushFromFrontNb()
 
 	// return status OK with the marshalling of the the serieDB
 	c.JSON(http.StatusOK, serieDB)
@@ -279,8 +297,19 @@ func UpdateSerie(c *gin.Context) {
 // default: genericError
 //
 //	200: serieDBResponse
-func DeleteSerie(c *gin.Context) {
-	db := orm.BackRepo.BackRepoSerie.GetDB()
+func (controller *Controller) DeleteSerie(c *gin.Context) {
+
+	values := c.Request.URL.Query()
+	stackPath := ""
+	if len(values) == 1 {
+		value := values["GONG__StackPath"]
+		if len(value) == 1 {
+			stackPath = value[0]
+			log.Println("DeleteSerie", "GONG__StackPath", stackPath)
+		}
+	}
+	backRepo := controller.Map_BackRepos[stackPath]
+	db := backRepo.BackRepoSerie.GetDB()
 
 	// Get model if exist
 	var serieDB orm.SerieDB
@@ -301,14 +330,14 @@ func DeleteSerie(c *gin.Context) {
 	serieDB.CopyBasicFieldsToSerie(serieDeleted)
 
 	// get stage instance from DB instance, and call callback function
-	serieStaged := (*orm.BackRepo.BackRepoSerie.Map_SerieDBID_SeriePtr)[serieDB.ID]
+	serieStaged := (*backRepo.BackRepoSerie.Map_SerieDBID_SeriePtr)[serieDB.ID]
 	if serieStaged != nil {
-		models.AfterDeleteFromFront(&models.Stage, serieStaged, serieDeleted)
+		models.AfterDeleteFromFront(backRepo.GetStage(), serieStaged, serieDeleted)
 	}
 
 	// a DELETE generates a back repo commit increase
 	// (this will be improved with implementation of unit of work design pattern)
-	orm.BackRepo.IncrementPushFromFrontNb()
+	backRepo.IncrementPushFromFrontNb()
 
 	c.JSON(http.StatusOK, gin.H{"data": true})
 }
