@@ -5,53 +5,43 @@ import { Observable, combineLatest, timer } from 'rxjs'
 import * as gongdoc from 'gongdoc'
 import * as gongd3 from 'gongd3'
 
+import { GongdocModule } from 'gongdoc'
+import { GongdocspecificModule } from 'gongdocspecific'
+
+import { GongtreeModule } from 'gongtree'
+import { GongtreespecificModule } from 'gongtreespecific'
+
+import { GongtableModule } from 'gongtable'
+import { GongtablespecificModule } from 'gongtablespecific'
+
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
 })
 export class AppComponent implements OnInit {
 
-  view = 'D3 view'
+
   d3 = 'D3 view'
-  data = 'Data view'
-  diagrams = 'Diagrams view'
-  meta = 'Meta view'
+  probe = 'Probe view'
 
-  views: string[] = [this.d3, this.data, this.diagrams, this.meta];
+  view = this.d3
 
-  // variable that enables pooling of selected gongstruct
-  obsTimer: Observable<number> = timer(1000, 1000)
-  lastSelectionDate: string = ''
+  views: string[] = [this.d3, this.probe];
 
-  constructor(private gongdocClassshapeService: gongdoc.ClassshapeService,
-    private gongstructSelectionService: gongd3.GongstructSelectionService
+
+  scrollStyle = {
+    'overflow- x': 'auto',
+    'width': '100%',  // Ensure the div takes the full width of its parent container
+  }
+
+  StackName = "gongd3"
+  StackType = "github.com/fullstack-lang/gongd3/go/models"
+
+  constructor(
   ) {
 
   }
 
   ngOnInit(): void {
-
-    // pool the gongdoc command and check wether a gongstruct has been selected
-    this.obsTimer.subscribe(
-      currTime => {
-        // pool all classshapes and find which one is selected
-        this.gongdocClassshapeService.getClassshapes().subscribe(
-          classshapes => {
-            for (let classshape of classshapes) {
-              if (classshape.IsSelected) {
-                classshape.IsSelected = false
-                // console.log("classshape " + classshape.ReferenceName + " is selected")
-                this.gongdocClassshapeService.updateClassshape(classshape).subscribe(
-                  classshape2 => {
-                    // console.log("classshape has been unselected")
-                  }
-                )
-                this.gongstructSelectionService.gongstructSelected(classshape.ReferenceName)
-              }
-            }
-          }
-        )
-      }
-    )
   }
 }

@@ -42,35 +42,52 @@ export class SerieService {
     origin = origin.replace("4200", "8080")
 
     // compute path to the service
-    this.seriesUrl = origin + '/api/gongd3/go/v1/series';
+    this.seriesUrl = origin + '/api/github.com/fullstack-lang/gongd3/go/v1/series';
   }
 
   /** GET series from the server */
-  getSeries(GONG__StackPath: string = ""): Observable<SerieDB[]> {
+  // gets is more robust to refactoring
+  gets(GONG__StackPath: string): Observable<SerieDB[]> {
+    return this.getSeries(GONG__StackPath)
+  }
+  getSeries(GONG__StackPath: string): Observable<SerieDB[]> {
 
-	let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
+    let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
 
     return this.http.get<SerieDB[]>(this.seriesUrl, { params: params })
       .pipe(
-        tap(_ => this.log('fetched series')),
+        tap(),
+		// tap(_ => this.log('fetched series')),
         catchError(this.handleError<SerieDB[]>('getSeries', []))
       );
   }
 
   /** GET serie by id. Will 404 if id not found */
-  getSerie(id: number): Observable<SerieDB> {
+  // more robust API to refactoring
+  get(id: number, GONG__StackPath: string): Observable<SerieDB> {
+	return this.getSerie(id, GONG__StackPath)
+  }
+  getSerie(id: number, GONG__StackPath: string): Observable<SerieDB> {
+
+    let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
+
     const url = `${this.seriesUrl}/${id}`;
-    return this.http.get<SerieDB>(url).pipe(
-      tap(_ => this.log(`fetched serie id=${id}`)),
+    return this.http.get<SerieDB>(url, { params: params }).pipe(
+      // tap(_ => this.log(`fetched serie id=${id}`)),
       catchError(this.handleError<SerieDB>(`getSerie id=${id}`))
     );
   }
 
   /** POST: add a new serie to the server */
+  post(seriedb: SerieDB, GONG__StackPath: string): Observable<SerieDB> {
+    return this.postSerie(seriedb, GONG__StackPath)	
+  }
   postSerie(seriedb: SerieDB, GONG__StackPath: string): Observable<SerieDB> {
 
     // insertion point for reset of pointers and reverse pointers (to avoid circular JSON)
+    let Key = seriedb.Key
     seriedb.Key = new KeyDB
+    let Values = seriedb.Values
     seriedb.Values = []
     let _Bar_Set_reverse = seriedb.Bar_Set_reverse
     seriedb.Bar_Set_reverse = new BarDB
@@ -85,19 +102,23 @@ export class SerieService {
       params: params
     }
 
-	return this.http.post<SerieDB>(this.seriesUrl, seriedb, httpOptions).pipe(
+    return this.http.post<SerieDB>(this.seriesUrl, seriedb, httpOptions).pipe(
       tap(_ => {
         // insertion point for restoration of reverse pointers
+	      seriedb.Values = Values
         seriedb.Bar_Set_reverse = _Bar_Set_reverse
         seriedb.Pie_Set_reverse = _Pie_Set_reverse
         seriedb.Scatter_Set_reverse = _Scatter_Set_reverse
-        this.log(`posted seriedb id=${seriedb.ID}`)
+        // this.log(`posted seriedb id=${seriedb.ID}`)
       }),
       catchError(this.handleError<SerieDB>('postSerie'))
     );
   }
 
   /** DELETE: delete the seriedb from the server */
+  delete(seriedb: SerieDB | number, GONG__StackPath: string): Observable<SerieDB> {
+    return this.deleteSerie(seriedb, GONG__StackPath)
+  }
   deleteSerie(seriedb: SerieDB | number, GONG__StackPath: string): Observable<SerieDB> {
     const id = typeof seriedb === 'number' ? seriedb : seriedb.ID;
     const url = `${this.seriesUrl}/${id}`;
@@ -115,12 +136,17 @@ export class SerieService {
   }
 
   /** PUT: update the seriedb on the server */
+  update(seriedb: SerieDB, GONG__StackPath: string): Observable<SerieDB> {
+    return this.updateSerie(seriedb, GONG__StackPath)
+  }
   updateSerie(seriedb: SerieDB, GONG__StackPath: string): Observable<SerieDB> {
     const id = typeof seriedb === 'number' ? seriedb : seriedb.ID;
     const url = `${this.seriesUrl}/${id}`;
 
     // insertion point for reset of pointers and reverse pointers (to avoid circular JSON)
+    let Key = seriedb.Key
     seriedb.Key = new KeyDB
+    let Values = seriedb.Values
     seriedb.Values = []
     let _Bar_Set_reverse = seriedb.Bar_Set_reverse
     seriedb.Bar_Set_reverse = new BarDB
@@ -138,10 +164,11 @@ export class SerieService {
     return this.http.put<SerieDB>(url, seriedb, httpOptions).pipe(
       tap(_ => {
         // insertion point for restoration of reverse pointers
+	      seriedb.Values = Values
         seriedb.Bar_Set_reverse = _Bar_Set_reverse
         seriedb.Pie_Set_reverse = _Pie_Set_reverse
         seriedb.Scatter_Set_reverse = _Scatter_Set_reverse
-        this.log(`updated seriedb id=${seriedb.ID}`)
+        // this.log(`updated seriedb id=${seriedb.ID}`)
       }),
       catchError(this.handleError<SerieDB>('updateSerie'))
     );
@@ -153,11 +180,11 @@ export class SerieService {
    * @param operation - name of the operation that failed
    * @param result - optional value to return as the observable result
    */
-  private handleError<T>(operation = 'operation', result?: T) {
+  private handleError<T>(operation = 'operation in SerieService', result?: T) {
     return (error: any): Observable<T> => {
 
       // TODO: send the error to remote logging infrastructure
-      console.error(error); // log to console instead
+      console.error("SerieService" + error); // log to console instead
 
       // TODO: better job of transforming error for user consumption
       this.log(`${operation} failed: ${error.message}`);
@@ -168,6 +195,6 @@ export class SerieService {
   }
 
   private log(message: string) {
-
+      console.log(message)
   }
 }

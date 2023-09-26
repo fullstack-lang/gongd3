@@ -43,27 +43,42 @@ export class GongTimeFieldService {
   }
 
   /** GET gongtimefields from the server */
-  getGongTimeFields(GONG__StackPath: string = ""): Observable<GongTimeFieldDB[]> {
+  // gets is more robust to refactoring
+  gets(GONG__StackPath: string): Observable<GongTimeFieldDB[]> {
+    return this.getGongTimeFields(GONG__StackPath)
+  }
+  getGongTimeFields(GONG__StackPath: string): Observable<GongTimeFieldDB[]> {
 
-	let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
+    let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
 
     return this.http.get<GongTimeFieldDB[]>(this.gongtimefieldsUrl, { params: params })
       .pipe(
-        tap(_ => this.log('fetched gongtimefields')),
+        tap(),
+		// tap(_ => this.log('fetched gongtimefields')),
         catchError(this.handleError<GongTimeFieldDB[]>('getGongTimeFields', []))
       );
   }
 
   /** GET gongtimefield by id. Will 404 if id not found */
-  getGongTimeField(id: number): Observable<GongTimeFieldDB> {
+  // more robust API to refactoring
+  get(id: number, GONG__StackPath: string): Observable<GongTimeFieldDB> {
+	return this.getGongTimeField(id, GONG__StackPath)
+  }
+  getGongTimeField(id: number, GONG__StackPath: string): Observable<GongTimeFieldDB> {
+
+    let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
+
     const url = `${this.gongtimefieldsUrl}/${id}`;
-    return this.http.get<GongTimeFieldDB>(url).pipe(
-      tap(_ => this.log(`fetched gongtimefield id=${id}`)),
+    return this.http.get<GongTimeFieldDB>(url, { params: params }).pipe(
+      // tap(_ => this.log(`fetched gongtimefield id=${id}`)),
       catchError(this.handleError<GongTimeFieldDB>(`getGongTimeField id=${id}`))
     );
   }
 
   /** POST: add a new gongtimefield to the server */
+  post(gongtimefielddb: GongTimeFieldDB, GONG__StackPath: string): Observable<GongTimeFieldDB> {
+    return this.postGongTimeField(gongtimefielddb, GONG__StackPath)	
+  }
   postGongTimeField(gongtimefielddb: GongTimeFieldDB, GONG__StackPath: string): Observable<GongTimeFieldDB> {
 
     // insertion point for reset of pointers and reverse pointers (to avoid circular JSON)
@@ -76,17 +91,20 @@ export class GongTimeFieldService {
       params: params
     }
 
-	return this.http.post<GongTimeFieldDB>(this.gongtimefieldsUrl, gongtimefielddb, httpOptions).pipe(
+    return this.http.post<GongTimeFieldDB>(this.gongtimefieldsUrl, gongtimefielddb, httpOptions).pipe(
       tap(_ => {
         // insertion point for restoration of reverse pointers
         gongtimefielddb.GongStruct_GongTimeFields_reverse = _GongStruct_GongTimeFields_reverse
-        this.log(`posted gongtimefielddb id=${gongtimefielddb.ID}`)
+        // this.log(`posted gongtimefielddb id=${gongtimefielddb.ID}`)
       }),
       catchError(this.handleError<GongTimeFieldDB>('postGongTimeField'))
     );
   }
 
   /** DELETE: delete the gongtimefielddb from the server */
+  delete(gongtimefielddb: GongTimeFieldDB | number, GONG__StackPath: string): Observable<GongTimeFieldDB> {
+    return this.deleteGongTimeField(gongtimefielddb, GONG__StackPath)
+  }
   deleteGongTimeField(gongtimefielddb: GongTimeFieldDB | number, GONG__StackPath: string): Observable<GongTimeFieldDB> {
     const id = typeof gongtimefielddb === 'number' ? gongtimefielddb : gongtimefielddb.ID;
     const url = `${this.gongtimefieldsUrl}/${id}`;
@@ -104,6 +122,9 @@ export class GongTimeFieldService {
   }
 
   /** PUT: update the gongtimefielddb on the server */
+  update(gongtimefielddb: GongTimeFieldDB, GONG__StackPath: string): Observable<GongTimeFieldDB> {
+    return this.updateGongTimeField(gongtimefielddb, GONG__StackPath)
+  }
   updateGongTimeField(gongtimefielddb: GongTimeFieldDB, GONG__StackPath: string): Observable<GongTimeFieldDB> {
     const id = typeof gongtimefielddb === 'number' ? gongtimefielddb : gongtimefielddb.ID;
     const url = `${this.gongtimefieldsUrl}/${id}`;
@@ -122,7 +143,7 @@ export class GongTimeFieldService {
       tap(_ => {
         // insertion point for restoration of reverse pointers
         gongtimefielddb.GongStruct_GongTimeFields_reverse = _GongStruct_GongTimeFields_reverse
-        this.log(`updated gongtimefielddb id=${gongtimefielddb.ID}`)
+        // this.log(`updated gongtimefielddb id=${gongtimefielddb.ID}`)
       }),
       catchError(this.handleError<GongTimeFieldDB>('updateGongTimeField'))
     );
@@ -134,11 +155,11 @@ export class GongTimeFieldService {
    * @param operation - name of the operation that failed
    * @param result - optional value to return as the observable result
    */
-  private handleError<T>(operation = 'operation', result?: T) {
+  private handleError<T>(operation = 'operation in GongTimeFieldService', result?: T) {
     return (error: any): Observable<T> => {
 
       // TODO: send the error to remote logging infrastructure
-      console.error(error); // log to console instead
+      console.error("GongTimeFieldService" + error); // log to console instead
 
       // TODO: better job of transforming error for user consumption
       this.log(`${operation} failed: ${error.message}`);
@@ -149,6 +170,6 @@ export class GongTimeFieldService {
   }
 
   private log(message: string) {
-
+      console.log(message)
   }
 }

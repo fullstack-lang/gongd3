@@ -4,6 +4,9 @@
 import { NullInt64 } from './null-int64'
 
 export class KeyDB {
+
+	static GONGSTRUCT_NAME = "Key"
+
 	CreatedAt?: string
 	DeletedAt?: string
 	ID: number = 0

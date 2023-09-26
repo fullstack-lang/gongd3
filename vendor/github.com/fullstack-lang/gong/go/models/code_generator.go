@@ -38,6 +38,7 @@ func SimpleCodeGenerator(
 	subTemplateCode map[string]string) {
 	CodeGenerator(mdlPkg, pkgName, pkgGoPath, generatedFilePath, templateCode, subTemplateCode,
 		map[string]string{}, map[string]string{},
+		false,
 		false)
 }
 
@@ -52,7 +53,8 @@ func SimpleCodeGeneratorForGongStructWithNameField(
 	subTemplateCode map[string]string) {
 	CodeGenerator(mdlPkg, pkgName, pkgGoPath, generatedFilePath, templateCode, subTemplateCode,
 		map[string]string{}, map[string]string{},
-		true)
+		true,
+		false)
 }
 
 // SimpleCodeGenerator generates from elements of mdlPkg the file generatedFilePath with templateCode and
@@ -68,7 +70,8 @@ func CodeGenerator(
 	subSubTemplateCode map[string]string,
 	// a sub sub template is generated within a sub template
 	subSubToSubMap map[string]string,
-	forGongStructWithNameFieldOnly bool) {
+	forGongStructWithNameFieldOnly bool,
+	forGongStructWithHasOnUpdateSignatureOnly bool) {
 
 	file, err := os.Create(generatedFilePath)
 
@@ -91,6 +94,10 @@ func CodeGenerator(
 	structList := []*GongStruct{}
 	for _, _struct := range mdlPkg.GongStructs {
 		if forGongStructWithNameFieldOnly && !_struct.HasNameField() {
+			continue
+		}
+		if forGongStructWithHasOnUpdateSignatureOnly &&
+			!_struct.HasOnAfterUpdateSignature {
 			continue
 		}
 		structList = append(structList, _struct)
@@ -131,9 +138,12 @@ func CodeGenerator(
 
 		// compute code from sub template
 		for subTemplate := range subTemplateCode {
-			subCodes[subTemplate] += Replace2(subTemplateCode[subTemplate],
+			subCodes[subTemplate] += Replace3(subTemplateCode[subTemplate],
 				"{{Structname}}", _struct.Name,
-				"{{structname}}", structName)
+				"{{structname}}", structName,
+				"	 | ", "	", // for the replacement of the of the first bar in the Gongstruct Type def
+
+			)
 
 			// apply sub sub templates
 			for subSubTemplate := range subSubTemplateCode {

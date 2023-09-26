@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 
-import { Observable, combineLatest, BehaviorSubject } from 'rxjs';
+import { Observable, combineLatest, BehaviorSubject, of } from 'rxjs';
 
 // insertion point sub template for services imports 
 import { GongBasicFieldDB } from './gongbasicfield-db'
@@ -81,11 +81,6 @@ export class FrontRepo { // insertion point sub template
   SliceOfPointerToGongStructFields_batch = new Map<number, SliceOfPointerToGongStructFieldDB>(); // same but only in last GET (for finding repo instances to delete)
 }
 
-//
-// Store of all instances of the stack
-//
-export const FrontRepoSingloton = new (FrontRepo)
-
 // the table component is called in different ways
 //
 // DISPLAY or ASSOCIATION MODE
@@ -139,6 +134,11 @@ export class FrontRepoService {
     headers: new HttpHeaders({ 'Content-Type': 'application/json' })
   };
 
+  //
+  // Store of all instances of the stack
+  //
+  frontRepo = new (FrontRepo)
+
   constructor(
     private http: HttpClient, // insertion point sub template 
     private gongbasicfieldService: GongBasicFieldService,
@@ -182,7 +182,9 @@ export class FrontRepoService {
   }
 
   // typing of observable can be messy in typescript. Therefore, one force the type
-  observableFrontRepo: [ // insertion point sub template 
+  observableFrontRepo: [ 
+    Observable<null>, // see below for the of(null) observable
+    // insertion point sub template 
     Observable<GongBasicFieldDB[]>,
     Observable<GongEnumDB[]>,
     Observable<GongEnumValueDB[]>,
@@ -195,7 +197,16 @@ export class FrontRepoService {
     Observable<ModelPkgDB[]>,
     Observable<PointerToGongStructFieldDB[]>,
     Observable<SliceOfPointerToGongStructFieldDB[]>,
-  ] = [ // insertion point sub template
+  ] = [ 
+    // Using "combineLatest" with a placeholder observable.
+    //
+    // This allows the typescript compiler to pass when no GongStruct is present in the front API
+    //
+    // The "of(null)" is a "meaningless" observable that emits a single value (null) and completes.
+    // This is used as a workaround to satisfy TypeScript requirements and the "combineLatest" 
+    // expectation for a non-empty array of observables.
+    of(null), // 
+    // insertion point sub template
       this.gongbasicfieldService.getGongBasicFields(this.GONG__StackPath),
       this.gongenumService.getGongEnums(this.GONG__StackPath),
       this.gongenumvalueService.getGongEnumValues(this.GONG__StackPath),
@@ -220,7 +231,9 @@ export class FrontRepoService {
 
     this.GONG__StackPath = GONG__StackPath
 
-    this.observableFrontRepo = [ // insertion point sub template
+    this.observableFrontRepo = [ 
+      of(null), // see above for justification
+      // insertion point sub template
       this.gongbasicfieldService.getGongBasicFields(this.GONG__StackPath),
       this.gongenumService.getGongEnums(this.GONG__StackPath),
       this.gongenumvalueService.getGongEnumValues(this.GONG__StackPath),
@@ -240,7 +253,9 @@ export class FrontRepoService {
         combineLatest(
           this.observableFrontRepo
         ).subscribe(
-          ([ // insertion point sub template for declarations 
+          ([ 
+            ___of_null, // see above for the explanation about of
+            // insertion point sub template for declarations 
             gongbasicfields_,
             gongenums_,
             gongenumvalues_,
@@ -285,29 +300,29 @@ export class FrontRepoService {
             // First Step: init map of instances
             // insertion point sub template for init 
             // init the array
-            FrontRepoSingloton.GongBasicFields_array = gongbasicfields
+            this.frontRepo.GongBasicFields_array = gongbasicfields
 
             // clear the map that counts GongBasicField in the GET
-            FrontRepoSingloton.GongBasicFields_batch.clear()
+            this.frontRepo.GongBasicFields_batch.clear()
 
             gongbasicfields.forEach(
               gongbasicfield => {
-                FrontRepoSingloton.GongBasicFields.set(gongbasicfield.ID, gongbasicfield)
-                FrontRepoSingloton.GongBasicFields_batch.set(gongbasicfield.ID, gongbasicfield)
+                this.frontRepo.GongBasicFields.set(gongbasicfield.ID, gongbasicfield)
+                this.frontRepo.GongBasicFields_batch.set(gongbasicfield.ID, gongbasicfield)
               }
             )
 
             // clear gongbasicfields that are absent from the batch
-            FrontRepoSingloton.GongBasicFields.forEach(
+            this.frontRepo.GongBasicFields.forEach(
               gongbasicfield => {
-                if (FrontRepoSingloton.GongBasicFields_batch.get(gongbasicfield.ID) == undefined) {
-                  FrontRepoSingloton.GongBasicFields.delete(gongbasicfield.ID)
+                if (this.frontRepo.GongBasicFields_batch.get(gongbasicfield.ID) == undefined) {
+                  this.frontRepo.GongBasicFields.delete(gongbasicfield.ID)
                 }
               }
             )
 
             // sort GongBasicFields_array array
-            FrontRepoSingloton.GongBasicFields_array.sort((t1, t2) => {
+            this.frontRepo.GongBasicFields_array.sort((t1, t2) => {
               if (t1.Name > t2.Name) {
                 return 1;
               }
@@ -318,29 +333,29 @@ export class FrontRepoService {
             });
 
             // init the array
-            FrontRepoSingloton.GongEnums_array = gongenums
+            this.frontRepo.GongEnums_array = gongenums
 
             // clear the map that counts GongEnum in the GET
-            FrontRepoSingloton.GongEnums_batch.clear()
+            this.frontRepo.GongEnums_batch.clear()
 
             gongenums.forEach(
               gongenum => {
-                FrontRepoSingloton.GongEnums.set(gongenum.ID, gongenum)
-                FrontRepoSingloton.GongEnums_batch.set(gongenum.ID, gongenum)
+                this.frontRepo.GongEnums.set(gongenum.ID, gongenum)
+                this.frontRepo.GongEnums_batch.set(gongenum.ID, gongenum)
               }
             )
 
             // clear gongenums that are absent from the batch
-            FrontRepoSingloton.GongEnums.forEach(
+            this.frontRepo.GongEnums.forEach(
               gongenum => {
-                if (FrontRepoSingloton.GongEnums_batch.get(gongenum.ID) == undefined) {
-                  FrontRepoSingloton.GongEnums.delete(gongenum.ID)
+                if (this.frontRepo.GongEnums_batch.get(gongenum.ID) == undefined) {
+                  this.frontRepo.GongEnums.delete(gongenum.ID)
                 }
               }
             )
 
             // sort GongEnums_array array
-            FrontRepoSingloton.GongEnums_array.sort((t1, t2) => {
+            this.frontRepo.GongEnums_array.sort((t1, t2) => {
               if (t1.Name > t2.Name) {
                 return 1;
               }
@@ -351,29 +366,29 @@ export class FrontRepoService {
             });
 
             // init the array
-            FrontRepoSingloton.GongEnumValues_array = gongenumvalues
+            this.frontRepo.GongEnumValues_array = gongenumvalues
 
             // clear the map that counts GongEnumValue in the GET
-            FrontRepoSingloton.GongEnumValues_batch.clear()
+            this.frontRepo.GongEnumValues_batch.clear()
 
             gongenumvalues.forEach(
               gongenumvalue => {
-                FrontRepoSingloton.GongEnumValues.set(gongenumvalue.ID, gongenumvalue)
-                FrontRepoSingloton.GongEnumValues_batch.set(gongenumvalue.ID, gongenumvalue)
+                this.frontRepo.GongEnumValues.set(gongenumvalue.ID, gongenumvalue)
+                this.frontRepo.GongEnumValues_batch.set(gongenumvalue.ID, gongenumvalue)
               }
             )
 
             // clear gongenumvalues that are absent from the batch
-            FrontRepoSingloton.GongEnumValues.forEach(
+            this.frontRepo.GongEnumValues.forEach(
               gongenumvalue => {
-                if (FrontRepoSingloton.GongEnumValues_batch.get(gongenumvalue.ID) == undefined) {
-                  FrontRepoSingloton.GongEnumValues.delete(gongenumvalue.ID)
+                if (this.frontRepo.GongEnumValues_batch.get(gongenumvalue.ID) == undefined) {
+                  this.frontRepo.GongEnumValues.delete(gongenumvalue.ID)
                 }
               }
             )
 
             // sort GongEnumValues_array array
-            FrontRepoSingloton.GongEnumValues_array.sort((t1, t2) => {
+            this.frontRepo.GongEnumValues_array.sort((t1, t2) => {
               if (t1.Name > t2.Name) {
                 return 1;
               }
@@ -384,29 +399,29 @@ export class FrontRepoService {
             });
 
             // init the array
-            FrontRepoSingloton.GongLinks_array = gonglinks
+            this.frontRepo.GongLinks_array = gonglinks
 
             // clear the map that counts GongLink in the GET
-            FrontRepoSingloton.GongLinks_batch.clear()
+            this.frontRepo.GongLinks_batch.clear()
 
             gonglinks.forEach(
               gonglink => {
-                FrontRepoSingloton.GongLinks.set(gonglink.ID, gonglink)
-                FrontRepoSingloton.GongLinks_batch.set(gonglink.ID, gonglink)
+                this.frontRepo.GongLinks.set(gonglink.ID, gonglink)
+                this.frontRepo.GongLinks_batch.set(gonglink.ID, gonglink)
               }
             )
 
             // clear gonglinks that are absent from the batch
-            FrontRepoSingloton.GongLinks.forEach(
+            this.frontRepo.GongLinks.forEach(
               gonglink => {
-                if (FrontRepoSingloton.GongLinks_batch.get(gonglink.ID) == undefined) {
-                  FrontRepoSingloton.GongLinks.delete(gonglink.ID)
+                if (this.frontRepo.GongLinks_batch.get(gonglink.ID) == undefined) {
+                  this.frontRepo.GongLinks.delete(gonglink.ID)
                 }
               }
             )
 
             // sort GongLinks_array array
-            FrontRepoSingloton.GongLinks_array.sort((t1, t2) => {
+            this.frontRepo.GongLinks_array.sort((t1, t2) => {
               if (t1.Name > t2.Name) {
                 return 1;
               }
@@ -417,29 +432,29 @@ export class FrontRepoService {
             });
 
             // init the array
-            FrontRepoSingloton.GongNotes_array = gongnotes
+            this.frontRepo.GongNotes_array = gongnotes
 
             // clear the map that counts GongNote in the GET
-            FrontRepoSingloton.GongNotes_batch.clear()
+            this.frontRepo.GongNotes_batch.clear()
 
             gongnotes.forEach(
               gongnote => {
-                FrontRepoSingloton.GongNotes.set(gongnote.ID, gongnote)
-                FrontRepoSingloton.GongNotes_batch.set(gongnote.ID, gongnote)
+                this.frontRepo.GongNotes.set(gongnote.ID, gongnote)
+                this.frontRepo.GongNotes_batch.set(gongnote.ID, gongnote)
               }
             )
 
             // clear gongnotes that are absent from the batch
-            FrontRepoSingloton.GongNotes.forEach(
+            this.frontRepo.GongNotes.forEach(
               gongnote => {
-                if (FrontRepoSingloton.GongNotes_batch.get(gongnote.ID) == undefined) {
-                  FrontRepoSingloton.GongNotes.delete(gongnote.ID)
+                if (this.frontRepo.GongNotes_batch.get(gongnote.ID) == undefined) {
+                  this.frontRepo.GongNotes.delete(gongnote.ID)
                 }
               }
             )
 
             // sort GongNotes_array array
-            FrontRepoSingloton.GongNotes_array.sort((t1, t2) => {
+            this.frontRepo.GongNotes_array.sort((t1, t2) => {
               if (t1.Name > t2.Name) {
                 return 1;
               }
@@ -450,29 +465,29 @@ export class FrontRepoService {
             });
 
             // init the array
-            FrontRepoSingloton.GongStructs_array = gongstructs
+            this.frontRepo.GongStructs_array = gongstructs
 
             // clear the map that counts GongStruct in the GET
-            FrontRepoSingloton.GongStructs_batch.clear()
+            this.frontRepo.GongStructs_batch.clear()
 
             gongstructs.forEach(
               gongstruct => {
-                FrontRepoSingloton.GongStructs.set(gongstruct.ID, gongstruct)
-                FrontRepoSingloton.GongStructs_batch.set(gongstruct.ID, gongstruct)
+                this.frontRepo.GongStructs.set(gongstruct.ID, gongstruct)
+                this.frontRepo.GongStructs_batch.set(gongstruct.ID, gongstruct)
               }
             )
 
             // clear gongstructs that are absent from the batch
-            FrontRepoSingloton.GongStructs.forEach(
+            this.frontRepo.GongStructs.forEach(
               gongstruct => {
-                if (FrontRepoSingloton.GongStructs_batch.get(gongstruct.ID) == undefined) {
-                  FrontRepoSingloton.GongStructs.delete(gongstruct.ID)
+                if (this.frontRepo.GongStructs_batch.get(gongstruct.ID) == undefined) {
+                  this.frontRepo.GongStructs.delete(gongstruct.ID)
                 }
               }
             )
 
             // sort GongStructs_array array
-            FrontRepoSingloton.GongStructs_array.sort((t1, t2) => {
+            this.frontRepo.GongStructs_array.sort((t1, t2) => {
               if (t1.Name > t2.Name) {
                 return 1;
               }
@@ -483,29 +498,29 @@ export class FrontRepoService {
             });
 
             // init the array
-            FrontRepoSingloton.GongTimeFields_array = gongtimefields
+            this.frontRepo.GongTimeFields_array = gongtimefields
 
             // clear the map that counts GongTimeField in the GET
-            FrontRepoSingloton.GongTimeFields_batch.clear()
+            this.frontRepo.GongTimeFields_batch.clear()
 
             gongtimefields.forEach(
               gongtimefield => {
-                FrontRepoSingloton.GongTimeFields.set(gongtimefield.ID, gongtimefield)
-                FrontRepoSingloton.GongTimeFields_batch.set(gongtimefield.ID, gongtimefield)
+                this.frontRepo.GongTimeFields.set(gongtimefield.ID, gongtimefield)
+                this.frontRepo.GongTimeFields_batch.set(gongtimefield.ID, gongtimefield)
               }
             )
 
             // clear gongtimefields that are absent from the batch
-            FrontRepoSingloton.GongTimeFields.forEach(
+            this.frontRepo.GongTimeFields.forEach(
               gongtimefield => {
-                if (FrontRepoSingloton.GongTimeFields_batch.get(gongtimefield.ID) == undefined) {
-                  FrontRepoSingloton.GongTimeFields.delete(gongtimefield.ID)
+                if (this.frontRepo.GongTimeFields_batch.get(gongtimefield.ID) == undefined) {
+                  this.frontRepo.GongTimeFields.delete(gongtimefield.ID)
                 }
               }
             )
 
             // sort GongTimeFields_array array
-            FrontRepoSingloton.GongTimeFields_array.sort((t1, t2) => {
+            this.frontRepo.GongTimeFields_array.sort((t1, t2) => {
               if (t1.Name > t2.Name) {
                 return 1;
               }
@@ -516,29 +531,29 @@ export class FrontRepoService {
             });
 
             // init the array
-            FrontRepoSingloton.Metas_array = metas
+            this.frontRepo.Metas_array = metas
 
             // clear the map that counts Meta in the GET
-            FrontRepoSingloton.Metas_batch.clear()
+            this.frontRepo.Metas_batch.clear()
 
             metas.forEach(
               meta => {
-                FrontRepoSingloton.Metas.set(meta.ID, meta)
-                FrontRepoSingloton.Metas_batch.set(meta.ID, meta)
+                this.frontRepo.Metas.set(meta.ID, meta)
+                this.frontRepo.Metas_batch.set(meta.ID, meta)
               }
             )
 
             // clear metas that are absent from the batch
-            FrontRepoSingloton.Metas.forEach(
+            this.frontRepo.Metas.forEach(
               meta => {
-                if (FrontRepoSingloton.Metas_batch.get(meta.ID) == undefined) {
-                  FrontRepoSingloton.Metas.delete(meta.ID)
+                if (this.frontRepo.Metas_batch.get(meta.ID) == undefined) {
+                  this.frontRepo.Metas.delete(meta.ID)
                 }
               }
             )
 
             // sort Metas_array array
-            FrontRepoSingloton.Metas_array.sort((t1, t2) => {
+            this.frontRepo.Metas_array.sort((t1, t2) => {
               if (t1.Name > t2.Name) {
                 return 1;
               }
@@ -549,29 +564,29 @@ export class FrontRepoService {
             });
 
             // init the array
-            FrontRepoSingloton.MetaReferences_array = metareferences
+            this.frontRepo.MetaReferences_array = metareferences
 
             // clear the map that counts MetaReference in the GET
-            FrontRepoSingloton.MetaReferences_batch.clear()
+            this.frontRepo.MetaReferences_batch.clear()
 
             metareferences.forEach(
               metareference => {
-                FrontRepoSingloton.MetaReferences.set(metareference.ID, metareference)
-                FrontRepoSingloton.MetaReferences_batch.set(metareference.ID, metareference)
+                this.frontRepo.MetaReferences.set(metareference.ID, metareference)
+                this.frontRepo.MetaReferences_batch.set(metareference.ID, metareference)
               }
             )
 
             // clear metareferences that are absent from the batch
-            FrontRepoSingloton.MetaReferences.forEach(
+            this.frontRepo.MetaReferences.forEach(
               metareference => {
-                if (FrontRepoSingloton.MetaReferences_batch.get(metareference.ID) == undefined) {
-                  FrontRepoSingloton.MetaReferences.delete(metareference.ID)
+                if (this.frontRepo.MetaReferences_batch.get(metareference.ID) == undefined) {
+                  this.frontRepo.MetaReferences.delete(metareference.ID)
                 }
               }
             )
 
             // sort MetaReferences_array array
-            FrontRepoSingloton.MetaReferences_array.sort((t1, t2) => {
+            this.frontRepo.MetaReferences_array.sort((t1, t2) => {
               if (t1.Name > t2.Name) {
                 return 1;
               }
@@ -582,29 +597,29 @@ export class FrontRepoService {
             });
 
             // init the array
-            FrontRepoSingloton.ModelPkgs_array = modelpkgs
+            this.frontRepo.ModelPkgs_array = modelpkgs
 
             // clear the map that counts ModelPkg in the GET
-            FrontRepoSingloton.ModelPkgs_batch.clear()
+            this.frontRepo.ModelPkgs_batch.clear()
 
             modelpkgs.forEach(
               modelpkg => {
-                FrontRepoSingloton.ModelPkgs.set(modelpkg.ID, modelpkg)
-                FrontRepoSingloton.ModelPkgs_batch.set(modelpkg.ID, modelpkg)
+                this.frontRepo.ModelPkgs.set(modelpkg.ID, modelpkg)
+                this.frontRepo.ModelPkgs_batch.set(modelpkg.ID, modelpkg)
               }
             )
 
             // clear modelpkgs that are absent from the batch
-            FrontRepoSingloton.ModelPkgs.forEach(
+            this.frontRepo.ModelPkgs.forEach(
               modelpkg => {
-                if (FrontRepoSingloton.ModelPkgs_batch.get(modelpkg.ID) == undefined) {
-                  FrontRepoSingloton.ModelPkgs.delete(modelpkg.ID)
+                if (this.frontRepo.ModelPkgs_batch.get(modelpkg.ID) == undefined) {
+                  this.frontRepo.ModelPkgs.delete(modelpkg.ID)
                 }
               }
             )
 
             // sort ModelPkgs_array array
-            FrontRepoSingloton.ModelPkgs_array.sort((t1, t2) => {
+            this.frontRepo.ModelPkgs_array.sort((t1, t2) => {
               if (t1.Name > t2.Name) {
                 return 1;
               }
@@ -615,29 +630,29 @@ export class FrontRepoService {
             });
 
             // init the array
-            FrontRepoSingloton.PointerToGongStructFields_array = pointertogongstructfields
+            this.frontRepo.PointerToGongStructFields_array = pointertogongstructfields
 
             // clear the map that counts PointerToGongStructField in the GET
-            FrontRepoSingloton.PointerToGongStructFields_batch.clear()
+            this.frontRepo.PointerToGongStructFields_batch.clear()
 
             pointertogongstructfields.forEach(
               pointertogongstructfield => {
-                FrontRepoSingloton.PointerToGongStructFields.set(pointertogongstructfield.ID, pointertogongstructfield)
-                FrontRepoSingloton.PointerToGongStructFields_batch.set(pointertogongstructfield.ID, pointertogongstructfield)
+                this.frontRepo.PointerToGongStructFields.set(pointertogongstructfield.ID, pointertogongstructfield)
+                this.frontRepo.PointerToGongStructFields_batch.set(pointertogongstructfield.ID, pointertogongstructfield)
               }
             )
 
             // clear pointertogongstructfields that are absent from the batch
-            FrontRepoSingloton.PointerToGongStructFields.forEach(
+            this.frontRepo.PointerToGongStructFields.forEach(
               pointertogongstructfield => {
-                if (FrontRepoSingloton.PointerToGongStructFields_batch.get(pointertogongstructfield.ID) == undefined) {
-                  FrontRepoSingloton.PointerToGongStructFields.delete(pointertogongstructfield.ID)
+                if (this.frontRepo.PointerToGongStructFields_batch.get(pointertogongstructfield.ID) == undefined) {
+                  this.frontRepo.PointerToGongStructFields.delete(pointertogongstructfield.ID)
                 }
               }
             )
 
             // sort PointerToGongStructFields_array array
-            FrontRepoSingloton.PointerToGongStructFields_array.sort((t1, t2) => {
+            this.frontRepo.PointerToGongStructFields_array.sort((t1, t2) => {
               if (t1.Name > t2.Name) {
                 return 1;
               }
@@ -648,29 +663,29 @@ export class FrontRepoService {
             });
 
             // init the array
-            FrontRepoSingloton.SliceOfPointerToGongStructFields_array = sliceofpointertogongstructfields
+            this.frontRepo.SliceOfPointerToGongStructFields_array = sliceofpointertogongstructfields
 
             // clear the map that counts SliceOfPointerToGongStructField in the GET
-            FrontRepoSingloton.SliceOfPointerToGongStructFields_batch.clear()
+            this.frontRepo.SliceOfPointerToGongStructFields_batch.clear()
 
             sliceofpointertogongstructfields.forEach(
               sliceofpointertogongstructfield => {
-                FrontRepoSingloton.SliceOfPointerToGongStructFields.set(sliceofpointertogongstructfield.ID, sliceofpointertogongstructfield)
-                FrontRepoSingloton.SliceOfPointerToGongStructFields_batch.set(sliceofpointertogongstructfield.ID, sliceofpointertogongstructfield)
+                this.frontRepo.SliceOfPointerToGongStructFields.set(sliceofpointertogongstructfield.ID, sliceofpointertogongstructfield)
+                this.frontRepo.SliceOfPointerToGongStructFields_batch.set(sliceofpointertogongstructfield.ID, sliceofpointertogongstructfield)
               }
             )
 
             // clear sliceofpointertogongstructfields that are absent from the batch
-            FrontRepoSingloton.SliceOfPointerToGongStructFields.forEach(
+            this.frontRepo.SliceOfPointerToGongStructFields.forEach(
               sliceofpointertogongstructfield => {
-                if (FrontRepoSingloton.SliceOfPointerToGongStructFields_batch.get(sliceofpointertogongstructfield.ID) == undefined) {
-                  FrontRepoSingloton.SliceOfPointerToGongStructFields.delete(sliceofpointertogongstructfield.ID)
+                if (this.frontRepo.SliceOfPointerToGongStructFields_batch.get(sliceofpointertogongstructfield.ID) == undefined) {
+                  this.frontRepo.SliceOfPointerToGongStructFields.delete(sliceofpointertogongstructfield.ID)
                 }
               }
             )
 
             // sort SliceOfPointerToGongStructFields_array array
-            FrontRepoSingloton.SliceOfPointerToGongStructFields_array.sort((t1, t2) => {
+            this.frontRepo.SliceOfPointerToGongStructFields_array.sort((t1, t2) => {
               if (t1.Name > t2.Name) {
                 return 1;
               }
@@ -689,7 +704,7 @@ export class FrontRepoService {
                 // insertion point sub sub template for ONE-/ZERO-ONE associations pointers redeeming
                 // insertion point for pointer field GongEnum redeeming
                 {
-                  let _gongenum = FrontRepoSingloton.GongEnums.get(gongbasicfield.GongEnumID.Int64)
+                  let _gongenum = this.frontRepo.GongEnums.get(gongbasicfield.GongEnumID.Int64)
                   if (_gongenum) {
                     gongbasicfield.GongEnum = _gongenum
                   }
@@ -698,7 +713,7 @@ export class FrontRepoService {
                 // insertion point for redeeming ONE-MANY associations
                 // insertion point for slice of pointer field GongStruct.GongBasicFields redeeming
                 {
-                  let _gongstruct = FrontRepoSingloton.GongStructs.get(gongbasicfield.GongStruct_GongBasicFieldsDBID.Int64)
+                  let _gongstruct = this.frontRepo.GongStructs.get(gongbasicfield.GongStruct_GongBasicFieldsDBID.Int64)
                   if (_gongstruct) {
                     if (_gongstruct.GongBasicFields == undefined) {
                       _gongstruct.GongBasicFields = new Array<GongBasicFieldDB>()
@@ -725,7 +740,7 @@ export class FrontRepoService {
                 // insertion point for redeeming ONE-MANY associations
                 // insertion point for slice of pointer field GongEnum.GongEnumValues redeeming
                 {
-                  let _gongenum = FrontRepoSingloton.GongEnums.get(gongenumvalue.GongEnum_GongEnumValuesDBID.Int64)
+                  let _gongenum = this.frontRepo.GongEnums.get(gongenumvalue.GongEnum_GongEnumValuesDBID.Int64)
                   if (_gongenum) {
                     if (_gongenum.GongEnumValues == undefined) {
                       _gongenum.GongEnumValues = new Array<GongEnumValueDB>()
@@ -745,7 +760,7 @@ export class FrontRepoService {
                 // insertion point for redeeming ONE-MANY associations
                 // insertion point for slice of pointer field GongNote.Links redeeming
                 {
-                  let _gongnote = FrontRepoSingloton.GongNotes.get(gonglink.GongNote_LinksDBID.Int64)
+                  let _gongnote = this.frontRepo.GongNotes.get(gonglink.GongNote_LinksDBID.Int64)
                   if (_gongnote) {
                     if (_gongnote.Links == undefined) {
                       _gongnote.Links = new Array<GongLinkDB>()
@@ -779,7 +794,7 @@ export class FrontRepoService {
                 // insertion point for redeeming ONE-MANY associations
                 // insertion point for slice of pointer field GongStruct.GongTimeFields redeeming
                 {
-                  let _gongstruct = FrontRepoSingloton.GongStructs.get(gongtimefield.GongStruct_GongTimeFieldsDBID.Int64)
+                  let _gongstruct = this.frontRepo.GongStructs.get(gongtimefield.GongStruct_GongTimeFieldsDBID.Int64)
                   if (_gongstruct) {
                     if (_gongstruct.GongTimeFields == undefined) {
                       _gongstruct.GongTimeFields = new Array<GongTimeFieldDB>()
@@ -806,7 +821,7 @@ export class FrontRepoService {
                 // insertion point for redeeming ONE-MANY associations
                 // insertion point for slice of pointer field Meta.MetaReferences redeeming
                 {
-                  let _meta = FrontRepoSingloton.Metas.get(metareference.Meta_MetaReferencesDBID.Int64)
+                  let _meta = this.frontRepo.Metas.get(metareference.Meta_MetaReferencesDBID.Int64)
                   if (_meta) {
                     if (_meta.MetaReferences == undefined) {
                       _meta.MetaReferences = new Array<MetaReferenceDB>()
@@ -831,7 +846,7 @@ export class FrontRepoService {
                 // insertion point sub sub template for ONE-/ZERO-ONE associations pointers redeeming
                 // insertion point for pointer field GongStruct redeeming
                 {
-                  let _gongstruct = FrontRepoSingloton.GongStructs.get(pointertogongstructfield.GongStructID.Int64)
+                  let _gongstruct = this.frontRepo.GongStructs.get(pointertogongstructfield.GongStructID.Int64)
                   if (_gongstruct) {
                     pointertogongstructfield.GongStruct = _gongstruct
                   }
@@ -840,7 +855,7 @@ export class FrontRepoService {
                 // insertion point for redeeming ONE-MANY associations
                 // insertion point for slice of pointer field GongStruct.PointerToGongStructFields redeeming
                 {
-                  let _gongstruct = FrontRepoSingloton.GongStructs.get(pointertogongstructfield.GongStruct_PointerToGongStructFieldsDBID.Int64)
+                  let _gongstruct = this.frontRepo.GongStructs.get(pointertogongstructfield.GongStruct_PointerToGongStructFieldsDBID.Int64)
                   if (_gongstruct) {
                     if (_gongstruct.PointerToGongStructFields == undefined) {
                       _gongstruct.PointerToGongStructFields = new Array<PointerToGongStructFieldDB>()
@@ -858,7 +873,7 @@ export class FrontRepoService {
                 // insertion point sub sub template for ONE-/ZERO-ONE associations pointers redeeming
                 // insertion point for pointer field GongStruct redeeming
                 {
-                  let _gongstruct = FrontRepoSingloton.GongStructs.get(sliceofpointertogongstructfield.GongStructID.Int64)
+                  let _gongstruct = this.frontRepo.GongStructs.get(sliceofpointertogongstructfield.GongStructID.Int64)
                   if (_gongstruct) {
                     sliceofpointertogongstructfield.GongStruct = _gongstruct
                   }
@@ -867,7 +882,7 @@ export class FrontRepoService {
                 // insertion point for redeeming ONE-MANY associations
                 // insertion point for slice of pointer field GongStruct.SliceOfPointerToGongStructFields redeeming
                 {
-                  let _gongstruct = FrontRepoSingloton.GongStructs.get(sliceofpointertogongstructfield.GongStruct_SliceOfPointerToGongStructFieldsDBID.Int64)
+                  let _gongstruct = this.frontRepo.GongStructs.get(sliceofpointertogongstructfield.GongStruct_SliceOfPointerToGongStructFieldsDBID.Int64)
                   if (_gongstruct) {
                     if (_gongstruct.SliceOfPointerToGongStructFields == undefined) {
                       _gongstruct.SliceOfPointerToGongStructFields = new Array<SliceOfPointerToGongStructFieldDB>()
@@ -881,8 +896,142 @@ export class FrontRepoService {
               }
             )
 
+            // 
+            // Third Step: sort arrays (slices in go) according to their index
+            // insertion point sub template for redeem 
+            gongbasicfields.forEach(
+              gongbasicfield => {
+                // insertion point for sorting
+              }
+            )
+            gongenums.forEach(
+              gongenum => {
+                // insertion point for sorting
+                gongenum.GongEnumValues?.sort((t1, t2) => {
+                  if (t1.GongEnum_GongEnumValuesDBID_Index.Int64 > t2.GongEnum_GongEnumValuesDBID_Index.Int64) {
+                    return 1;
+                  }
+                  if (t1.GongEnum_GongEnumValuesDBID_Index.Int64 < t2.GongEnum_GongEnumValuesDBID_Index.Int64) {
+                    return -1;
+                  }
+                  return 0;
+                })
+
+              }
+            )
+            gongenumvalues.forEach(
+              gongenumvalue => {
+                // insertion point for sorting
+              }
+            )
+            gonglinks.forEach(
+              gonglink => {
+                // insertion point for sorting
+              }
+            )
+            gongnotes.forEach(
+              gongnote => {
+                // insertion point for sorting
+                gongnote.Links?.sort((t1, t2) => {
+                  if (t1.GongNote_LinksDBID_Index.Int64 > t2.GongNote_LinksDBID_Index.Int64) {
+                    return 1;
+                  }
+                  if (t1.GongNote_LinksDBID_Index.Int64 < t2.GongNote_LinksDBID_Index.Int64) {
+                    return -1;
+                  }
+                  return 0;
+                })
+
+              }
+            )
+            gongstructs.forEach(
+              gongstruct => {
+                // insertion point for sorting
+                gongstruct.GongBasicFields?.sort((t1, t2) => {
+                  if (t1.GongStruct_GongBasicFieldsDBID_Index.Int64 > t2.GongStruct_GongBasicFieldsDBID_Index.Int64) {
+                    return 1;
+                  }
+                  if (t1.GongStruct_GongBasicFieldsDBID_Index.Int64 < t2.GongStruct_GongBasicFieldsDBID_Index.Int64) {
+                    return -1;
+                  }
+                  return 0;
+                })
+
+                gongstruct.GongTimeFields?.sort((t1, t2) => {
+                  if (t1.GongStruct_GongTimeFieldsDBID_Index.Int64 > t2.GongStruct_GongTimeFieldsDBID_Index.Int64) {
+                    return 1;
+                  }
+                  if (t1.GongStruct_GongTimeFieldsDBID_Index.Int64 < t2.GongStruct_GongTimeFieldsDBID_Index.Int64) {
+                    return -1;
+                  }
+                  return 0;
+                })
+
+                gongstruct.PointerToGongStructFields?.sort((t1, t2) => {
+                  if (t1.GongStruct_PointerToGongStructFieldsDBID_Index.Int64 > t2.GongStruct_PointerToGongStructFieldsDBID_Index.Int64) {
+                    return 1;
+                  }
+                  if (t1.GongStruct_PointerToGongStructFieldsDBID_Index.Int64 < t2.GongStruct_PointerToGongStructFieldsDBID_Index.Int64) {
+                    return -1;
+                  }
+                  return 0;
+                })
+
+                gongstruct.SliceOfPointerToGongStructFields?.sort((t1, t2) => {
+                  if (t1.GongStruct_SliceOfPointerToGongStructFieldsDBID_Index.Int64 > t2.GongStruct_SliceOfPointerToGongStructFieldsDBID_Index.Int64) {
+                    return 1;
+                  }
+                  if (t1.GongStruct_SliceOfPointerToGongStructFieldsDBID_Index.Int64 < t2.GongStruct_SliceOfPointerToGongStructFieldsDBID_Index.Int64) {
+                    return -1;
+                  }
+                  return 0;
+                })
+
+              }
+            )
+            gongtimefields.forEach(
+              gongtimefield => {
+                // insertion point for sorting
+              }
+            )
+            metas.forEach(
+              meta => {
+                // insertion point for sorting
+                meta.MetaReferences?.sort((t1, t2) => {
+                  if (t1.Meta_MetaReferencesDBID_Index.Int64 > t2.Meta_MetaReferencesDBID_Index.Int64) {
+                    return 1;
+                  }
+                  if (t1.Meta_MetaReferencesDBID_Index.Int64 < t2.Meta_MetaReferencesDBID_Index.Int64) {
+                    return -1;
+                  }
+                  return 0;
+                })
+
+              }
+            )
+            metareferences.forEach(
+              metareference => {
+                // insertion point for sorting
+              }
+            )
+            modelpkgs.forEach(
+              modelpkg => {
+                // insertion point for sorting
+              }
+            )
+            pointertogongstructfields.forEach(
+              pointertogongstructfield => {
+                // insertion point for sorting
+              }
+            )
+            sliceofpointertogongstructfields.forEach(
+              sliceofpointertogongstructfield => {
+                // insertion point for sorting
+              }
+            )
+
             // hand over control flow to observer
-            observer.next(FrontRepoSingloton)
+            observer.next(this.frontRepo)
           }
         )
       }
@@ -896,29 +1045,29 @@ export class FrontRepoService {
     return new Observable<FrontRepo>(
       (observer) => {
         combineLatest([
-          this.gongbasicfieldService.getGongBasicFields()
+          this.gongbasicfieldService.getGongBasicFields(this.GONG__StackPath)
         ]).subscribe(
           ([ // insertion point sub template 
             gongbasicfields,
           ]) => {
             // init the array
-            FrontRepoSingloton.GongBasicFields_array = gongbasicfields
+            this.frontRepo.GongBasicFields_array = gongbasicfields
 
             // clear the map that counts GongBasicField in the GET
-            FrontRepoSingloton.GongBasicFields_batch.clear()
+            this.frontRepo.GongBasicFields_batch.clear()
 
             // 
             // First Step: init map of instances
             // insertion point sub template 
             gongbasicfields.forEach(
               gongbasicfield => {
-                FrontRepoSingloton.GongBasicFields.set(gongbasicfield.ID, gongbasicfield)
-                FrontRepoSingloton.GongBasicFields_batch.set(gongbasicfield.ID, gongbasicfield)
+                this.frontRepo.GongBasicFields.set(gongbasicfield.ID, gongbasicfield)
+                this.frontRepo.GongBasicFields_batch.set(gongbasicfield.ID, gongbasicfield)
 
                 // insertion point for redeeming ONE/ZERO-ONE associations
                 // insertion point for pointer field GongEnum redeeming
                 {
-                  let _gongenum = FrontRepoSingloton.GongEnums.get(gongbasicfield.GongEnumID.Int64)
+                  let _gongenum = this.frontRepo.GongEnums.get(gongbasicfield.GongEnumID.Int64)
                   if (_gongenum) {
                     gongbasicfield.GongEnum = _gongenum
                   }
@@ -927,7 +1076,7 @@ export class FrontRepoService {
                 // insertion point for redeeming ONE-MANY associations
                 // insertion point for slice of pointer field GongStruct.GongBasicFields redeeming
                 {
-                  let _gongstruct = FrontRepoSingloton.GongStructs.get(gongbasicfield.GongStruct_GongBasicFieldsDBID.Int64)
+                  let _gongstruct = this.frontRepo.GongStructs.get(gongbasicfield.GongStruct_GongBasicFieldsDBID.Int64)
                   if (_gongstruct) {
                     if (_gongstruct.GongBasicFields == undefined) {
                       _gongstruct.GongBasicFields = new Array<GongBasicFieldDB>()
@@ -942,10 +1091,10 @@ export class FrontRepoService {
             )
 
             // clear gongbasicfields that are absent from the GET
-            FrontRepoSingloton.GongBasicFields.forEach(
+            this.frontRepo.GongBasicFields.forEach(
               gongbasicfield => {
-                if (FrontRepoSingloton.GongBasicFields_batch.get(gongbasicfield.ID) == undefined) {
-                  FrontRepoSingloton.GongBasicFields.delete(gongbasicfield.ID)
+                if (this.frontRepo.GongBasicFields_batch.get(gongbasicfield.ID) == undefined) {
+                  this.frontRepo.GongBasicFields.delete(gongbasicfield.ID)
                 }
               }
             )
@@ -955,7 +1104,7 @@ export class FrontRepoService {
             // insertion point sub template 
 
             // hand over control flow to observer
-            observer.next(FrontRepoSingloton)
+            observer.next(this.frontRepo)
           }
         )
       }
@@ -967,24 +1116,24 @@ export class FrontRepoService {
     return new Observable<FrontRepo>(
       (observer) => {
         combineLatest([
-          this.gongenumService.getGongEnums()
+          this.gongenumService.getGongEnums(this.GONG__StackPath)
         ]).subscribe(
           ([ // insertion point sub template 
             gongenums,
           ]) => {
             // init the array
-            FrontRepoSingloton.GongEnums_array = gongenums
+            this.frontRepo.GongEnums_array = gongenums
 
             // clear the map that counts GongEnum in the GET
-            FrontRepoSingloton.GongEnums_batch.clear()
+            this.frontRepo.GongEnums_batch.clear()
 
             // 
             // First Step: init map of instances
             // insertion point sub template 
             gongenums.forEach(
               gongenum => {
-                FrontRepoSingloton.GongEnums.set(gongenum.ID, gongenum)
-                FrontRepoSingloton.GongEnums_batch.set(gongenum.ID, gongenum)
+                this.frontRepo.GongEnums.set(gongenum.ID, gongenum)
+                this.frontRepo.GongEnums_batch.set(gongenum.ID, gongenum)
 
                 // insertion point for redeeming ONE/ZERO-ONE associations
 
@@ -993,10 +1142,10 @@ export class FrontRepoService {
             )
 
             // clear gongenums that are absent from the GET
-            FrontRepoSingloton.GongEnums.forEach(
+            this.frontRepo.GongEnums.forEach(
               gongenum => {
-                if (FrontRepoSingloton.GongEnums_batch.get(gongenum.ID) == undefined) {
-                  FrontRepoSingloton.GongEnums.delete(gongenum.ID)
+                if (this.frontRepo.GongEnums_batch.get(gongenum.ID) == undefined) {
+                  this.frontRepo.GongEnums.delete(gongenum.ID)
                 }
               }
             )
@@ -1006,7 +1155,7 @@ export class FrontRepoService {
             // insertion point sub template 
 
             // hand over control flow to observer
-            observer.next(FrontRepoSingloton)
+            observer.next(this.frontRepo)
           }
         )
       }
@@ -1018,31 +1167,31 @@ export class FrontRepoService {
     return new Observable<FrontRepo>(
       (observer) => {
         combineLatest([
-          this.gongenumvalueService.getGongEnumValues()
+          this.gongenumvalueService.getGongEnumValues(this.GONG__StackPath)
         ]).subscribe(
           ([ // insertion point sub template 
             gongenumvalues,
           ]) => {
             // init the array
-            FrontRepoSingloton.GongEnumValues_array = gongenumvalues
+            this.frontRepo.GongEnumValues_array = gongenumvalues
 
             // clear the map that counts GongEnumValue in the GET
-            FrontRepoSingloton.GongEnumValues_batch.clear()
+            this.frontRepo.GongEnumValues_batch.clear()
 
             // 
             // First Step: init map of instances
             // insertion point sub template 
             gongenumvalues.forEach(
               gongenumvalue => {
-                FrontRepoSingloton.GongEnumValues.set(gongenumvalue.ID, gongenumvalue)
-                FrontRepoSingloton.GongEnumValues_batch.set(gongenumvalue.ID, gongenumvalue)
+                this.frontRepo.GongEnumValues.set(gongenumvalue.ID, gongenumvalue)
+                this.frontRepo.GongEnumValues_batch.set(gongenumvalue.ID, gongenumvalue)
 
                 // insertion point for redeeming ONE/ZERO-ONE associations
 
                 // insertion point for redeeming ONE-MANY associations
                 // insertion point for slice of pointer field GongEnum.GongEnumValues redeeming
                 {
-                  let _gongenum = FrontRepoSingloton.GongEnums.get(gongenumvalue.GongEnum_GongEnumValuesDBID.Int64)
+                  let _gongenum = this.frontRepo.GongEnums.get(gongenumvalue.GongEnum_GongEnumValuesDBID.Int64)
                   if (_gongenum) {
                     if (_gongenum.GongEnumValues == undefined) {
                       _gongenum.GongEnumValues = new Array<GongEnumValueDB>()
@@ -1057,10 +1206,10 @@ export class FrontRepoService {
             )
 
             // clear gongenumvalues that are absent from the GET
-            FrontRepoSingloton.GongEnumValues.forEach(
+            this.frontRepo.GongEnumValues.forEach(
               gongenumvalue => {
-                if (FrontRepoSingloton.GongEnumValues_batch.get(gongenumvalue.ID) == undefined) {
-                  FrontRepoSingloton.GongEnumValues.delete(gongenumvalue.ID)
+                if (this.frontRepo.GongEnumValues_batch.get(gongenumvalue.ID) == undefined) {
+                  this.frontRepo.GongEnumValues.delete(gongenumvalue.ID)
                 }
               }
             )
@@ -1070,7 +1219,7 @@ export class FrontRepoService {
             // insertion point sub template 
 
             // hand over control flow to observer
-            observer.next(FrontRepoSingloton)
+            observer.next(this.frontRepo)
           }
         )
       }
@@ -1082,31 +1231,31 @@ export class FrontRepoService {
     return new Observable<FrontRepo>(
       (observer) => {
         combineLatest([
-          this.gonglinkService.getGongLinks()
+          this.gonglinkService.getGongLinks(this.GONG__StackPath)
         ]).subscribe(
           ([ // insertion point sub template 
             gonglinks,
           ]) => {
             // init the array
-            FrontRepoSingloton.GongLinks_array = gonglinks
+            this.frontRepo.GongLinks_array = gonglinks
 
             // clear the map that counts GongLink in the GET
-            FrontRepoSingloton.GongLinks_batch.clear()
+            this.frontRepo.GongLinks_batch.clear()
 
             // 
             // First Step: init map of instances
             // insertion point sub template 
             gonglinks.forEach(
               gonglink => {
-                FrontRepoSingloton.GongLinks.set(gonglink.ID, gonglink)
-                FrontRepoSingloton.GongLinks_batch.set(gonglink.ID, gonglink)
+                this.frontRepo.GongLinks.set(gonglink.ID, gonglink)
+                this.frontRepo.GongLinks_batch.set(gonglink.ID, gonglink)
 
                 // insertion point for redeeming ONE/ZERO-ONE associations
 
                 // insertion point for redeeming ONE-MANY associations
                 // insertion point for slice of pointer field GongNote.Links redeeming
                 {
-                  let _gongnote = FrontRepoSingloton.GongNotes.get(gonglink.GongNote_LinksDBID.Int64)
+                  let _gongnote = this.frontRepo.GongNotes.get(gonglink.GongNote_LinksDBID.Int64)
                   if (_gongnote) {
                     if (_gongnote.Links == undefined) {
                       _gongnote.Links = new Array<GongLinkDB>()
@@ -1121,10 +1270,10 @@ export class FrontRepoService {
             )
 
             // clear gonglinks that are absent from the GET
-            FrontRepoSingloton.GongLinks.forEach(
+            this.frontRepo.GongLinks.forEach(
               gonglink => {
-                if (FrontRepoSingloton.GongLinks_batch.get(gonglink.ID) == undefined) {
-                  FrontRepoSingloton.GongLinks.delete(gonglink.ID)
+                if (this.frontRepo.GongLinks_batch.get(gonglink.ID) == undefined) {
+                  this.frontRepo.GongLinks.delete(gonglink.ID)
                 }
               }
             )
@@ -1134,7 +1283,7 @@ export class FrontRepoService {
             // insertion point sub template 
 
             // hand over control flow to observer
-            observer.next(FrontRepoSingloton)
+            observer.next(this.frontRepo)
           }
         )
       }
@@ -1146,24 +1295,24 @@ export class FrontRepoService {
     return new Observable<FrontRepo>(
       (observer) => {
         combineLatest([
-          this.gongnoteService.getGongNotes()
+          this.gongnoteService.getGongNotes(this.GONG__StackPath)
         ]).subscribe(
           ([ // insertion point sub template 
             gongnotes,
           ]) => {
             // init the array
-            FrontRepoSingloton.GongNotes_array = gongnotes
+            this.frontRepo.GongNotes_array = gongnotes
 
             // clear the map that counts GongNote in the GET
-            FrontRepoSingloton.GongNotes_batch.clear()
+            this.frontRepo.GongNotes_batch.clear()
 
             // 
             // First Step: init map of instances
             // insertion point sub template 
             gongnotes.forEach(
               gongnote => {
-                FrontRepoSingloton.GongNotes.set(gongnote.ID, gongnote)
-                FrontRepoSingloton.GongNotes_batch.set(gongnote.ID, gongnote)
+                this.frontRepo.GongNotes.set(gongnote.ID, gongnote)
+                this.frontRepo.GongNotes_batch.set(gongnote.ID, gongnote)
 
                 // insertion point for redeeming ONE/ZERO-ONE associations
 
@@ -1172,10 +1321,10 @@ export class FrontRepoService {
             )
 
             // clear gongnotes that are absent from the GET
-            FrontRepoSingloton.GongNotes.forEach(
+            this.frontRepo.GongNotes.forEach(
               gongnote => {
-                if (FrontRepoSingloton.GongNotes_batch.get(gongnote.ID) == undefined) {
-                  FrontRepoSingloton.GongNotes.delete(gongnote.ID)
+                if (this.frontRepo.GongNotes_batch.get(gongnote.ID) == undefined) {
+                  this.frontRepo.GongNotes.delete(gongnote.ID)
                 }
               }
             )
@@ -1185,7 +1334,7 @@ export class FrontRepoService {
             // insertion point sub template 
 
             // hand over control flow to observer
-            observer.next(FrontRepoSingloton)
+            observer.next(this.frontRepo)
           }
         )
       }
@@ -1197,24 +1346,24 @@ export class FrontRepoService {
     return new Observable<FrontRepo>(
       (observer) => {
         combineLatest([
-          this.gongstructService.getGongStructs()
+          this.gongstructService.getGongStructs(this.GONG__StackPath)
         ]).subscribe(
           ([ // insertion point sub template 
             gongstructs,
           ]) => {
             // init the array
-            FrontRepoSingloton.GongStructs_array = gongstructs
+            this.frontRepo.GongStructs_array = gongstructs
 
             // clear the map that counts GongStruct in the GET
-            FrontRepoSingloton.GongStructs_batch.clear()
+            this.frontRepo.GongStructs_batch.clear()
 
             // 
             // First Step: init map of instances
             // insertion point sub template 
             gongstructs.forEach(
               gongstruct => {
-                FrontRepoSingloton.GongStructs.set(gongstruct.ID, gongstruct)
-                FrontRepoSingloton.GongStructs_batch.set(gongstruct.ID, gongstruct)
+                this.frontRepo.GongStructs.set(gongstruct.ID, gongstruct)
+                this.frontRepo.GongStructs_batch.set(gongstruct.ID, gongstruct)
 
                 // insertion point for redeeming ONE/ZERO-ONE associations
 
@@ -1223,10 +1372,10 @@ export class FrontRepoService {
             )
 
             // clear gongstructs that are absent from the GET
-            FrontRepoSingloton.GongStructs.forEach(
+            this.frontRepo.GongStructs.forEach(
               gongstruct => {
-                if (FrontRepoSingloton.GongStructs_batch.get(gongstruct.ID) == undefined) {
-                  FrontRepoSingloton.GongStructs.delete(gongstruct.ID)
+                if (this.frontRepo.GongStructs_batch.get(gongstruct.ID) == undefined) {
+                  this.frontRepo.GongStructs.delete(gongstruct.ID)
                 }
               }
             )
@@ -1236,7 +1385,7 @@ export class FrontRepoService {
             // insertion point sub template 
 
             // hand over control flow to observer
-            observer.next(FrontRepoSingloton)
+            observer.next(this.frontRepo)
           }
         )
       }
@@ -1248,31 +1397,31 @@ export class FrontRepoService {
     return new Observable<FrontRepo>(
       (observer) => {
         combineLatest([
-          this.gongtimefieldService.getGongTimeFields()
+          this.gongtimefieldService.getGongTimeFields(this.GONG__StackPath)
         ]).subscribe(
           ([ // insertion point sub template 
             gongtimefields,
           ]) => {
             // init the array
-            FrontRepoSingloton.GongTimeFields_array = gongtimefields
+            this.frontRepo.GongTimeFields_array = gongtimefields
 
             // clear the map that counts GongTimeField in the GET
-            FrontRepoSingloton.GongTimeFields_batch.clear()
+            this.frontRepo.GongTimeFields_batch.clear()
 
             // 
             // First Step: init map of instances
             // insertion point sub template 
             gongtimefields.forEach(
               gongtimefield => {
-                FrontRepoSingloton.GongTimeFields.set(gongtimefield.ID, gongtimefield)
-                FrontRepoSingloton.GongTimeFields_batch.set(gongtimefield.ID, gongtimefield)
+                this.frontRepo.GongTimeFields.set(gongtimefield.ID, gongtimefield)
+                this.frontRepo.GongTimeFields_batch.set(gongtimefield.ID, gongtimefield)
 
                 // insertion point for redeeming ONE/ZERO-ONE associations
 
                 // insertion point for redeeming ONE-MANY associations
                 // insertion point for slice of pointer field GongStruct.GongTimeFields redeeming
                 {
-                  let _gongstruct = FrontRepoSingloton.GongStructs.get(gongtimefield.GongStruct_GongTimeFieldsDBID.Int64)
+                  let _gongstruct = this.frontRepo.GongStructs.get(gongtimefield.GongStruct_GongTimeFieldsDBID.Int64)
                   if (_gongstruct) {
                     if (_gongstruct.GongTimeFields == undefined) {
                       _gongstruct.GongTimeFields = new Array<GongTimeFieldDB>()
@@ -1287,10 +1436,10 @@ export class FrontRepoService {
             )
 
             // clear gongtimefields that are absent from the GET
-            FrontRepoSingloton.GongTimeFields.forEach(
+            this.frontRepo.GongTimeFields.forEach(
               gongtimefield => {
-                if (FrontRepoSingloton.GongTimeFields_batch.get(gongtimefield.ID) == undefined) {
-                  FrontRepoSingloton.GongTimeFields.delete(gongtimefield.ID)
+                if (this.frontRepo.GongTimeFields_batch.get(gongtimefield.ID) == undefined) {
+                  this.frontRepo.GongTimeFields.delete(gongtimefield.ID)
                 }
               }
             )
@@ -1300,7 +1449,7 @@ export class FrontRepoService {
             // insertion point sub template 
 
             // hand over control flow to observer
-            observer.next(FrontRepoSingloton)
+            observer.next(this.frontRepo)
           }
         )
       }
@@ -1312,24 +1461,24 @@ export class FrontRepoService {
     return new Observable<FrontRepo>(
       (observer) => {
         combineLatest([
-          this.metaService.getMetas()
+          this.metaService.getMetas(this.GONG__StackPath)
         ]).subscribe(
           ([ // insertion point sub template 
             metas,
           ]) => {
             // init the array
-            FrontRepoSingloton.Metas_array = metas
+            this.frontRepo.Metas_array = metas
 
             // clear the map that counts Meta in the GET
-            FrontRepoSingloton.Metas_batch.clear()
+            this.frontRepo.Metas_batch.clear()
 
             // 
             // First Step: init map of instances
             // insertion point sub template 
             metas.forEach(
               meta => {
-                FrontRepoSingloton.Metas.set(meta.ID, meta)
-                FrontRepoSingloton.Metas_batch.set(meta.ID, meta)
+                this.frontRepo.Metas.set(meta.ID, meta)
+                this.frontRepo.Metas_batch.set(meta.ID, meta)
 
                 // insertion point for redeeming ONE/ZERO-ONE associations
 
@@ -1338,10 +1487,10 @@ export class FrontRepoService {
             )
 
             // clear metas that are absent from the GET
-            FrontRepoSingloton.Metas.forEach(
+            this.frontRepo.Metas.forEach(
               meta => {
-                if (FrontRepoSingloton.Metas_batch.get(meta.ID) == undefined) {
-                  FrontRepoSingloton.Metas.delete(meta.ID)
+                if (this.frontRepo.Metas_batch.get(meta.ID) == undefined) {
+                  this.frontRepo.Metas.delete(meta.ID)
                 }
               }
             )
@@ -1351,7 +1500,7 @@ export class FrontRepoService {
             // insertion point sub template 
 
             // hand over control flow to observer
-            observer.next(FrontRepoSingloton)
+            observer.next(this.frontRepo)
           }
         )
       }
@@ -1363,31 +1512,31 @@ export class FrontRepoService {
     return new Observable<FrontRepo>(
       (observer) => {
         combineLatest([
-          this.metareferenceService.getMetaReferences()
+          this.metareferenceService.getMetaReferences(this.GONG__StackPath)
         ]).subscribe(
           ([ // insertion point sub template 
             metareferences,
           ]) => {
             // init the array
-            FrontRepoSingloton.MetaReferences_array = metareferences
+            this.frontRepo.MetaReferences_array = metareferences
 
             // clear the map that counts MetaReference in the GET
-            FrontRepoSingloton.MetaReferences_batch.clear()
+            this.frontRepo.MetaReferences_batch.clear()
 
             // 
             // First Step: init map of instances
             // insertion point sub template 
             metareferences.forEach(
               metareference => {
-                FrontRepoSingloton.MetaReferences.set(metareference.ID, metareference)
-                FrontRepoSingloton.MetaReferences_batch.set(metareference.ID, metareference)
+                this.frontRepo.MetaReferences.set(metareference.ID, metareference)
+                this.frontRepo.MetaReferences_batch.set(metareference.ID, metareference)
 
                 // insertion point for redeeming ONE/ZERO-ONE associations
 
                 // insertion point for redeeming ONE-MANY associations
                 // insertion point for slice of pointer field Meta.MetaReferences redeeming
                 {
-                  let _meta = FrontRepoSingloton.Metas.get(metareference.Meta_MetaReferencesDBID.Int64)
+                  let _meta = this.frontRepo.Metas.get(metareference.Meta_MetaReferencesDBID.Int64)
                   if (_meta) {
                     if (_meta.MetaReferences == undefined) {
                       _meta.MetaReferences = new Array<MetaReferenceDB>()
@@ -1402,10 +1551,10 @@ export class FrontRepoService {
             )
 
             // clear metareferences that are absent from the GET
-            FrontRepoSingloton.MetaReferences.forEach(
+            this.frontRepo.MetaReferences.forEach(
               metareference => {
-                if (FrontRepoSingloton.MetaReferences_batch.get(metareference.ID) == undefined) {
-                  FrontRepoSingloton.MetaReferences.delete(metareference.ID)
+                if (this.frontRepo.MetaReferences_batch.get(metareference.ID) == undefined) {
+                  this.frontRepo.MetaReferences.delete(metareference.ID)
                 }
               }
             )
@@ -1415,7 +1564,7 @@ export class FrontRepoService {
             // insertion point sub template 
 
             // hand over control flow to observer
-            observer.next(FrontRepoSingloton)
+            observer.next(this.frontRepo)
           }
         )
       }
@@ -1427,24 +1576,24 @@ export class FrontRepoService {
     return new Observable<FrontRepo>(
       (observer) => {
         combineLatest([
-          this.modelpkgService.getModelPkgs()
+          this.modelpkgService.getModelPkgs(this.GONG__StackPath)
         ]).subscribe(
           ([ // insertion point sub template 
             modelpkgs,
           ]) => {
             // init the array
-            FrontRepoSingloton.ModelPkgs_array = modelpkgs
+            this.frontRepo.ModelPkgs_array = modelpkgs
 
             // clear the map that counts ModelPkg in the GET
-            FrontRepoSingloton.ModelPkgs_batch.clear()
+            this.frontRepo.ModelPkgs_batch.clear()
 
             // 
             // First Step: init map of instances
             // insertion point sub template 
             modelpkgs.forEach(
               modelpkg => {
-                FrontRepoSingloton.ModelPkgs.set(modelpkg.ID, modelpkg)
-                FrontRepoSingloton.ModelPkgs_batch.set(modelpkg.ID, modelpkg)
+                this.frontRepo.ModelPkgs.set(modelpkg.ID, modelpkg)
+                this.frontRepo.ModelPkgs_batch.set(modelpkg.ID, modelpkg)
 
                 // insertion point for redeeming ONE/ZERO-ONE associations
 
@@ -1453,10 +1602,10 @@ export class FrontRepoService {
             )
 
             // clear modelpkgs that are absent from the GET
-            FrontRepoSingloton.ModelPkgs.forEach(
+            this.frontRepo.ModelPkgs.forEach(
               modelpkg => {
-                if (FrontRepoSingloton.ModelPkgs_batch.get(modelpkg.ID) == undefined) {
-                  FrontRepoSingloton.ModelPkgs.delete(modelpkg.ID)
+                if (this.frontRepo.ModelPkgs_batch.get(modelpkg.ID) == undefined) {
+                  this.frontRepo.ModelPkgs.delete(modelpkg.ID)
                 }
               }
             )
@@ -1466,7 +1615,7 @@ export class FrontRepoService {
             // insertion point sub template 
 
             // hand over control flow to observer
-            observer.next(FrontRepoSingloton)
+            observer.next(this.frontRepo)
           }
         )
       }
@@ -1478,29 +1627,29 @@ export class FrontRepoService {
     return new Observable<FrontRepo>(
       (observer) => {
         combineLatest([
-          this.pointertogongstructfieldService.getPointerToGongStructFields()
+          this.pointertogongstructfieldService.getPointerToGongStructFields(this.GONG__StackPath)
         ]).subscribe(
           ([ // insertion point sub template 
             pointertogongstructfields,
           ]) => {
             // init the array
-            FrontRepoSingloton.PointerToGongStructFields_array = pointertogongstructfields
+            this.frontRepo.PointerToGongStructFields_array = pointertogongstructfields
 
             // clear the map that counts PointerToGongStructField in the GET
-            FrontRepoSingloton.PointerToGongStructFields_batch.clear()
+            this.frontRepo.PointerToGongStructFields_batch.clear()
 
             // 
             // First Step: init map of instances
             // insertion point sub template 
             pointertogongstructfields.forEach(
               pointertogongstructfield => {
-                FrontRepoSingloton.PointerToGongStructFields.set(pointertogongstructfield.ID, pointertogongstructfield)
-                FrontRepoSingloton.PointerToGongStructFields_batch.set(pointertogongstructfield.ID, pointertogongstructfield)
+                this.frontRepo.PointerToGongStructFields.set(pointertogongstructfield.ID, pointertogongstructfield)
+                this.frontRepo.PointerToGongStructFields_batch.set(pointertogongstructfield.ID, pointertogongstructfield)
 
                 // insertion point for redeeming ONE/ZERO-ONE associations
                 // insertion point for pointer field GongStruct redeeming
                 {
-                  let _gongstruct = FrontRepoSingloton.GongStructs.get(pointertogongstructfield.GongStructID.Int64)
+                  let _gongstruct = this.frontRepo.GongStructs.get(pointertogongstructfield.GongStructID.Int64)
                   if (_gongstruct) {
                     pointertogongstructfield.GongStruct = _gongstruct
                   }
@@ -1509,7 +1658,7 @@ export class FrontRepoService {
                 // insertion point for redeeming ONE-MANY associations
                 // insertion point for slice of pointer field GongStruct.PointerToGongStructFields redeeming
                 {
-                  let _gongstruct = FrontRepoSingloton.GongStructs.get(pointertogongstructfield.GongStruct_PointerToGongStructFieldsDBID.Int64)
+                  let _gongstruct = this.frontRepo.GongStructs.get(pointertogongstructfield.GongStruct_PointerToGongStructFieldsDBID.Int64)
                   if (_gongstruct) {
                     if (_gongstruct.PointerToGongStructFields == undefined) {
                       _gongstruct.PointerToGongStructFields = new Array<PointerToGongStructFieldDB>()
@@ -1524,10 +1673,10 @@ export class FrontRepoService {
             )
 
             // clear pointertogongstructfields that are absent from the GET
-            FrontRepoSingloton.PointerToGongStructFields.forEach(
+            this.frontRepo.PointerToGongStructFields.forEach(
               pointertogongstructfield => {
-                if (FrontRepoSingloton.PointerToGongStructFields_batch.get(pointertogongstructfield.ID) == undefined) {
-                  FrontRepoSingloton.PointerToGongStructFields.delete(pointertogongstructfield.ID)
+                if (this.frontRepo.PointerToGongStructFields_batch.get(pointertogongstructfield.ID) == undefined) {
+                  this.frontRepo.PointerToGongStructFields.delete(pointertogongstructfield.ID)
                 }
               }
             )
@@ -1537,7 +1686,7 @@ export class FrontRepoService {
             // insertion point sub template 
 
             // hand over control flow to observer
-            observer.next(FrontRepoSingloton)
+            observer.next(this.frontRepo)
           }
         )
       }
@@ -1549,29 +1698,29 @@ export class FrontRepoService {
     return new Observable<FrontRepo>(
       (observer) => {
         combineLatest([
-          this.sliceofpointertogongstructfieldService.getSliceOfPointerToGongStructFields()
+          this.sliceofpointertogongstructfieldService.getSliceOfPointerToGongStructFields(this.GONG__StackPath)
         ]).subscribe(
           ([ // insertion point sub template 
             sliceofpointertogongstructfields,
           ]) => {
             // init the array
-            FrontRepoSingloton.SliceOfPointerToGongStructFields_array = sliceofpointertogongstructfields
+            this.frontRepo.SliceOfPointerToGongStructFields_array = sliceofpointertogongstructfields
 
             // clear the map that counts SliceOfPointerToGongStructField in the GET
-            FrontRepoSingloton.SliceOfPointerToGongStructFields_batch.clear()
+            this.frontRepo.SliceOfPointerToGongStructFields_batch.clear()
 
             // 
             // First Step: init map of instances
             // insertion point sub template 
             sliceofpointertogongstructfields.forEach(
               sliceofpointertogongstructfield => {
-                FrontRepoSingloton.SliceOfPointerToGongStructFields.set(sliceofpointertogongstructfield.ID, sliceofpointertogongstructfield)
-                FrontRepoSingloton.SliceOfPointerToGongStructFields_batch.set(sliceofpointertogongstructfield.ID, sliceofpointertogongstructfield)
+                this.frontRepo.SliceOfPointerToGongStructFields.set(sliceofpointertogongstructfield.ID, sliceofpointertogongstructfield)
+                this.frontRepo.SliceOfPointerToGongStructFields_batch.set(sliceofpointertogongstructfield.ID, sliceofpointertogongstructfield)
 
                 // insertion point for redeeming ONE/ZERO-ONE associations
                 // insertion point for pointer field GongStruct redeeming
                 {
-                  let _gongstruct = FrontRepoSingloton.GongStructs.get(sliceofpointertogongstructfield.GongStructID.Int64)
+                  let _gongstruct = this.frontRepo.GongStructs.get(sliceofpointertogongstructfield.GongStructID.Int64)
                   if (_gongstruct) {
                     sliceofpointertogongstructfield.GongStruct = _gongstruct
                   }
@@ -1580,7 +1729,7 @@ export class FrontRepoService {
                 // insertion point for redeeming ONE-MANY associations
                 // insertion point for slice of pointer field GongStruct.SliceOfPointerToGongStructFields redeeming
                 {
-                  let _gongstruct = FrontRepoSingloton.GongStructs.get(sliceofpointertogongstructfield.GongStruct_SliceOfPointerToGongStructFieldsDBID.Int64)
+                  let _gongstruct = this.frontRepo.GongStructs.get(sliceofpointertogongstructfield.GongStruct_SliceOfPointerToGongStructFieldsDBID.Int64)
                   if (_gongstruct) {
                     if (_gongstruct.SliceOfPointerToGongStructFields == undefined) {
                       _gongstruct.SliceOfPointerToGongStructFields = new Array<SliceOfPointerToGongStructFieldDB>()
@@ -1595,10 +1744,10 @@ export class FrontRepoService {
             )
 
             // clear sliceofpointertogongstructfields that are absent from the GET
-            FrontRepoSingloton.SliceOfPointerToGongStructFields.forEach(
+            this.frontRepo.SliceOfPointerToGongStructFields.forEach(
               sliceofpointertogongstructfield => {
-                if (FrontRepoSingloton.SliceOfPointerToGongStructFields_batch.get(sliceofpointertogongstructfield.ID) == undefined) {
-                  FrontRepoSingloton.SliceOfPointerToGongStructFields.delete(sliceofpointertogongstructfield.ID)
+                if (this.frontRepo.SliceOfPointerToGongStructFields_batch.get(sliceofpointertogongstructfield.ID) == undefined) {
+                  this.frontRepo.SliceOfPointerToGongStructFields.delete(sliceofpointertogongstructfield.ID)
                 }
               }
             )
@@ -1608,7 +1757,7 @@ export class FrontRepoService {
             // insertion point sub template 
 
             // hand over control flow to observer
-            observer.next(FrontRepoSingloton)
+            observer.next(this.frontRepo)
           }
         )
       }

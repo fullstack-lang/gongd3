@@ -44,30 +44,46 @@ export class GongBasicFieldService {
   }
 
   /** GET gongbasicfields from the server */
-  getGongBasicFields(GONG__StackPath: string = ""): Observable<GongBasicFieldDB[]> {
+  // gets is more robust to refactoring
+  gets(GONG__StackPath: string): Observable<GongBasicFieldDB[]> {
+    return this.getGongBasicFields(GONG__StackPath)
+  }
+  getGongBasicFields(GONG__StackPath: string): Observable<GongBasicFieldDB[]> {
 
-	let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
+    let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
 
     return this.http.get<GongBasicFieldDB[]>(this.gongbasicfieldsUrl, { params: params })
       .pipe(
-        tap(_ => this.log('fetched gongbasicfields')),
+        tap(),
+		// tap(_ => this.log('fetched gongbasicfields')),
         catchError(this.handleError<GongBasicFieldDB[]>('getGongBasicFields', []))
       );
   }
 
   /** GET gongbasicfield by id. Will 404 if id not found */
-  getGongBasicField(id: number): Observable<GongBasicFieldDB> {
+  // more robust API to refactoring
+  get(id: number, GONG__StackPath: string): Observable<GongBasicFieldDB> {
+	return this.getGongBasicField(id, GONG__StackPath)
+  }
+  getGongBasicField(id: number, GONG__StackPath: string): Observable<GongBasicFieldDB> {
+
+    let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
+
     const url = `${this.gongbasicfieldsUrl}/${id}`;
-    return this.http.get<GongBasicFieldDB>(url).pipe(
-      tap(_ => this.log(`fetched gongbasicfield id=${id}`)),
+    return this.http.get<GongBasicFieldDB>(url, { params: params }).pipe(
+      // tap(_ => this.log(`fetched gongbasicfield id=${id}`)),
       catchError(this.handleError<GongBasicFieldDB>(`getGongBasicField id=${id}`))
     );
   }
 
   /** POST: add a new gongbasicfield to the server */
+  post(gongbasicfielddb: GongBasicFieldDB, GONG__StackPath: string): Observable<GongBasicFieldDB> {
+    return this.postGongBasicField(gongbasicfielddb, GONG__StackPath)	
+  }
   postGongBasicField(gongbasicfielddb: GongBasicFieldDB, GONG__StackPath: string): Observable<GongBasicFieldDB> {
 
     // insertion point for reset of pointers and reverse pointers (to avoid circular JSON)
+    let GongEnum = gongbasicfielddb.GongEnum
     gongbasicfielddb.GongEnum = new GongEnumDB
     let _GongStruct_GongBasicFields_reverse = gongbasicfielddb.GongStruct_GongBasicFields_reverse
     gongbasicfielddb.GongStruct_GongBasicFields_reverse = new GongStructDB
@@ -78,17 +94,20 @@ export class GongBasicFieldService {
       params: params
     }
 
-	return this.http.post<GongBasicFieldDB>(this.gongbasicfieldsUrl, gongbasicfielddb, httpOptions).pipe(
+    return this.http.post<GongBasicFieldDB>(this.gongbasicfieldsUrl, gongbasicfielddb, httpOptions).pipe(
       tap(_ => {
         // insertion point for restoration of reverse pointers
         gongbasicfielddb.GongStruct_GongBasicFields_reverse = _GongStruct_GongBasicFields_reverse
-        this.log(`posted gongbasicfielddb id=${gongbasicfielddb.ID}`)
+        // this.log(`posted gongbasicfielddb id=${gongbasicfielddb.ID}`)
       }),
       catchError(this.handleError<GongBasicFieldDB>('postGongBasicField'))
     );
   }
 
   /** DELETE: delete the gongbasicfielddb from the server */
+  delete(gongbasicfielddb: GongBasicFieldDB | number, GONG__StackPath: string): Observable<GongBasicFieldDB> {
+    return this.deleteGongBasicField(gongbasicfielddb, GONG__StackPath)
+  }
   deleteGongBasicField(gongbasicfielddb: GongBasicFieldDB | number, GONG__StackPath: string): Observable<GongBasicFieldDB> {
     const id = typeof gongbasicfielddb === 'number' ? gongbasicfielddb : gongbasicfielddb.ID;
     const url = `${this.gongbasicfieldsUrl}/${id}`;
@@ -106,11 +125,15 @@ export class GongBasicFieldService {
   }
 
   /** PUT: update the gongbasicfielddb on the server */
+  update(gongbasicfielddb: GongBasicFieldDB, GONG__StackPath: string): Observable<GongBasicFieldDB> {
+    return this.updateGongBasicField(gongbasicfielddb, GONG__StackPath)
+  }
   updateGongBasicField(gongbasicfielddb: GongBasicFieldDB, GONG__StackPath: string): Observable<GongBasicFieldDB> {
     const id = typeof gongbasicfielddb === 'number' ? gongbasicfielddb : gongbasicfielddb.ID;
     const url = `${this.gongbasicfieldsUrl}/${id}`;
 
     // insertion point for reset of pointers and reverse pointers (to avoid circular JSON)
+    let GongEnum = gongbasicfielddb.GongEnum
     gongbasicfielddb.GongEnum = new GongEnumDB
     let _GongStruct_GongBasicFields_reverse = gongbasicfielddb.GongStruct_GongBasicFields_reverse
     gongbasicfielddb.GongStruct_GongBasicFields_reverse = new GongStructDB
@@ -125,7 +148,7 @@ export class GongBasicFieldService {
       tap(_ => {
         // insertion point for restoration of reverse pointers
         gongbasicfielddb.GongStruct_GongBasicFields_reverse = _GongStruct_GongBasicFields_reverse
-        this.log(`updated gongbasicfielddb id=${gongbasicfielddb.ID}`)
+        // this.log(`updated gongbasicfielddb id=${gongbasicfielddb.ID}`)
       }),
       catchError(this.handleError<GongBasicFieldDB>('updateGongBasicField'))
     );
@@ -137,11 +160,11 @@ export class GongBasicFieldService {
    * @param operation - name of the operation that failed
    * @param result - optional value to return as the observable result
    */
-  private handleError<T>(operation = 'operation', result?: T) {
+  private handleError<T>(operation = 'operation in GongBasicFieldService', result?: T) {
     return (error: any): Observable<T> => {
 
       // TODO: send the error to remote logging infrastructure
-      console.error(error); // log to console instead
+      console.error("GongBasicFieldService" + error); // log to console instead
 
       // TODO: better job of transforming error for user consumption
       this.log(`${operation} failed: ${error.message}`);
@@ -152,6 +175,6 @@ export class GongBasicFieldService {
   }
 
   private log(message: string) {
-
+      console.log(message)
   }
 }

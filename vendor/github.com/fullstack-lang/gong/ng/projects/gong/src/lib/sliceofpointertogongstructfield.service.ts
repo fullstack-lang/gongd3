@@ -43,30 +43,46 @@ export class SliceOfPointerToGongStructFieldService {
   }
 
   /** GET sliceofpointertogongstructfields from the server */
-  getSliceOfPointerToGongStructFields(GONG__StackPath: string = ""): Observable<SliceOfPointerToGongStructFieldDB[]> {
+  // gets is more robust to refactoring
+  gets(GONG__StackPath: string): Observable<SliceOfPointerToGongStructFieldDB[]> {
+    return this.getSliceOfPointerToGongStructFields(GONG__StackPath)
+  }
+  getSliceOfPointerToGongStructFields(GONG__StackPath: string): Observable<SliceOfPointerToGongStructFieldDB[]> {
 
-	let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
+    let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
 
     return this.http.get<SliceOfPointerToGongStructFieldDB[]>(this.sliceofpointertogongstructfieldsUrl, { params: params })
       .pipe(
-        tap(_ => this.log('fetched sliceofpointertogongstructfields')),
+        tap(),
+		// tap(_ => this.log('fetched sliceofpointertogongstructfields')),
         catchError(this.handleError<SliceOfPointerToGongStructFieldDB[]>('getSliceOfPointerToGongStructFields', []))
       );
   }
 
   /** GET sliceofpointertogongstructfield by id. Will 404 if id not found */
-  getSliceOfPointerToGongStructField(id: number): Observable<SliceOfPointerToGongStructFieldDB> {
+  // more robust API to refactoring
+  get(id: number, GONG__StackPath: string): Observable<SliceOfPointerToGongStructFieldDB> {
+	return this.getSliceOfPointerToGongStructField(id, GONG__StackPath)
+  }
+  getSliceOfPointerToGongStructField(id: number, GONG__StackPath: string): Observable<SliceOfPointerToGongStructFieldDB> {
+
+    let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
+
     const url = `${this.sliceofpointertogongstructfieldsUrl}/${id}`;
-    return this.http.get<SliceOfPointerToGongStructFieldDB>(url).pipe(
-      tap(_ => this.log(`fetched sliceofpointertogongstructfield id=${id}`)),
+    return this.http.get<SliceOfPointerToGongStructFieldDB>(url, { params: params }).pipe(
+      // tap(_ => this.log(`fetched sliceofpointertogongstructfield id=${id}`)),
       catchError(this.handleError<SliceOfPointerToGongStructFieldDB>(`getSliceOfPointerToGongStructField id=${id}`))
     );
   }
 
   /** POST: add a new sliceofpointertogongstructfield to the server */
+  post(sliceofpointertogongstructfielddb: SliceOfPointerToGongStructFieldDB, GONG__StackPath: string): Observable<SliceOfPointerToGongStructFieldDB> {
+    return this.postSliceOfPointerToGongStructField(sliceofpointertogongstructfielddb, GONG__StackPath)	
+  }
   postSliceOfPointerToGongStructField(sliceofpointertogongstructfielddb: SliceOfPointerToGongStructFieldDB, GONG__StackPath: string): Observable<SliceOfPointerToGongStructFieldDB> {
 
     // insertion point for reset of pointers and reverse pointers (to avoid circular JSON)
+    let GongStruct = sliceofpointertogongstructfielddb.GongStruct
     sliceofpointertogongstructfielddb.GongStruct = new GongStructDB
     let _GongStruct_SliceOfPointerToGongStructFields_reverse = sliceofpointertogongstructfielddb.GongStruct_SliceOfPointerToGongStructFields_reverse
     sliceofpointertogongstructfielddb.GongStruct_SliceOfPointerToGongStructFields_reverse = new GongStructDB
@@ -77,17 +93,20 @@ export class SliceOfPointerToGongStructFieldService {
       params: params
     }
 
-	return this.http.post<SliceOfPointerToGongStructFieldDB>(this.sliceofpointertogongstructfieldsUrl, sliceofpointertogongstructfielddb, httpOptions).pipe(
+    return this.http.post<SliceOfPointerToGongStructFieldDB>(this.sliceofpointertogongstructfieldsUrl, sliceofpointertogongstructfielddb, httpOptions).pipe(
       tap(_ => {
         // insertion point for restoration of reverse pointers
         sliceofpointertogongstructfielddb.GongStruct_SliceOfPointerToGongStructFields_reverse = _GongStruct_SliceOfPointerToGongStructFields_reverse
-        this.log(`posted sliceofpointertogongstructfielddb id=${sliceofpointertogongstructfielddb.ID}`)
+        // this.log(`posted sliceofpointertogongstructfielddb id=${sliceofpointertogongstructfielddb.ID}`)
       }),
       catchError(this.handleError<SliceOfPointerToGongStructFieldDB>('postSliceOfPointerToGongStructField'))
     );
   }
 
   /** DELETE: delete the sliceofpointertogongstructfielddb from the server */
+  delete(sliceofpointertogongstructfielddb: SliceOfPointerToGongStructFieldDB | number, GONG__StackPath: string): Observable<SliceOfPointerToGongStructFieldDB> {
+    return this.deleteSliceOfPointerToGongStructField(sliceofpointertogongstructfielddb, GONG__StackPath)
+  }
   deleteSliceOfPointerToGongStructField(sliceofpointertogongstructfielddb: SliceOfPointerToGongStructFieldDB | number, GONG__StackPath: string): Observable<SliceOfPointerToGongStructFieldDB> {
     const id = typeof sliceofpointertogongstructfielddb === 'number' ? sliceofpointertogongstructfielddb : sliceofpointertogongstructfielddb.ID;
     const url = `${this.sliceofpointertogongstructfieldsUrl}/${id}`;
@@ -105,11 +124,15 @@ export class SliceOfPointerToGongStructFieldService {
   }
 
   /** PUT: update the sliceofpointertogongstructfielddb on the server */
+  update(sliceofpointertogongstructfielddb: SliceOfPointerToGongStructFieldDB, GONG__StackPath: string): Observable<SliceOfPointerToGongStructFieldDB> {
+    return this.updateSliceOfPointerToGongStructField(sliceofpointertogongstructfielddb, GONG__StackPath)
+  }
   updateSliceOfPointerToGongStructField(sliceofpointertogongstructfielddb: SliceOfPointerToGongStructFieldDB, GONG__StackPath: string): Observable<SliceOfPointerToGongStructFieldDB> {
     const id = typeof sliceofpointertogongstructfielddb === 'number' ? sliceofpointertogongstructfielddb : sliceofpointertogongstructfielddb.ID;
     const url = `${this.sliceofpointertogongstructfieldsUrl}/${id}`;
 
     // insertion point for reset of pointers and reverse pointers (to avoid circular JSON)
+    let GongStruct = sliceofpointertogongstructfielddb.GongStruct
     sliceofpointertogongstructfielddb.GongStruct = new GongStructDB
     let _GongStruct_SliceOfPointerToGongStructFields_reverse = sliceofpointertogongstructfielddb.GongStruct_SliceOfPointerToGongStructFields_reverse
     sliceofpointertogongstructfielddb.GongStruct_SliceOfPointerToGongStructFields_reverse = new GongStructDB
@@ -124,7 +147,7 @@ export class SliceOfPointerToGongStructFieldService {
       tap(_ => {
         // insertion point for restoration of reverse pointers
         sliceofpointertogongstructfielddb.GongStruct_SliceOfPointerToGongStructFields_reverse = _GongStruct_SliceOfPointerToGongStructFields_reverse
-        this.log(`updated sliceofpointertogongstructfielddb id=${sliceofpointertogongstructfielddb.ID}`)
+        // this.log(`updated sliceofpointertogongstructfielddb id=${sliceofpointertogongstructfielddb.ID}`)
       }),
       catchError(this.handleError<SliceOfPointerToGongStructFieldDB>('updateSliceOfPointerToGongStructField'))
     );
@@ -136,11 +159,11 @@ export class SliceOfPointerToGongStructFieldService {
    * @param operation - name of the operation that failed
    * @param result - optional value to return as the observable result
    */
-  private handleError<T>(operation = 'operation', result?: T) {
+  private handleError<T>(operation = 'operation in SliceOfPointerToGongStructFieldService', result?: T) {
     return (error: any): Observable<T> => {
 
       // TODO: send the error to remote logging infrastructure
-      console.error(error); // log to console instead
+      console.error("SliceOfPointerToGongStructFieldService" + error); // log to console instead
 
       // TODO: better job of transforming error for user consumption
       this.log(`${operation} failed: ${error.message}`);
@@ -151,6 +174,6 @@ export class SliceOfPointerToGongStructFieldService {
   }
 
   private log(message: string) {
-
+      console.log(message)
   }
 }

@@ -1,3 +1,4 @@
+// generated code - do not edit
 package models
 
 import (
@@ -30,9 +31,6 @@ const (
 // ParseAstFile Parse pathToFile and stages all instances
 // declared in the file
 func ParseAstFile(stage *StageStruct, pathToFile string) error {
-	// map to store renaming docLink
-	// to be removed after fix of [issue](https://github.com/golang/go/issues/57559)
-	stage.Map_DocLink_Renaming = make(map[string]GONG__Identifier, 0)
 
 	fileOfInterest, err := filepath.Abs(pathToFile)
 	if err != nil {
@@ -659,9 +657,22 @@ func UnmarshallGongstructStaging(stage *StageStruct, cmap *ast.CommentMap, assig
 					}
 				}
 			}
-		case *ast.BasicLit:
-			// assignment to string field
-			basicLit := expr
+		case *ast.BasicLit, *ast.UnaryExpr:
+
+			var basicLit *ast.BasicLit
+			var exprSign = 1.0
+			_ = exprSign // in case this is not used
+
+			if bl, ok := expr.(*ast.BasicLit); ok {
+				// expression is  for instance ... = 18.000
+				basicLit = bl
+			} else if ue, ok := expr.(*ast.UnaryExpr); ok {
+				// expression is  for instance ... = -18.000
+				// we want to extract a *ast.BasicLit from the *ast.UnaryExpr
+				basicLit = ue.X.(*ast.BasicLit)
+				exprSign = -1
+			}
+
 			// astCoordinate := astCoordinate + "\tBasicLit" + "." + basicLit.Value
 			// log.Println(astCoordinate)
 			var ok bool
@@ -690,63 +701,63 @@ func UnmarshallGongstructStaging(stage *StageStruct, cmap *ast.CommentMap, assig
 					if err != nil {
 						log.Fatalln(err)
 					}
-					__gong__map_Bar[identifier].XMin = fielValue
+					__gong__map_Bar[identifier].XMin = exprSign * fielValue
 				case "XMax":
 					// convert string to float64
 					fielValue, err := strconv.ParseFloat(basicLit.Value, 64)
 					if err != nil {
 						log.Fatalln(err)
 					}
-					__gong__map_Bar[identifier].XMax = fielValue
+					__gong__map_Bar[identifier].XMax = exprSign * fielValue
 				case "YMin":
 					// convert string to float64
 					fielValue, err := strconv.ParseFloat(basicLit.Value, 64)
 					if err != nil {
 						log.Fatalln(err)
 					}
-					__gong__map_Bar[identifier].YMin = fielValue
+					__gong__map_Bar[identifier].YMin = exprSign * fielValue
 				case "YMax":
 					// convert string to float64
 					fielValue, err := strconv.ParseFloat(basicLit.Value, 64)
 					if err != nil {
 						log.Fatalln(err)
 					}
-					__gong__map_Bar[identifier].YMax = fielValue
+					__gong__map_Bar[identifier].YMax = exprSign * fielValue
 				case "YLabelOffset":
 					// convert string to float64
 					fielValue, err := strconv.ParseFloat(basicLit.Value, 64)
 					if err != nil {
 						log.Fatalln(err)
 					}
-					__gong__map_Bar[identifier].YLabelOffset = fielValue
+					__gong__map_Bar[identifier].YLabelOffset = exprSign * fielValue
 				case "XLabelOffset":
 					// convert string to float64
 					fielValue, err := strconv.ParseFloat(basicLit.Value, 64)
 					if err != nil {
 						log.Fatalln(err)
 					}
-					__gong__map_Bar[identifier].XLabelOffset = fielValue
+					__gong__map_Bar[identifier].XLabelOffset = exprSign * fielValue
 				case "Width":
 					// convert string to float64
 					fielValue, err := strconv.ParseFloat(basicLit.Value, 64)
 					if err != nil {
 						log.Fatalln(err)
 					}
-					__gong__map_Bar[identifier].Width = fielValue
+					__gong__map_Bar[identifier].Width = exprSign * fielValue
 				case "Heigth":
 					// convert string to float64
 					fielValue, err := strconv.ParseFloat(basicLit.Value, 64)
 					if err != nil {
 						log.Fatalln(err)
 					}
-					__gong__map_Bar[identifier].Heigth = fielValue
+					__gong__map_Bar[identifier].Heigth = exprSign * fielValue
 				case "Margin":
 					// convert string to float64
 					fielValue, err := strconv.ParseFloat(basicLit.Value, 64)
 					if err != nil {
 						log.Fatalln(err)
 					}
-					__gong__map_Bar[identifier].Margin = fielValue
+					__gong__map_Bar[identifier].Margin = exprSign * fielValue
 				}
 			case "Key":
 				switch fieldName {
@@ -769,21 +780,21 @@ func UnmarshallGongstructStaging(stage *StageStruct, cmap *ast.CommentMap, assig
 					if err != nil {
 						log.Fatalln(err)
 					}
-					__gong__map_Pie[identifier].Width = fielValue
+					__gong__map_Pie[identifier].Width = exprSign * fielValue
 				case "Heigth":
 					// convert string to float64
 					fielValue, err := strconv.ParseFloat(basicLit.Value, 64)
 					if err != nil {
 						log.Fatalln(err)
 					}
-					__gong__map_Pie[identifier].Heigth = fielValue
+					__gong__map_Pie[identifier].Heigth = exprSign * fielValue
 				case "Margin":
 					// convert string to float64
 					fielValue, err := strconv.ParseFloat(basicLit.Value, 64)
 					if err != nil {
 						log.Fatalln(err)
 					}
-					__gong__map_Pie[identifier].Margin = fielValue
+					__gong__map_Pie[identifier].Margin = exprSign * fielValue
 				}
 			case "Scatter":
 				switch fieldName {
@@ -798,21 +809,21 @@ func UnmarshallGongstructStaging(stage *StageStruct, cmap *ast.CommentMap, assig
 					if err != nil {
 						log.Fatalln(err)
 					}
-					__gong__map_Scatter[identifier].Width = fielValue
+					__gong__map_Scatter[identifier].Width = exprSign * fielValue
 				case "Heigth":
 					// convert string to float64
 					fielValue, err := strconv.ParseFloat(basicLit.Value, 64)
 					if err != nil {
 						log.Fatalln(err)
 					}
-					__gong__map_Scatter[identifier].Heigth = fielValue
+					__gong__map_Scatter[identifier].Heigth = exprSign * fielValue
 				case "Margin":
 					// convert string to float64
 					fielValue, err := strconv.ParseFloat(basicLit.Value, 64)
 					if err != nil {
 						log.Fatalln(err)
 					}
-					__gong__map_Scatter[identifier].Margin = fielValue
+					__gong__map_Scatter[identifier].Margin = exprSign * fielValue
 				}
 			case "Serie":
 				switch fieldName {

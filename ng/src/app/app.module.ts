@@ -27,14 +27,19 @@ import { FormsModule } from '@angular/forms';
 // to split the screen
 import { AngularSplitModule } from 'angular-split';
 
-import { GongdocModule } from 'gongdoc'
-import { GongdocdiagramsModule } from 'gongdocdiagrams'
-
 import { GongModule } from 'gong'
+
+import { GongdocModule } from 'gongdoc'
+import { GongdocspecificModule } from 'gongdocspecific'
+
+import { GongtreeModule } from 'gongtree'
+import { GongtreespecificModule } from 'gongtreespecific'
+
+import { GongtableModule } from 'gongtable'
+import { GongtablespecificModule } from 'gongtablespecific'
 
 import { Gongd3Module } from 'gongd3'
 import { Gongd3specificModule } from 'gongd3specific'
-import { GongstructSelectionService } from 'gongd3'
 
 // mandatory
 import { HttpClientModule } from '@angular/common/http';
@@ -72,13 +77,18 @@ import { HttpClientModule } from '@angular/common/http';
 
     // gongdoc stack (for displaying UML diagrams of the gong code in the current stack)
     GongdocModule,
-    GongdocdiagramsModule,
+    GongdocspecificModule,
+
+    GongtreeModule,
+    GongtreespecificModule,
+
+    GongtableModule,
+    GongtablespecificModule,
 
     Gongd3Module,
-    Gongd3specificModule
+    Gongd3specificModule,
   ],
   providers: [
-    GongstructSelectionService
   ],
   bootstrap: [AppComponent]
 })

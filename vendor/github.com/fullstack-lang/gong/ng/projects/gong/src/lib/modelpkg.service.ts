@@ -42,27 +42,42 @@ export class ModelPkgService {
   }
 
   /** GET modelpkgs from the server */
-  getModelPkgs(GONG__StackPath: string = ""): Observable<ModelPkgDB[]> {
+  // gets is more robust to refactoring
+  gets(GONG__StackPath: string): Observable<ModelPkgDB[]> {
+    return this.getModelPkgs(GONG__StackPath)
+  }
+  getModelPkgs(GONG__StackPath: string): Observable<ModelPkgDB[]> {
 
-	let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
+    let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
 
     return this.http.get<ModelPkgDB[]>(this.modelpkgsUrl, { params: params })
       .pipe(
-        tap(_ => this.log('fetched modelpkgs')),
+        tap(),
+		// tap(_ => this.log('fetched modelpkgs')),
         catchError(this.handleError<ModelPkgDB[]>('getModelPkgs', []))
       );
   }
 
   /** GET modelpkg by id. Will 404 if id not found */
-  getModelPkg(id: number): Observable<ModelPkgDB> {
+  // more robust API to refactoring
+  get(id: number, GONG__StackPath: string): Observable<ModelPkgDB> {
+	return this.getModelPkg(id, GONG__StackPath)
+  }
+  getModelPkg(id: number, GONG__StackPath: string): Observable<ModelPkgDB> {
+
+    let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
+
     const url = `${this.modelpkgsUrl}/${id}`;
-    return this.http.get<ModelPkgDB>(url).pipe(
-      tap(_ => this.log(`fetched modelpkg id=${id}`)),
+    return this.http.get<ModelPkgDB>(url, { params: params }).pipe(
+      // tap(_ => this.log(`fetched modelpkg id=${id}`)),
       catchError(this.handleError<ModelPkgDB>(`getModelPkg id=${id}`))
     );
   }
 
   /** POST: add a new modelpkg to the server */
+  post(modelpkgdb: ModelPkgDB, GONG__StackPath: string): Observable<ModelPkgDB> {
+    return this.postModelPkg(modelpkgdb, GONG__StackPath)	
+  }
   postModelPkg(modelpkgdb: ModelPkgDB, GONG__StackPath: string): Observable<ModelPkgDB> {
 
     // insertion point for reset of pointers and reverse pointers (to avoid circular JSON)
@@ -73,16 +88,19 @@ export class ModelPkgService {
       params: params
     }
 
-	return this.http.post<ModelPkgDB>(this.modelpkgsUrl, modelpkgdb, httpOptions).pipe(
+    return this.http.post<ModelPkgDB>(this.modelpkgsUrl, modelpkgdb, httpOptions).pipe(
       tap(_ => {
         // insertion point for restoration of reverse pointers
-        this.log(`posted modelpkgdb id=${modelpkgdb.ID}`)
+        // this.log(`posted modelpkgdb id=${modelpkgdb.ID}`)
       }),
       catchError(this.handleError<ModelPkgDB>('postModelPkg'))
     );
   }
 
   /** DELETE: delete the modelpkgdb from the server */
+  delete(modelpkgdb: ModelPkgDB | number, GONG__StackPath: string): Observable<ModelPkgDB> {
+    return this.deleteModelPkg(modelpkgdb, GONG__StackPath)
+  }
   deleteModelPkg(modelpkgdb: ModelPkgDB | number, GONG__StackPath: string): Observable<ModelPkgDB> {
     const id = typeof modelpkgdb === 'number' ? modelpkgdb : modelpkgdb.ID;
     const url = `${this.modelpkgsUrl}/${id}`;
@@ -100,6 +118,9 @@ export class ModelPkgService {
   }
 
   /** PUT: update the modelpkgdb on the server */
+  update(modelpkgdb: ModelPkgDB, GONG__StackPath: string): Observable<ModelPkgDB> {
+    return this.updateModelPkg(modelpkgdb, GONG__StackPath)
+  }
   updateModelPkg(modelpkgdb: ModelPkgDB, GONG__StackPath: string): Observable<ModelPkgDB> {
     const id = typeof modelpkgdb === 'number' ? modelpkgdb : modelpkgdb.ID;
     const url = `${this.modelpkgsUrl}/${id}`;
@@ -115,7 +136,7 @@ export class ModelPkgService {
     return this.http.put<ModelPkgDB>(url, modelpkgdb, httpOptions).pipe(
       tap(_ => {
         // insertion point for restoration of reverse pointers
-        this.log(`updated modelpkgdb id=${modelpkgdb.ID}`)
+        // this.log(`updated modelpkgdb id=${modelpkgdb.ID}`)
       }),
       catchError(this.handleError<ModelPkgDB>('updateModelPkg'))
     );
@@ -127,11 +148,11 @@ export class ModelPkgService {
    * @param operation - name of the operation that failed
    * @param result - optional value to return as the observable result
    */
-  private handleError<T>(operation = 'operation', result?: T) {
+  private handleError<T>(operation = 'operation in ModelPkgService', result?: T) {
     return (error: any): Observable<T> => {
 
       // TODO: send the error to remote logging infrastructure
-      console.error(error); // log to console instead
+      console.error("ModelPkgService" + error); // log to console instead
 
       // TODO: better job of transforming error for user consumption
       this.log(`${operation} failed: ${error.message}`);
@@ -142,6 +163,6 @@ export class ModelPkgService {
   }
 
   private log(message: string) {
-
+      console.log(message)
   }
 }

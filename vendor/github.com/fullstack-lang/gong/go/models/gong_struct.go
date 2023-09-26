@@ -14,15 +14,22 @@ type GongStruct struct {
 	GongTimeFields                   []*GongTimeField
 	PointerToGongStructFields        []*PointerToGongStructField
 	SliceOfPointerToGongStructFields []*SliceOfPointerToGongStructField
+
+	// HasOnAfterUpdateSignature is used to generate orchestrator code
+	HasOnAfterUpdateSignature bool
+
+	// IsIgnoredForFront, if true, let the compiler avoid generation of code
+	// in the angular front
+	// .frontignore file provides a pattern for parsing go files similar to the gitingore syntax "*"
+	// every GongStruct defined in matched go file has IsIgnoredForFront set to true
+	IsIgnoredForFront bool
 }
 
-//
 // HasNameField indicates wether the gong struct has a field with Name "Name"
 //
 // This is important since
 // - only Gong Struct with Name field can be stored in DB
 // - only Gong Struct without file
-//
 func (gongStruct *GongStruct) HasNameField() (hasNameField bool) {
 
 	// hasNameField default value is false

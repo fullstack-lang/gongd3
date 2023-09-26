@@ -39,31 +39,46 @@ export class ValueService {
     origin = origin.replace("4200", "8080")
 
     // compute path to the service
-    this.valuesUrl = origin + '/api/gongd3/go/v1/values';
+    this.valuesUrl = origin + '/api/github.com/fullstack-lang/gongd3/go/v1/values';
   }
 
   /** GET values from the server */
-  getValues(GONG__StackPath: string = ""): Observable<ValueDB[]> {
+  // gets is more robust to refactoring
+  gets(GONG__StackPath: string): Observable<ValueDB[]> {
+    return this.getValues(GONG__StackPath)
+  }
+  getValues(GONG__StackPath: string): Observable<ValueDB[]> {
 
-	let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
+    let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
 
     return this.http.get<ValueDB[]>(this.valuesUrl, { params: params })
       .pipe(
-        tap(_ => this.log('fetched values')),
+        tap(),
+		// tap(_ => this.log('fetched values')),
         catchError(this.handleError<ValueDB[]>('getValues', []))
       );
   }
 
   /** GET value by id. Will 404 if id not found */
-  getValue(id: number): Observable<ValueDB> {
+  // more robust API to refactoring
+  get(id: number, GONG__StackPath: string): Observable<ValueDB> {
+	return this.getValue(id, GONG__StackPath)
+  }
+  getValue(id: number, GONG__StackPath: string): Observable<ValueDB> {
+
+    let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
+
     const url = `${this.valuesUrl}/${id}`;
-    return this.http.get<ValueDB>(url).pipe(
-      tap(_ => this.log(`fetched value id=${id}`)),
+    return this.http.get<ValueDB>(url, { params: params }).pipe(
+      // tap(_ => this.log(`fetched value id=${id}`)),
       catchError(this.handleError<ValueDB>(`getValue id=${id}`))
     );
   }
 
   /** POST: add a new value to the server */
+  post(valuedb: ValueDB, GONG__StackPath: string): Observable<ValueDB> {
+    return this.postValue(valuedb, GONG__StackPath)	
+  }
   postValue(valuedb: ValueDB, GONG__StackPath: string): Observable<ValueDB> {
 
     // insertion point for reset of pointers and reverse pointers (to avoid circular JSON)
@@ -76,17 +91,20 @@ export class ValueService {
       params: params
     }
 
-	return this.http.post<ValueDB>(this.valuesUrl, valuedb, httpOptions).pipe(
+    return this.http.post<ValueDB>(this.valuesUrl, valuedb, httpOptions).pipe(
       tap(_ => {
         // insertion point for restoration of reverse pointers
         valuedb.Serie_Values_reverse = _Serie_Values_reverse
-        this.log(`posted valuedb id=${valuedb.ID}`)
+        // this.log(`posted valuedb id=${valuedb.ID}`)
       }),
       catchError(this.handleError<ValueDB>('postValue'))
     );
   }
 
   /** DELETE: delete the valuedb from the server */
+  delete(valuedb: ValueDB | number, GONG__StackPath: string): Observable<ValueDB> {
+    return this.deleteValue(valuedb, GONG__StackPath)
+  }
   deleteValue(valuedb: ValueDB | number, GONG__StackPath: string): Observable<ValueDB> {
     const id = typeof valuedb === 'number' ? valuedb : valuedb.ID;
     const url = `${this.valuesUrl}/${id}`;
@@ -104,6 +122,9 @@ export class ValueService {
   }
 
   /** PUT: update the valuedb on the server */
+  update(valuedb: ValueDB, GONG__StackPath: string): Observable<ValueDB> {
+    return this.updateValue(valuedb, GONG__StackPath)
+  }
   updateValue(valuedb: ValueDB, GONG__StackPath: string): Observable<ValueDB> {
     const id = typeof valuedb === 'number' ? valuedb : valuedb.ID;
     const url = `${this.valuesUrl}/${id}`;
@@ -122,7 +143,7 @@ export class ValueService {
       tap(_ => {
         // insertion point for restoration of reverse pointers
         valuedb.Serie_Values_reverse = _Serie_Values_reverse
-        this.log(`updated valuedb id=${valuedb.ID}`)
+        // this.log(`updated valuedb id=${valuedb.ID}`)
       }),
       catchError(this.handleError<ValueDB>('updateValue'))
     );
@@ -134,11 +155,11 @@ export class ValueService {
    * @param operation - name of the operation that failed
    * @param result - optional value to return as the observable result
    */
-  private handleError<T>(operation = 'operation', result?: T) {
+  private handleError<T>(operation = 'operation in ValueService', result?: T) {
     return (error: any): Observable<T> => {
 
       // TODO: send the error to remote logging infrastructure
-      console.error(error); // log to console instead
+      console.error("ValueService" + error); // log to console instead
 
       // TODO: better job of transforming error for user consumption
       this.log(`${operation} failed: ${error.message}`);
@@ -149,6 +170,6 @@ export class ValueService {
   }
 
   private log(message: string) {
-
+      console.log(message)
   }
 }

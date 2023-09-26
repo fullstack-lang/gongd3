@@ -77,11 +77,44 @@ type LinkDB struct {
 	// Declation for basic field linkDB.Fieldtypename
 	Fieldtypename_Data sql.NullString
 
+	// Declation for basic field linkDB.FieldOffsetX
+	FieldOffsetX_Data sql.NullFloat64
+
+	// Declation for basic field linkDB.FieldOffsetY
+	FieldOffsetY_Data sql.NullFloat64
+
 	// Declation for basic field linkDB.TargetMultiplicity
 	TargetMultiplicity_Data sql.NullString
 
+	// Declation for basic field linkDB.TargetMultiplicityOffsetX
+	TargetMultiplicityOffsetX_Data sql.NullFloat64
+
+	// Declation for basic field linkDB.TargetMultiplicityOffsetY
+	TargetMultiplicityOffsetY_Data sql.NullFloat64
+
 	// Declation for basic field linkDB.SourceMultiplicity
 	SourceMultiplicity_Data sql.NullString
+
+	// Declation for basic field linkDB.SourceMultiplicityOffsetX
+	SourceMultiplicityOffsetX_Data sql.NullFloat64
+
+	// Declation for basic field linkDB.SourceMultiplicityOffsetY
+	SourceMultiplicityOffsetY_Data sql.NullFloat64
+
+	// Declation for basic field linkDB.StartOrientation
+	StartOrientation_Data sql.NullString
+
+	// Declation for basic field linkDB.StartRatio
+	StartRatio_Data sql.NullFloat64
+
+	// Declation for basic field linkDB.EndOrientation
+	EndOrientation_Data sql.NullString
+
+	// Declation for basic field linkDB.EndRatio
+	EndRatio_Data sql.NullFloat64
+
+	// Declation for basic field linkDB.CornerOffsetRatio
+	CornerOffsetRatio_Data sql.NullFloat64
 	// encoding of pointers
 	LinkPointersEnconding
 }
@@ -109,9 +142,31 @@ type LinkWOP struct {
 
 	Fieldtypename string `xlsx:"3"`
 
-	TargetMultiplicity models.MultiplicityType `xlsx:"4"`
+	FieldOffsetX float64 `xlsx:"4"`
 
-	SourceMultiplicity models.MultiplicityType `xlsx:"5"`
+	FieldOffsetY float64 `xlsx:"5"`
+
+	TargetMultiplicity models.MultiplicityType `xlsx:"6"`
+
+	TargetMultiplicityOffsetX float64 `xlsx:"7"`
+
+	TargetMultiplicityOffsetY float64 `xlsx:"8"`
+
+	SourceMultiplicity models.MultiplicityType `xlsx:"9"`
+
+	SourceMultiplicityOffsetX float64 `xlsx:"10"`
+
+	SourceMultiplicityOffsetY float64 `xlsx:"11"`
+
+	StartOrientation models.OrientationType `xlsx:"12"`
+
+	StartRatio float64 `xlsx:"13"`
+
+	EndOrientation models.OrientationType `xlsx:"14"`
+
+	EndRatio float64 `xlsx:"15"`
+
+	CornerOffsetRatio float64 `xlsx:"16"`
 	// insertion for WOP pointer fields
 }
 
@@ -121,19 +176,30 @@ var Link_Fields = []string{
 	"Name",
 	"Identifier",
 	"Fieldtypename",
+	"FieldOffsetX",
+	"FieldOffsetY",
 	"TargetMultiplicity",
+	"TargetMultiplicityOffsetX",
+	"TargetMultiplicityOffsetY",
 	"SourceMultiplicity",
+	"SourceMultiplicityOffsetX",
+	"SourceMultiplicityOffsetY",
+	"StartOrientation",
+	"StartRatio",
+	"EndOrientation",
+	"EndRatio",
+	"CornerOffsetRatio",
 }
 
 type BackRepoLinkStruct struct {
 	// stores LinkDB according to their gorm ID
-	Map_LinkDBID_LinkDB *map[uint]*LinkDB
+	Map_LinkDBID_LinkDB map[uint]*LinkDB
 
 	// stores LinkDB ID according to Link address
-	Map_LinkPtr_LinkDBID *map[*models.Link]uint
+	Map_LinkPtr_LinkDBID map[*models.Link]uint
 
 	// stores Link according to their gorm ID
-	Map_LinkDBID_LinkPtr *map[uint]*models.Link
+	Map_LinkDBID_LinkPtr map[uint]*models.Link
 
 	db *gorm.DB
 
@@ -151,40 +217,8 @@ func (backRepoLink *BackRepoLinkStruct) GetDB() *gorm.DB {
 
 // GetLinkDBFromLinkPtr is a handy function to access the back repo instance from the stage instance
 func (backRepoLink *BackRepoLinkStruct) GetLinkDBFromLinkPtr(link *models.Link) (linkDB *LinkDB) {
-	id := (*backRepoLink.Map_LinkPtr_LinkDBID)[link]
-	linkDB = (*backRepoLink.Map_LinkDBID_LinkDB)[id]
-	return
-}
-
-// BackRepoLink.Init set up the BackRepo of the Link
-func (backRepoLink *BackRepoLinkStruct) Init(stage *models.StageStruct, db *gorm.DB) (Error error) {
-
-	if backRepoLink.Map_LinkDBID_LinkPtr != nil {
-		err := errors.New("In Init, backRepoLink.Map_LinkDBID_LinkPtr should be nil")
-		return err
-	}
-
-	if backRepoLink.Map_LinkDBID_LinkDB != nil {
-		err := errors.New("In Init, backRepoLink.Map_LinkDBID_LinkDB should be nil")
-		return err
-	}
-
-	if backRepoLink.Map_LinkPtr_LinkDBID != nil {
-		err := errors.New("In Init, backRepoLink.Map_LinkPtr_LinkDBID should be nil")
-		return err
-	}
-
-	tmp := make(map[uint]*models.Link, 0)
-	backRepoLink.Map_LinkDBID_LinkPtr = &tmp
-
-	tmpDB := make(map[uint]*LinkDB, 0)
-	backRepoLink.Map_LinkDBID_LinkDB = &tmpDB
-
-	tmpID := make(map[*models.Link]uint, 0)
-	backRepoLink.Map_LinkPtr_LinkDBID = &tmpID
-
-	backRepoLink.db = db
-	backRepoLink.stage = stage
+	id := backRepoLink.Map_LinkPtr_LinkDBID[link]
+	linkDB = backRepoLink.Map_LinkDBID_LinkDB[id]
 	return
 }
 
@@ -198,7 +232,7 @@ func (backRepoLink *BackRepoLinkStruct) CommitPhaseOne(stage *models.StageStruct
 
 	// parse all backRepo instance and checks wether some instance have been unstaged
 	// in this case, remove them from the back repo
-	for id, link := range *backRepoLink.Map_LinkDBID_LinkPtr {
+	for id, link := range backRepoLink.Map_LinkDBID_LinkPtr {
 		if _, ok := stage.Links[link]; !ok {
 			backRepoLink.CommitDeleteInstance(id)
 		}
@@ -210,19 +244,19 @@ func (backRepoLink *BackRepoLinkStruct) CommitPhaseOne(stage *models.StageStruct
 // BackRepoLink.CommitDeleteInstance commits deletion of Link to the BackRepo
 func (backRepoLink *BackRepoLinkStruct) CommitDeleteInstance(id uint) (Error error) {
 
-	link := (*backRepoLink.Map_LinkDBID_LinkPtr)[id]
+	link := backRepoLink.Map_LinkDBID_LinkPtr[id]
 
 	// link is not staged anymore, remove linkDB
-	linkDB := (*backRepoLink.Map_LinkDBID_LinkDB)[id]
+	linkDB := backRepoLink.Map_LinkDBID_LinkDB[id]
 	query := backRepoLink.db.Unscoped().Delete(&linkDB)
 	if query.Error != nil {
 		return query.Error
 	}
 
 	// update stores
-	delete((*backRepoLink.Map_LinkPtr_LinkDBID), link)
-	delete((*backRepoLink.Map_LinkDBID_LinkPtr), id)
-	delete((*backRepoLink.Map_LinkDBID_LinkDB), id)
+	delete(backRepoLink.Map_LinkPtr_LinkDBID, link)
+	delete(backRepoLink.Map_LinkDBID_LinkPtr, id)
+	delete(backRepoLink.Map_LinkDBID_LinkDB, id)
 
 	return
 }
@@ -232,7 +266,7 @@ func (backRepoLink *BackRepoLinkStruct) CommitDeleteInstance(id uint) (Error err
 func (backRepoLink *BackRepoLinkStruct) CommitPhaseOneInstance(link *models.Link) (Error error) {
 
 	// check if the link is not commited yet
-	if _, ok := (*backRepoLink.Map_LinkPtr_LinkDBID)[link]; ok {
+	if _, ok := backRepoLink.Map_LinkPtr_LinkDBID[link]; ok {
 		return
 	}
 
@@ -246,9 +280,9 @@ func (backRepoLink *BackRepoLinkStruct) CommitPhaseOneInstance(link *models.Link
 	}
 
 	// update stores
-	(*backRepoLink.Map_LinkPtr_LinkDBID)[link] = linkDB.ID
-	(*backRepoLink.Map_LinkDBID_LinkPtr)[linkDB.ID] = link
-	(*backRepoLink.Map_LinkDBID_LinkDB)[linkDB.ID] = &linkDB
+	backRepoLink.Map_LinkPtr_LinkDBID[link] = linkDB.ID
+	backRepoLink.Map_LinkDBID_LinkPtr[linkDB.ID] = link
+	backRepoLink.Map_LinkDBID_LinkDB[linkDB.ID] = &linkDB
 
 	return
 }
@@ -257,7 +291,7 @@ func (backRepoLink *BackRepoLinkStruct) CommitPhaseOneInstance(link *models.Link
 // Phase Two is the update of instance with the field in the database
 func (backRepoLink *BackRepoLinkStruct) CommitPhaseTwo(backRepo *BackRepoStruct) (Error error) {
 
-	for idx, link := range *backRepoLink.Map_LinkDBID_LinkPtr {
+	for idx, link := range backRepoLink.Map_LinkDBID_LinkPtr {
 		backRepoLink.CommitPhaseTwoInstance(backRepo, idx, link)
 	}
 
@@ -269,7 +303,7 @@ func (backRepoLink *BackRepoLinkStruct) CommitPhaseTwo(backRepo *BackRepoStruct)
 func (backRepoLink *BackRepoLinkStruct) CommitPhaseTwoInstance(backRepo *BackRepoStruct, idx uint, link *models.Link) (Error error) {
 
 	// fetch matching linkDB
-	if linkDB, ok := (*backRepoLink.Map_LinkDBID_LinkDB)[idx]; ok {
+	if linkDB, ok := backRepoLink.Map_LinkDBID_LinkDB[idx]; ok {
 
 		linkDB.CopyBasicFieldsFromLink(link)
 
@@ -277,10 +311,13 @@ func (backRepoLink *BackRepoLinkStruct) CommitPhaseTwoInstance(backRepo *BackRep
 		// commit pointer value link.Middlevertice translates to updating the link.MiddleverticeID
 		linkDB.MiddleverticeID.Valid = true // allow for a 0 value (nil association)
 		if link.Middlevertice != nil {
-			if MiddleverticeId, ok := (*backRepo.BackRepoVertice.Map_VerticePtr_VerticeDBID)[link.Middlevertice]; ok {
+			if MiddleverticeId, ok := backRepo.BackRepoVertice.Map_VerticePtr_VerticeDBID[link.Middlevertice]; ok {
 				linkDB.MiddleverticeID.Int64 = int64(MiddleverticeId)
 				linkDB.MiddleverticeID.Valid = true
 			}
+		} else {
+			linkDB.MiddleverticeID.Int64 = 0
+			linkDB.MiddleverticeID.Valid = true
 		}
 
 		query := backRepoLink.db.Save(&linkDB)
@@ -322,7 +359,7 @@ func (backRepoLink *BackRepoLinkStruct) CheckoutPhaseOne() (Error error) {
 
 		// do not remove this instance from the stage, therefore
 		// remove instance from the list of instances to be be removed from the stage
-		link, ok := (*backRepoLink.Map_LinkDBID_LinkPtr)[linkDB.ID]
+		link, ok := backRepoLink.Map_LinkDBID_LinkPtr[linkDB.ID]
 		if ok {
 			delete(linkInstancesToBeRemovedFromTheStage, link)
 		}
@@ -333,10 +370,10 @@ func (backRepoLink *BackRepoLinkStruct) CheckoutPhaseOne() (Error error) {
 		link.Unstage(backRepoLink.GetStage())
 
 		// remove instance from the back repo 3 maps
-		linkID := (*backRepoLink.Map_LinkPtr_LinkDBID)[link]
-		delete((*backRepoLink.Map_LinkPtr_LinkDBID), link)
-		delete((*backRepoLink.Map_LinkDBID_LinkDB), linkID)
-		delete((*backRepoLink.Map_LinkDBID_LinkPtr), linkID)
+		linkID := backRepoLink.Map_LinkPtr_LinkDBID[link]
+		delete(backRepoLink.Map_LinkPtr_LinkDBID, link)
+		delete(backRepoLink.Map_LinkDBID_LinkDB, linkID)
+		delete(backRepoLink.Map_LinkDBID_LinkPtr, linkID)
 	}
 
 	return
@@ -346,12 +383,12 @@ func (backRepoLink *BackRepoLinkStruct) CheckoutPhaseOne() (Error error) {
 // models version of the linkDB
 func (backRepoLink *BackRepoLinkStruct) CheckoutPhaseOneInstance(linkDB *LinkDB) (Error error) {
 
-	link, ok := (*backRepoLink.Map_LinkDBID_LinkPtr)[linkDB.ID]
+	link, ok := backRepoLink.Map_LinkDBID_LinkPtr[linkDB.ID]
 	if !ok {
 		link = new(models.Link)
 
-		(*backRepoLink.Map_LinkDBID_LinkPtr)[linkDB.ID] = link
-		(*backRepoLink.Map_LinkPtr_LinkDBID)[link] = linkDB.ID
+		backRepoLink.Map_LinkDBID_LinkPtr[linkDB.ID] = link
+		backRepoLink.Map_LinkPtr_LinkDBID[link] = linkDB.ID
 
 		// append model store with the new element
 		link.Name = linkDB.Name_Data.String
@@ -366,7 +403,7 @@ func (backRepoLink *BackRepoLinkStruct) CheckoutPhaseOneInstance(linkDB *LinkDB)
 	// Map_LinkDBID_LinkDB)[linkDB hold variable pointers
 	linkDB_Data := *linkDB
 	preservedPtrToLink := &linkDB_Data
-	(*backRepoLink.Map_LinkDBID_LinkDB)[linkDB.ID] = preservedPtrToLink
+	backRepoLink.Map_LinkDBID_LinkDB[linkDB.ID] = preservedPtrToLink
 
 	return
 }
@@ -376,7 +413,7 @@ func (backRepoLink *BackRepoLinkStruct) CheckoutPhaseOneInstance(linkDB *LinkDB)
 func (backRepoLink *BackRepoLinkStruct) CheckoutPhaseTwo(backRepo *BackRepoStruct) (Error error) {
 
 	// parse all DB instance and update all pointer fields of the translated models instance
-	for _, linkDB := range *backRepoLink.Map_LinkDBID_LinkDB {
+	for _, linkDB := range backRepoLink.Map_LinkDBID_LinkDB {
 		backRepoLink.CheckoutPhaseTwoInstance(backRepo, linkDB)
 	}
 	return
@@ -386,13 +423,14 @@ func (backRepoLink *BackRepoLinkStruct) CheckoutPhaseTwo(backRepo *BackRepoStruc
 // Phase Two is the update of instance with the field in the database
 func (backRepoLink *BackRepoLinkStruct) CheckoutPhaseTwoInstance(backRepo *BackRepoStruct, linkDB *LinkDB) (Error error) {
 
-	link := (*backRepoLink.Map_LinkDBID_LinkPtr)[linkDB.ID]
+	link := backRepoLink.Map_LinkDBID_LinkPtr[linkDB.ID]
 	_ = link // sometimes, there is no code generated. This lines voids the "unused variable" compilation error
 
 	// insertion point for checkout of pointer encoding
 	// Middlevertice field
+	link.Middlevertice = nil
 	if linkDB.MiddleverticeID.Int64 != 0 {
-		link.Middlevertice = (*backRepo.BackRepoVertice.Map_VerticeDBID_VerticePtr)[uint(linkDB.MiddleverticeID.Int64)]
+		link.Middlevertice = backRepo.BackRepoVertice.Map_VerticeDBID_VerticePtr[uint(linkDB.MiddleverticeID.Int64)]
 	}
 	return
 }
@@ -400,7 +438,7 @@ func (backRepoLink *BackRepoLinkStruct) CheckoutPhaseTwoInstance(backRepo *BackR
 // CommitLink allows commit of a single link (if already staged)
 func (backRepo *BackRepoStruct) CommitLink(link *models.Link) {
 	backRepo.BackRepoLink.CommitPhaseOneInstance(link)
-	if id, ok := (*backRepo.BackRepoLink.Map_LinkPtr_LinkDBID)[link]; ok {
+	if id, ok := backRepo.BackRepoLink.Map_LinkPtr_LinkDBID[link]; ok {
 		backRepo.BackRepoLink.CommitPhaseTwoInstance(backRepo, id, link)
 	}
 	backRepo.CommitFromBackNb = backRepo.CommitFromBackNb + 1
@@ -409,9 +447,9 @@ func (backRepo *BackRepoStruct) CommitLink(link *models.Link) {
 // CommitLink allows checkout of a single link (if already staged and with a BackRepo id)
 func (backRepo *BackRepoStruct) CheckoutLink(link *models.Link) {
 	// check if the link is staged
-	if _, ok := (*backRepo.BackRepoLink.Map_LinkPtr_LinkDBID)[link]; ok {
+	if _, ok := backRepo.BackRepoLink.Map_LinkPtr_LinkDBID[link]; ok {
 
-		if id, ok := (*backRepo.BackRepoLink.Map_LinkPtr_LinkDBID)[link]; ok {
+		if id, ok := backRepo.BackRepoLink.Map_LinkPtr_LinkDBID[link]; ok {
 			var linkDB LinkDB
 			linkDB.ID = id
 
@@ -437,11 +475,44 @@ func (linkDB *LinkDB) CopyBasicFieldsFromLink(link *models.Link) {
 	linkDB.Fieldtypename_Data.String = link.Fieldtypename
 	linkDB.Fieldtypename_Data.Valid = true
 
+	linkDB.FieldOffsetX_Data.Float64 = link.FieldOffsetX
+	linkDB.FieldOffsetX_Data.Valid = true
+
+	linkDB.FieldOffsetY_Data.Float64 = link.FieldOffsetY
+	linkDB.FieldOffsetY_Data.Valid = true
+
 	linkDB.TargetMultiplicity_Data.String = link.TargetMultiplicity.ToString()
 	linkDB.TargetMultiplicity_Data.Valid = true
 
+	linkDB.TargetMultiplicityOffsetX_Data.Float64 = link.TargetMultiplicityOffsetX
+	linkDB.TargetMultiplicityOffsetX_Data.Valid = true
+
+	linkDB.TargetMultiplicityOffsetY_Data.Float64 = link.TargetMultiplicityOffsetY
+	linkDB.TargetMultiplicityOffsetY_Data.Valid = true
+
 	linkDB.SourceMultiplicity_Data.String = link.SourceMultiplicity.ToString()
 	linkDB.SourceMultiplicity_Data.Valid = true
+
+	linkDB.SourceMultiplicityOffsetX_Data.Float64 = link.SourceMultiplicityOffsetX
+	linkDB.SourceMultiplicityOffsetX_Data.Valid = true
+
+	linkDB.SourceMultiplicityOffsetY_Data.Float64 = link.SourceMultiplicityOffsetY
+	linkDB.SourceMultiplicityOffsetY_Data.Valid = true
+
+	linkDB.StartOrientation_Data.String = link.StartOrientation.ToString()
+	linkDB.StartOrientation_Data.Valid = true
+
+	linkDB.StartRatio_Data.Float64 = link.StartRatio
+	linkDB.StartRatio_Data.Valid = true
+
+	linkDB.EndOrientation_Data.String = link.EndOrientation.ToString()
+	linkDB.EndOrientation_Data.Valid = true
+
+	linkDB.EndRatio_Data.Float64 = link.EndRatio
+	linkDB.EndRatio_Data.Valid = true
+
+	linkDB.CornerOffsetRatio_Data.Float64 = link.CornerOffsetRatio
+	linkDB.CornerOffsetRatio_Data.Valid = true
 }
 
 // CopyBasicFieldsFromLinkWOP
@@ -457,11 +528,44 @@ func (linkDB *LinkDB) CopyBasicFieldsFromLinkWOP(link *LinkWOP) {
 	linkDB.Fieldtypename_Data.String = link.Fieldtypename
 	linkDB.Fieldtypename_Data.Valid = true
 
+	linkDB.FieldOffsetX_Data.Float64 = link.FieldOffsetX
+	linkDB.FieldOffsetX_Data.Valid = true
+
+	linkDB.FieldOffsetY_Data.Float64 = link.FieldOffsetY
+	linkDB.FieldOffsetY_Data.Valid = true
+
 	linkDB.TargetMultiplicity_Data.String = link.TargetMultiplicity.ToString()
 	linkDB.TargetMultiplicity_Data.Valid = true
 
+	linkDB.TargetMultiplicityOffsetX_Data.Float64 = link.TargetMultiplicityOffsetX
+	linkDB.TargetMultiplicityOffsetX_Data.Valid = true
+
+	linkDB.TargetMultiplicityOffsetY_Data.Float64 = link.TargetMultiplicityOffsetY
+	linkDB.TargetMultiplicityOffsetY_Data.Valid = true
+
 	linkDB.SourceMultiplicity_Data.String = link.SourceMultiplicity.ToString()
 	linkDB.SourceMultiplicity_Data.Valid = true
+
+	linkDB.SourceMultiplicityOffsetX_Data.Float64 = link.SourceMultiplicityOffsetX
+	linkDB.SourceMultiplicityOffsetX_Data.Valid = true
+
+	linkDB.SourceMultiplicityOffsetY_Data.Float64 = link.SourceMultiplicityOffsetY
+	linkDB.SourceMultiplicityOffsetY_Data.Valid = true
+
+	linkDB.StartOrientation_Data.String = link.StartOrientation.ToString()
+	linkDB.StartOrientation_Data.Valid = true
+
+	linkDB.StartRatio_Data.Float64 = link.StartRatio
+	linkDB.StartRatio_Data.Valid = true
+
+	linkDB.EndOrientation_Data.String = link.EndOrientation.ToString()
+	linkDB.EndOrientation_Data.Valid = true
+
+	linkDB.EndRatio_Data.Float64 = link.EndRatio
+	linkDB.EndRatio_Data.Valid = true
+
+	linkDB.CornerOffsetRatio_Data.Float64 = link.CornerOffsetRatio
+	linkDB.CornerOffsetRatio_Data.Valid = true
 }
 
 // CopyBasicFieldsToLink
@@ -470,8 +574,19 @@ func (linkDB *LinkDB) CopyBasicFieldsToLink(link *models.Link) {
 	link.Name = linkDB.Name_Data.String
 	link.Identifier = linkDB.Identifier_Data.String
 	link.Fieldtypename = linkDB.Fieldtypename_Data.String
+	link.FieldOffsetX = linkDB.FieldOffsetX_Data.Float64
+	link.FieldOffsetY = linkDB.FieldOffsetY_Data.Float64
 	link.TargetMultiplicity.FromString(linkDB.TargetMultiplicity_Data.String)
+	link.TargetMultiplicityOffsetX = linkDB.TargetMultiplicityOffsetX_Data.Float64
+	link.TargetMultiplicityOffsetY = linkDB.TargetMultiplicityOffsetY_Data.Float64
 	link.SourceMultiplicity.FromString(linkDB.SourceMultiplicity_Data.String)
+	link.SourceMultiplicityOffsetX = linkDB.SourceMultiplicityOffsetX_Data.Float64
+	link.SourceMultiplicityOffsetY = linkDB.SourceMultiplicityOffsetY_Data.Float64
+	link.StartOrientation.FromString(linkDB.StartOrientation_Data.String)
+	link.StartRatio = linkDB.StartRatio_Data.Float64
+	link.EndOrientation.FromString(linkDB.EndOrientation_Data.String)
+	link.EndRatio = linkDB.EndRatio_Data.Float64
+	link.CornerOffsetRatio = linkDB.CornerOffsetRatio_Data.Float64
 }
 
 // CopyBasicFieldsToLinkWOP
@@ -481,8 +596,19 @@ func (linkDB *LinkDB) CopyBasicFieldsToLinkWOP(link *LinkWOP) {
 	link.Name = linkDB.Name_Data.String
 	link.Identifier = linkDB.Identifier_Data.String
 	link.Fieldtypename = linkDB.Fieldtypename_Data.String
+	link.FieldOffsetX = linkDB.FieldOffsetX_Data.Float64
+	link.FieldOffsetY = linkDB.FieldOffsetY_Data.Float64
 	link.TargetMultiplicity.FromString(linkDB.TargetMultiplicity_Data.String)
+	link.TargetMultiplicityOffsetX = linkDB.TargetMultiplicityOffsetX_Data.Float64
+	link.TargetMultiplicityOffsetY = linkDB.TargetMultiplicityOffsetY_Data.Float64
 	link.SourceMultiplicity.FromString(linkDB.SourceMultiplicity_Data.String)
+	link.SourceMultiplicityOffsetX = linkDB.SourceMultiplicityOffsetX_Data.Float64
+	link.SourceMultiplicityOffsetY = linkDB.SourceMultiplicityOffsetY_Data.Float64
+	link.StartOrientation.FromString(linkDB.StartOrientation_Data.String)
+	link.StartRatio = linkDB.StartRatio_Data.Float64
+	link.EndOrientation.FromString(linkDB.EndOrientation_Data.String)
+	link.EndRatio = linkDB.EndRatio_Data.Float64
+	link.CornerOffsetRatio = linkDB.CornerOffsetRatio_Data.Float64
 }
 
 // Backup generates a json file from a slice of all LinkDB instances in the backrepo
@@ -493,7 +619,7 @@ func (backRepoLink *BackRepoLinkStruct) Backup(dirPath string) {
 	// organize the map into an array with increasing IDs, in order to have repoductible
 	// backup file
 	forBackup := make([]*LinkDB, 0)
-	for _, linkDB := range *backRepoLink.Map_LinkDBID_LinkDB {
+	for _, linkDB := range backRepoLink.Map_LinkDBID_LinkDB {
 		forBackup = append(forBackup, linkDB)
 	}
 
@@ -519,7 +645,7 @@ func (backRepoLink *BackRepoLinkStruct) BackupXL(file *xlsx.File) {
 	// organize the map into an array with increasing IDs, in order to have repoductible
 	// backup file
 	forBackup := make([]*LinkDB, 0)
-	for _, linkDB := range *backRepoLink.Map_LinkDBID_LinkDB {
+	for _, linkDB := range backRepoLink.Map_LinkDBID_LinkDB {
 		forBackup = append(forBackup, linkDB)
 	}
 
@@ -584,7 +710,7 @@ func (backRepoLink *BackRepoLinkStruct) rowVisitorLink(row *xlsx.Row) error {
 		if query.Error != nil {
 			log.Panic(query.Error)
 		}
-		(*backRepoLink.Map_LinkDBID_LinkDB)[linkDB.ID] = linkDB
+		backRepoLink.Map_LinkDBID_LinkDB[linkDB.ID] = linkDB
 		BackRepoLinkid_atBckpTime_newID[linkDB_ID_atBackupTime] = linkDB.ID
 	}
 	return nil
@@ -621,7 +747,7 @@ func (backRepoLink *BackRepoLinkStruct) RestorePhaseOne(dirPath string) {
 		if query.Error != nil {
 			log.Panic(query.Error)
 		}
-		(*backRepoLink.Map_LinkDBID_LinkDB)[linkDB.ID] = linkDB
+		backRepoLink.Map_LinkDBID_LinkDB[linkDB.ID] = linkDB
 		BackRepoLinkid_atBckpTime_newID[linkDB_ID_atBackupTime] = linkDB.ID
 	}
 
@@ -634,7 +760,7 @@ func (backRepoLink *BackRepoLinkStruct) RestorePhaseOne(dirPath string) {
 // to compute new index
 func (backRepoLink *BackRepoLinkStruct) RestorePhaseTwo() {
 
-	for _, linkDB := range *backRepoLink.Map_LinkDBID_LinkDB {
+	for _, linkDB := range backRepoLink.Map_LinkDBID_LinkDB {
 
 		// next line of code is to avert unused variable compilation error
 		_ = linkDB
@@ -659,6 +785,39 @@ func (backRepoLink *BackRepoLinkStruct) RestorePhaseTwo() {
 		}
 	}
 
+}
+
+// BackRepoLink.ResetReversePointers commits all staged instances of Link to the BackRepo
+// Phase Two is the update of instance with the field in the database
+func (backRepoLink *BackRepoLinkStruct) ResetReversePointers(backRepo *BackRepoStruct) (Error error) {
+
+	for idx, link := range backRepoLink.Map_LinkDBID_LinkPtr {
+		backRepoLink.ResetReversePointersInstance(backRepo, idx, link)
+	}
+
+	return
+}
+
+func (backRepoLink *BackRepoLinkStruct) ResetReversePointersInstance(backRepo *BackRepoStruct, idx uint, astruct *models.Link) (Error error) {
+
+	// fetch matching linkDB
+	if linkDB, ok := backRepoLink.Map_LinkDBID_LinkDB[idx]; ok {
+		_ = linkDB // to avoid unused variable error if there are no reverse to reset
+
+		// insertion point for reverse pointers reset
+		if linkDB.GongStructShape_LinksDBID.Int64 != 0 {
+			linkDB.GongStructShape_LinksDBID.Int64 = 0
+			linkDB.GongStructShape_LinksDBID.Valid = true
+
+			// save the reset
+			if q := backRepoLink.db.Save(linkDB); q.Error != nil {
+				return q.Error
+			}
+		}
+		// end of insertion point for reverse pointers reset
+	}
+
+	return
 }
 
 // this field is used during the restauration process.

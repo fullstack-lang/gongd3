@@ -9,6 +9,9 @@ import { ScatterDB } from './scatter-db'
 import { NullInt64 } from './null-int64'
 
 export class SerieDB {
+
+	static GONGSTRUCT_NAME = "Serie"
+
 	CreatedAt?: string
 	DeletedAt?: string
 	ID: number = 0

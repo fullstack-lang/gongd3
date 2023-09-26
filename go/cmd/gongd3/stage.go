@@ -3,7 +3,7 @@ package main
 import (
 	"time"
 
-	"gongd3/go/models"
+	"github.com/fullstack-lang/gongd3/go/models"
 )
 
 // generated in order to avoid error in the package import

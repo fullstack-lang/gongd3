@@ -17,7 +17,7 @@ import (
 
 	"github.com/tealeg/xlsx/v3"
 
-	"gongd3/go/models"
+	"github.com/fullstack-lang/gongd3/go/models"
 )
 
 // dummy variable to have the import declaration wihthout compile failure (even if no code needing this import is generated)
@@ -115,13 +115,13 @@ var Serie_Fields = []string{
 
 type BackRepoSerieStruct struct {
 	// stores SerieDB according to their gorm ID
-	Map_SerieDBID_SerieDB *map[uint]*SerieDB
+	Map_SerieDBID_SerieDB map[uint]*SerieDB
 
 	// stores SerieDB ID according to Serie address
-	Map_SeriePtr_SerieDBID *map[*models.Serie]uint
+	Map_SeriePtr_SerieDBID map[*models.Serie]uint
 
 	// stores Serie according to their gorm ID
-	Map_SerieDBID_SeriePtr *map[uint]*models.Serie
+	Map_SerieDBID_SeriePtr map[uint]*models.Serie
 
 	db *gorm.DB
 
@@ -139,40 +139,8 @@ func (backRepoSerie *BackRepoSerieStruct) GetDB() *gorm.DB {
 
 // GetSerieDBFromSeriePtr is a handy function to access the back repo instance from the stage instance
 func (backRepoSerie *BackRepoSerieStruct) GetSerieDBFromSeriePtr(serie *models.Serie) (serieDB *SerieDB) {
-	id := (*backRepoSerie.Map_SeriePtr_SerieDBID)[serie]
-	serieDB = (*backRepoSerie.Map_SerieDBID_SerieDB)[id]
-	return
-}
-
-// BackRepoSerie.Init set up the BackRepo of the Serie
-func (backRepoSerie *BackRepoSerieStruct) Init(stage *models.StageStruct, db *gorm.DB) (Error error) {
-
-	if backRepoSerie.Map_SerieDBID_SeriePtr != nil {
-		err := errors.New("In Init, backRepoSerie.Map_SerieDBID_SeriePtr should be nil")
-		return err
-	}
-
-	if backRepoSerie.Map_SerieDBID_SerieDB != nil {
-		err := errors.New("In Init, backRepoSerie.Map_SerieDBID_SerieDB should be nil")
-		return err
-	}
-
-	if backRepoSerie.Map_SeriePtr_SerieDBID != nil {
-		err := errors.New("In Init, backRepoSerie.Map_SeriePtr_SerieDBID should be nil")
-		return err
-	}
-
-	tmp := make(map[uint]*models.Serie, 0)
-	backRepoSerie.Map_SerieDBID_SeriePtr = &tmp
-
-	tmpDB := make(map[uint]*SerieDB, 0)
-	backRepoSerie.Map_SerieDBID_SerieDB = &tmpDB
-
-	tmpID := make(map[*models.Serie]uint, 0)
-	backRepoSerie.Map_SeriePtr_SerieDBID = &tmpID
-
-	backRepoSerie.db = db
-	backRepoSerie.stage = stage
+	id := backRepoSerie.Map_SeriePtr_SerieDBID[serie]
+	serieDB = backRepoSerie.Map_SerieDBID_SerieDB[id]
 	return
 }
 
@@ -186,7 +154,7 @@ func (backRepoSerie *BackRepoSerieStruct) CommitPhaseOne(stage *models.StageStru
 
 	// parse all backRepo instance and checks wether some instance have been unstaged
 	// in this case, remove them from the back repo
-	for id, serie := range *backRepoSerie.Map_SerieDBID_SeriePtr {
+	for id, serie := range backRepoSerie.Map_SerieDBID_SeriePtr {
 		if _, ok := stage.Series[serie]; !ok {
 			backRepoSerie.CommitDeleteInstance(id)
 		}
@@ -198,19 +166,19 @@ func (backRepoSerie *BackRepoSerieStruct) CommitPhaseOne(stage *models.StageStru
 // BackRepoSerie.CommitDeleteInstance commits deletion of Serie to the BackRepo
 func (backRepoSerie *BackRepoSerieStruct) CommitDeleteInstance(id uint) (Error error) {
 
-	serie := (*backRepoSerie.Map_SerieDBID_SeriePtr)[id]
+	serie := backRepoSerie.Map_SerieDBID_SeriePtr[id]
 
 	// serie is not staged anymore, remove serieDB
-	serieDB := (*backRepoSerie.Map_SerieDBID_SerieDB)[id]
+	serieDB := backRepoSerie.Map_SerieDBID_SerieDB[id]
 	query := backRepoSerie.db.Unscoped().Delete(&serieDB)
 	if query.Error != nil {
 		return query.Error
 	}
 
 	// update stores
-	delete((*backRepoSerie.Map_SeriePtr_SerieDBID), serie)
-	delete((*backRepoSerie.Map_SerieDBID_SeriePtr), id)
-	delete((*backRepoSerie.Map_SerieDBID_SerieDB), id)
+	delete(backRepoSerie.Map_SeriePtr_SerieDBID, serie)
+	delete(backRepoSerie.Map_SerieDBID_SeriePtr, id)
+	delete(backRepoSerie.Map_SerieDBID_SerieDB, id)
 
 	return
 }
@@ -220,7 +188,7 @@ func (backRepoSerie *BackRepoSerieStruct) CommitDeleteInstance(id uint) (Error e
 func (backRepoSerie *BackRepoSerieStruct) CommitPhaseOneInstance(serie *models.Serie) (Error error) {
 
 	// check if the serie is not commited yet
-	if _, ok := (*backRepoSerie.Map_SeriePtr_SerieDBID)[serie]; ok {
+	if _, ok := backRepoSerie.Map_SeriePtr_SerieDBID[serie]; ok {
 		return
 	}
 
@@ -234,9 +202,9 @@ func (backRepoSerie *BackRepoSerieStruct) CommitPhaseOneInstance(serie *models.S
 	}
 
 	// update stores
-	(*backRepoSerie.Map_SeriePtr_SerieDBID)[serie] = serieDB.ID
-	(*backRepoSerie.Map_SerieDBID_SeriePtr)[serieDB.ID] = serie
-	(*backRepoSerie.Map_SerieDBID_SerieDB)[serieDB.ID] = &serieDB
+	backRepoSerie.Map_SeriePtr_SerieDBID[serie] = serieDB.ID
+	backRepoSerie.Map_SerieDBID_SeriePtr[serieDB.ID] = serie
+	backRepoSerie.Map_SerieDBID_SerieDB[serieDB.ID] = &serieDB
 
 	return
 }
@@ -245,7 +213,7 @@ func (backRepoSerie *BackRepoSerieStruct) CommitPhaseOneInstance(serie *models.S
 // Phase Two is the update of instance with the field in the database
 func (backRepoSerie *BackRepoSerieStruct) CommitPhaseTwo(backRepo *BackRepoStruct) (Error error) {
 
-	for idx, serie := range *backRepoSerie.Map_SerieDBID_SeriePtr {
+	for idx, serie := range backRepoSerie.Map_SerieDBID_SeriePtr {
 		backRepoSerie.CommitPhaseTwoInstance(backRepo, idx, serie)
 	}
 
@@ -257,7 +225,7 @@ func (backRepoSerie *BackRepoSerieStruct) CommitPhaseTwo(backRepo *BackRepoStruc
 func (backRepoSerie *BackRepoSerieStruct) CommitPhaseTwoInstance(backRepo *BackRepoStruct, idx uint, serie *models.Serie) (Error error) {
 
 	// fetch matching serieDB
-	if serieDB, ok := (*backRepoSerie.Map_SerieDBID_SerieDB)[idx]; ok {
+	if serieDB, ok := backRepoSerie.Map_SerieDBID_SerieDB[idx]; ok {
 
 		serieDB.CopyBasicFieldsFromSerie(serie)
 
@@ -265,10 +233,13 @@ func (backRepoSerie *BackRepoSerieStruct) CommitPhaseTwoInstance(backRepo *BackR
 		// commit pointer value serie.Key translates to updating the serie.KeyID
 		serieDB.KeyID.Valid = true // allow for a 0 value (nil association)
 		if serie.Key != nil {
-			if KeyId, ok := (*backRepo.BackRepoKey.Map_KeyPtr_KeyDBID)[serie.Key]; ok {
+			if KeyId, ok := backRepo.BackRepoKey.Map_KeyPtr_KeyDBID[serie.Key]; ok {
 				serieDB.KeyID.Int64 = int64(KeyId)
 				serieDB.KeyID.Valid = true
 			}
+		} else {
+			serieDB.KeyID.Int64 = 0
+			serieDB.KeyID.Valid = true
 		}
 
 		// This loop encodes the slice of pointers serie.Values into the back repo.
@@ -329,7 +300,7 @@ func (backRepoSerie *BackRepoSerieStruct) CheckoutPhaseOne() (Error error) {
 
 		// do not remove this instance from the stage, therefore
 		// remove instance from the list of instances to be be removed from the stage
-		serie, ok := (*backRepoSerie.Map_SerieDBID_SeriePtr)[serieDB.ID]
+		serie, ok := backRepoSerie.Map_SerieDBID_SeriePtr[serieDB.ID]
 		if ok {
 			delete(serieInstancesToBeRemovedFromTheStage, serie)
 		}
@@ -340,10 +311,10 @@ func (backRepoSerie *BackRepoSerieStruct) CheckoutPhaseOne() (Error error) {
 		serie.Unstage(backRepoSerie.GetStage())
 
 		// remove instance from the back repo 3 maps
-		serieID := (*backRepoSerie.Map_SeriePtr_SerieDBID)[serie]
-		delete((*backRepoSerie.Map_SeriePtr_SerieDBID), serie)
-		delete((*backRepoSerie.Map_SerieDBID_SerieDB), serieID)
-		delete((*backRepoSerie.Map_SerieDBID_SeriePtr), serieID)
+		serieID := backRepoSerie.Map_SeriePtr_SerieDBID[serie]
+		delete(backRepoSerie.Map_SeriePtr_SerieDBID, serie)
+		delete(backRepoSerie.Map_SerieDBID_SerieDB, serieID)
+		delete(backRepoSerie.Map_SerieDBID_SeriePtr, serieID)
 	}
 
 	return
@@ -353,12 +324,12 @@ func (backRepoSerie *BackRepoSerieStruct) CheckoutPhaseOne() (Error error) {
 // models version of the serieDB
 func (backRepoSerie *BackRepoSerieStruct) CheckoutPhaseOneInstance(serieDB *SerieDB) (Error error) {
 
-	serie, ok := (*backRepoSerie.Map_SerieDBID_SeriePtr)[serieDB.ID]
+	serie, ok := backRepoSerie.Map_SerieDBID_SeriePtr[serieDB.ID]
 	if !ok {
 		serie = new(models.Serie)
 
-		(*backRepoSerie.Map_SerieDBID_SeriePtr)[serieDB.ID] = serie
-		(*backRepoSerie.Map_SeriePtr_SerieDBID)[serie] = serieDB.ID
+		backRepoSerie.Map_SerieDBID_SeriePtr[serieDB.ID] = serie
+		backRepoSerie.Map_SeriePtr_SerieDBID[serie] = serieDB.ID
 
 		// append model store with the new element
 		serie.Name = serieDB.Name_Data.String
@@ -373,7 +344,7 @@ func (backRepoSerie *BackRepoSerieStruct) CheckoutPhaseOneInstance(serieDB *Seri
 	// Map_SerieDBID_SerieDB)[serieDB hold variable pointers
 	serieDB_Data := *serieDB
 	preservedPtrToSerie := &serieDB_Data
-	(*backRepoSerie.Map_SerieDBID_SerieDB)[serieDB.ID] = preservedPtrToSerie
+	backRepoSerie.Map_SerieDBID_SerieDB[serieDB.ID] = preservedPtrToSerie
 
 	return
 }
@@ -383,7 +354,7 @@ func (backRepoSerie *BackRepoSerieStruct) CheckoutPhaseOneInstance(serieDB *Seri
 func (backRepoSerie *BackRepoSerieStruct) CheckoutPhaseTwo(backRepo *BackRepoStruct) (Error error) {
 
 	// parse all DB instance and update all pointer fields of the translated models instance
-	for _, serieDB := range *backRepoSerie.Map_SerieDBID_SerieDB {
+	for _, serieDB := range backRepoSerie.Map_SerieDBID_SerieDB {
 		backRepoSerie.CheckoutPhaseTwoInstance(backRepo, serieDB)
 	}
 	return
@@ -393,13 +364,14 @@ func (backRepoSerie *BackRepoSerieStruct) CheckoutPhaseTwo(backRepo *BackRepoStr
 // Phase Two is the update of instance with the field in the database
 func (backRepoSerie *BackRepoSerieStruct) CheckoutPhaseTwoInstance(backRepo *BackRepoStruct, serieDB *SerieDB) (Error error) {
 
-	serie := (*backRepoSerie.Map_SerieDBID_SeriePtr)[serieDB.ID]
+	serie := backRepoSerie.Map_SerieDBID_SeriePtr[serieDB.ID]
 	_ = serie // sometimes, there is no code generated. This lines voids the "unused variable" compilation error
 
 	// insertion point for checkout of pointer encoding
 	// Key field
+	serie.Key = nil
 	if serieDB.KeyID.Int64 != 0 {
-		serie.Key = (*backRepo.BackRepoKey.Map_KeyDBID_KeyPtr)[uint(serieDB.KeyID.Int64)]
+		serie.Key = backRepo.BackRepoKey.Map_KeyDBID_KeyPtr[uint(serieDB.KeyID.Int64)]
 	}
 	// This loop redeem serie.Values in the stage from the encode in the back repo
 	// It parses all ValueDB in the back repo and if the reverse pointer encoding matches the back repo ID
@@ -407,11 +379,11 @@ func (backRepoSerie *BackRepoSerieStruct) CheckoutPhaseTwoInstance(backRepo *Bac
 	// 1. reset the slice
 	serie.Values = serie.Values[:0]
 	// 2. loop all instances in the type in the association end
-	for _, valueDB_AssocEnd := range *backRepo.BackRepoValue.Map_ValueDBID_ValueDB {
+	for _, valueDB_AssocEnd := range backRepo.BackRepoValue.Map_ValueDBID_ValueDB {
 		// 3. Does the ID encoding at the end and the ID at the start matches ?
 		if valueDB_AssocEnd.Serie_ValuesDBID.Int64 == int64(serieDB.ID) {
 			// 4. fetch the associated instance in the stage
-			value_AssocEnd := (*backRepo.BackRepoValue.Map_ValueDBID_ValuePtr)[valueDB_AssocEnd.ID]
+			value_AssocEnd := backRepo.BackRepoValue.Map_ValueDBID_ValuePtr[valueDB_AssocEnd.ID]
 			// 5. append it the association slice
 			serie.Values = append(serie.Values, value_AssocEnd)
 		}
@@ -419,11 +391,11 @@ func (backRepoSerie *BackRepoSerieStruct) CheckoutPhaseTwoInstance(backRepo *Bac
 
 	// sort the array according to the order
 	sort.Slice(serie.Values, func(i, j int) bool {
-		valueDB_i_ID := (*backRepo.BackRepoValue.Map_ValuePtr_ValueDBID)[serie.Values[i]]
-		valueDB_j_ID := (*backRepo.BackRepoValue.Map_ValuePtr_ValueDBID)[serie.Values[j]]
+		valueDB_i_ID := backRepo.BackRepoValue.Map_ValuePtr_ValueDBID[serie.Values[i]]
+		valueDB_j_ID := backRepo.BackRepoValue.Map_ValuePtr_ValueDBID[serie.Values[j]]
 
-		valueDB_i := (*backRepo.BackRepoValue.Map_ValueDBID_ValueDB)[valueDB_i_ID]
-		valueDB_j := (*backRepo.BackRepoValue.Map_ValueDBID_ValueDB)[valueDB_j_ID]
+		valueDB_i := backRepo.BackRepoValue.Map_ValueDBID_ValueDB[valueDB_i_ID]
+		valueDB_j := backRepo.BackRepoValue.Map_ValueDBID_ValueDB[valueDB_j_ID]
 
 		return valueDB_i.Serie_ValuesDBID_Index.Int64 < valueDB_j.Serie_ValuesDBID_Index.Int64
 	})
@@ -434,7 +406,7 @@ func (backRepoSerie *BackRepoSerieStruct) CheckoutPhaseTwoInstance(backRepo *Bac
 // CommitSerie allows commit of a single serie (if already staged)
 func (backRepo *BackRepoStruct) CommitSerie(serie *models.Serie) {
 	backRepo.BackRepoSerie.CommitPhaseOneInstance(serie)
-	if id, ok := (*backRepo.BackRepoSerie.Map_SeriePtr_SerieDBID)[serie]; ok {
+	if id, ok := backRepo.BackRepoSerie.Map_SeriePtr_SerieDBID[serie]; ok {
 		backRepo.BackRepoSerie.CommitPhaseTwoInstance(backRepo, id, serie)
 	}
 	backRepo.CommitFromBackNb = backRepo.CommitFromBackNb + 1
@@ -443,9 +415,9 @@ func (backRepo *BackRepoStruct) CommitSerie(serie *models.Serie) {
 // CommitSerie allows checkout of a single serie (if already staged and with a BackRepo id)
 func (backRepo *BackRepoStruct) CheckoutSerie(serie *models.Serie) {
 	// check if the serie is staged
-	if _, ok := (*backRepo.BackRepoSerie.Map_SeriePtr_SerieDBID)[serie]; ok {
+	if _, ok := backRepo.BackRepoSerie.Map_SeriePtr_SerieDBID[serie]; ok {
 
-		if id, ok := (*backRepo.BackRepoSerie.Map_SeriePtr_SerieDBID)[serie]; ok {
+		if id, ok := backRepo.BackRepoSerie.Map_SeriePtr_SerieDBID[serie]; ok {
 			var serieDB SerieDB
 			serieDB.ID = id
 
@@ -495,7 +467,7 @@ func (backRepoSerie *BackRepoSerieStruct) Backup(dirPath string) {
 	// organize the map into an array with increasing IDs, in order to have repoductible
 	// backup file
 	forBackup := make([]*SerieDB, 0)
-	for _, serieDB := range *backRepoSerie.Map_SerieDBID_SerieDB {
+	for _, serieDB := range backRepoSerie.Map_SerieDBID_SerieDB {
 		forBackup = append(forBackup, serieDB)
 	}
 
@@ -521,7 +493,7 @@ func (backRepoSerie *BackRepoSerieStruct) BackupXL(file *xlsx.File) {
 	// organize the map into an array with increasing IDs, in order to have repoductible
 	// backup file
 	forBackup := make([]*SerieDB, 0)
-	for _, serieDB := range *backRepoSerie.Map_SerieDBID_SerieDB {
+	for _, serieDB := range backRepoSerie.Map_SerieDBID_SerieDB {
 		forBackup = append(forBackup, serieDB)
 	}
 
@@ -586,7 +558,7 @@ func (backRepoSerie *BackRepoSerieStruct) rowVisitorSerie(row *xlsx.Row) error {
 		if query.Error != nil {
 			log.Panic(query.Error)
 		}
-		(*backRepoSerie.Map_SerieDBID_SerieDB)[serieDB.ID] = serieDB
+		backRepoSerie.Map_SerieDBID_SerieDB[serieDB.ID] = serieDB
 		BackRepoSerieid_atBckpTime_newID[serieDB_ID_atBackupTime] = serieDB.ID
 	}
 	return nil
@@ -623,7 +595,7 @@ func (backRepoSerie *BackRepoSerieStruct) RestorePhaseOne(dirPath string) {
 		if query.Error != nil {
 			log.Panic(query.Error)
 		}
-		(*backRepoSerie.Map_SerieDBID_SerieDB)[serieDB.ID] = serieDB
+		backRepoSerie.Map_SerieDBID_SerieDB[serieDB.ID] = serieDB
 		BackRepoSerieid_atBckpTime_newID[serieDB_ID_atBackupTime] = serieDB.ID
 	}
 
@@ -636,7 +608,7 @@ func (backRepoSerie *BackRepoSerieStruct) RestorePhaseOne(dirPath string) {
 // to compute new index
 func (backRepoSerie *BackRepoSerieStruct) RestorePhaseTwo() {
 
-	for _, serieDB := range *backRepoSerie.Map_SerieDBID_SerieDB {
+	for _, serieDB := range backRepoSerie.Map_SerieDBID_SerieDB {
 
 		// next line of code is to avert unused variable compilation error
 		_ = serieDB
@@ -673,6 +645,57 @@ func (backRepoSerie *BackRepoSerieStruct) RestorePhaseTwo() {
 		}
 	}
 
+}
+
+// BackRepoSerie.ResetReversePointers commits all staged instances of Serie to the BackRepo
+// Phase Two is the update of instance with the field in the database
+func (backRepoSerie *BackRepoSerieStruct) ResetReversePointers(backRepo *BackRepoStruct) (Error error) {
+
+	for idx, serie := range backRepoSerie.Map_SerieDBID_SeriePtr {
+		backRepoSerie.ResetReversePointersInstance(backRepo, idx, serie)
+	}
+
+	return
+}
+
+func (backRepoSerie *BackRepoSerieStruct) ResetReversePointersInstance(backRepo *BackRepoStruct, idx uint, astruct *models.Serie) (Error error) {
+
+	// fetch matching serieDB
+	if serieDB, ok := backRepoSerie.Map_SerieDBID_SerieDB[idx]; ok {
+		_ = serieDB // to avoid unused variable error if there are no reverse to reset
+
+		// insertion point for reverse pointers reset
+		if serieDB.Bar_SetDBID.Int64 != 0 {
+			serieDB.Bar_SetDBID.Int64 = 0
+			serieDB.Bar_SetDBID.Valid = true
+
+			// save the reset
+			if q := backRepoSerie.db.Save(serieDB); q.Error != nil {
+				return q.Error
+			}
+		}
+		if serieDB.Pie_SetDBID.Int64 != 0 {
+			serieDB.Pie_SetDBID.Int64 = 0
+			serieDB.Pie_SetDBID.Valid = true
+
+			// save the reset
+			if q := backRepoSerie.db.Save(serieDB); q.Error != nil {
+				return q.Error
+			}
+		}
+		if serieDB.Scatter_SetDBID.Int64 != 0 {
+			serieDB.Scatter_SetDBID.Int64 = 0
+			serieDB.Scatter_SetDBID.Valid = true
+
+			// save the reset
+			if q := backRepoSerie.db.Save(serieDB); q.Error != nil {
+				return q.Error
+			}
+		}
+		// end of insertion point for reverse pointers reset
+	}
+
+	return
 }
 
 // this field is used during the restauration process.

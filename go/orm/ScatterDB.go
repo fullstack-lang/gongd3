@@ -17,7 +17,7 @@ import (
 
 	"github.com/tealeg/xlsx/v3"
 
-	"gongd3/go/models"
+	"github.com/fullstack-lang/gongd3/go/models"
 )
 
 // dummy variable to have the import declaration wihthout compile failure (even if no code needing this import is generated)
@@ -123,13 +123,13 @@ var Scatter_Fields = []string{
 
 type BackRepoScatterStruct struct {
 	// stores ScatterDB according to their gorm ID
-	Map_ScatterDBID_ScatterDB *map[uint]*ScatterDB
+	Map_ScatterDBID_ScatterDB map[uint]*ScatterDB
 
 	// stores ScatterDB ID according to Scatter address
-	Map_ScatterPtr_ScatterDBID *map[*models.Scatter]uint
+	Map_ScatterPtr_ScatterDBID map[*models.Scatter]uint
 
 	// stores Scatter according to their gorm ID
-	Map_ScatterDBID_ScatterPtr *map[uint]*models.Scatter
+	Map_ScatterDBID_ScatterPtr map[uint]*models.Scatter
 
 	db *gorm.DB
 
@@ -147,40 +147,8 @@ func (backRepoScatter *BackRepoScatterStruct) GetDB() *gorm.DB {
 
 // GetScatterDBFromScatterPtr is a handy function to access the back repo instance from the stage instance
 func (backRepoScatter *BackRepoScatterStruct) GetScatterDBFromScatterPtr(scatter *models.Scatter) (scatterDB *ScatterDB) {
-	id := (*backRepoScatter.Map_ScatterPtr_ScatterDBID)[scatter]
-	scatterDB = (*backRepoScatter.Map_ScatterDBID_ScatterDB)[id]
-	return
-}
-
-// BackRepoScatter.Init set up the BackRepo of the Scatter
-func (backRepoScatter *BackRepoScatterStruct) Init(stage *models.StageStruct, db *gorm.DB) (Error error) {
-
-	if backRepoScatter.Map_ScatterDBID_ScatterPtr != nil {
-		err := errors.New("In Init, backRepoScatter.Map_ScatterDBID_ScatterPtr should be nil")
-		return err
-	}
-
-	if backRepoScatter.Map_ScatterDBID_ScatterDB != nil {
-		err := errors.New("In Init, backRepoScatter.Map_ScatterDBID_ScatterDB should be nil")
-		return err
-	}
-
-	if backRepoScatter.Map_ScatterPtr_ScatterDBID != nil {
-		err := errors.New("In Init, backRepoScatter.Map_ScatterPtr_ScatterDBID should be nil")
-		return err
-	}
-
-	tmp := make(map[uint]*models.Scatter, 0)
-	backRepoScatter.Map_ScatterDBID_ScatterPtr = &tmp
-
-	tmpDB := make(map[uint]*ScatterDB, 0)
-	backRepoScatter.Map_ScatterDBID_ScatterDB = &tmpDB
-
-	tmpID := make(map[*models.Scatter]uint, 0)
-	backRepoScatter.Map_ScatterPtr_ScatterDBID = &tmpID
-
-	backRepoScatter.db = db
-	backRepoScatter.stage = stage
+	id := backRepoScatter.Map_ScatterPtr_ScatterDBID[scatter]
+	scatterDB = backRepoScatter.Map_ScatterDBID_ScatterDB[id]
 	return
 }
 
@@ -194,7 +162,7 @@ func (backRepoScatter *BackRepoScatterStruct) CommitPhaseOne(stage *models.Stage
 
 	// parse all backRepo instance and checks wether some instance have been unstaged
 	// in this case, remove them from the back repo
-	for id, scatter := range *backRepoScatter.Map_ScatterDBID_ScatterPtr {
+	for id, scatter := range backRepoScatter.Map_ScatterDBID_ScatterPtr {
 		if _, ok := stage.Scatters[scatter]; !ok {
 			backRepoScatter.CommitDeleteInstance(id)
 		}
@@ -206,19 +174,19 @@ func (backRepoScatter *BackRepoScatterStruct) CommitPhaseOne(stage *models.Stage
 // BackRepoScatter.CommitDeleteInstance commits deletion of Scatter to the BackRepo
 func (backRepoScatter *BackRepoScatterStruct) CommitDeleteInstance(id uint) (Error error) {
 
-	scatter := (*backRepoScatter.Map_ScatterDBID_ScatterPtr)[id]
+	scatter := backRepoScatter.Map_ScatterDBID_ScatterPtr[id]
 
 	// scatter is not staged anymore, remove scatterDB
-	scatterDB := (*backRepoScatter.Map_ScatterDBID_ScatterDB)[id]
+	scatterDB := backRepoScatter.Map_ScatterDBID_ScatterDB[id]
 	query := backRepoScatter.db.Unscoped().Delete(&scatterDB)
 	if query.Error != nil {
 		return query.Error
 	}
 
 	// update stores
-	delete((*backRepoScatter.Map_ScatterPtr_ScatterDBID), scatter)
-	delete((*backRepoScatter.Map_ScatterDBID_ScatterPtr), id)
-	delete((*backRepoScatter.Map_ScatterDBID_ScatterDB), id)
+	delete(backRepoScatter.Map_ScatterPtr_ScatterDBID, scatter)
+	delete(backRepoScatter.Map_ScatterDBID_ScatterPtr, id)
+	delete(backRepoScatter.Map_ScatterDBID_ScatterDB, id)
 
 	return
 }
@@ -228,7 +196,7 @@ func (backRepoScatter *BackRepoScatterStruct) CommitDeleteInstance(id uint) (Err
 func (backRepoScatter *BackRepoScatterStruct) CommitPhaseOneInstance(scatter *models.Scatter) (Error error) {
 
 	// check if the scatter is not commited yet
-	if _, ok := (*backRepoScatter.Map_ScatterPtr_ScatterDBID)[scatter]; ok {
+	if _, ok := backRepoScatter.Map_ScatterPtr_ScatterDBID[scatter]; ok {
 		return
 	}
 
@@ -242,9 +210,9 @@ func (backRepoScatter *BackRepoScatterStruct) CommitPhaseOneInstance(scatter *mo
 	}
 
 	// update stores
-	(*backRepoScatter.Map_ScatterPtr_ScatterDBID)[scatter] = scatterDB.ID
-	(*backRepoScatter.Map_ScatterDBID_ScatterPtr)[scatterDB.ID] = scatter
-	(*backRepoScatter.Map_ScatterDBID_ScatterDB)[scatterDB.ID] = &scatterDB
+	backRepoScatter.Map_ScatterPtr_ScatterDBID[scatter] = scatterDB.ID
+	backRepoScatter.Map_ScatterDBID_ScatterPtr[scatterDB.ID] = scatter
+	backRepoScatter.Map_ScatterDBID_ScatterDB[scatterDB.ID] = &scatterDB
 
 	return
 }
@@ -253,7 +221,7 @@ func (backRepoScatter *BackRepoScatterStruct) CommitPhaseOneInstance(scatter *mo
 // Phase Two is the update of instance with the field in the database
 func (backRepoScatter *BackRepoScatterStruct) CommitPhaseTwo(backRepo *BackRepoStruct) (Error error) {
 
-	for idx, scatter := range *backRepoScatter.Map_ScatterDBID_ScatterPtr {
+	for idx, scatter := range backRepoScatter.Map_ScatterDBID_ScatterPtr {
 		backRepoScatter.CommitPhaseTwoInstance(backRepo, idx, scatter)
 	}
 
@@ -265,7 +233,7 @@ func (backRepoScatter *BackRepoScatterStruct) CommitPhaseTwo(backRepo *BackRepoS
 func (backRepoScatter *BackRepoScatterStruct) CommitPhaseTwoInstance(backRepo *BackRepoStruct, idx uint, scatter *models.Scatter) (Error error) {
 
 	// fetch matching scatterDB
-	if scatterDB, ok := (*backRepoScatter.Map_ScatterDBID_ScatterDB)[idx]; ok {
+	if scatterDB, ok := backRepoScatter.Map_ScatterDBID_ScatterDB[idx]; ok {
 
 		scatterDB.CopyBasicFieldsFromScatter(scatter)
 
@@ -273,28 +241,37 @@ func (backRepoScatter *BackRepoScatterStruct) CommitPhaseTwoInstance(backRepo *B
 		// commit pointer value scatter.X translates to updating the scatter.XID
 		scatterDB.XID.Valid = true // allow for a 0 value (nil association)
 		if scatter.X != nil {
-			if XId, ok := (*backRepo.BackRepoKey.Map_KeyPtr_KeyDBID)[scatter.X]; ok {
+			if XId, ok := backRepo.BackRepoKey.Map_KeyPtr_KeyDBID[scatter.X]; ok {
 				scatterDB.XID.Int64 = int64(XId)
 				scatterDB.XID.Valid = true
 			}
+		} else {
+			scatterDB.XID.Int64 = 0
+			scatterDB.XID.Valid = true
 		}
 
 		// commit pointer value scatter.Y translates to updating the scatter.YID
 		scatterDB.YID.Valid = true // allow for a 0 value (nil association)
 		if scatter.Y != nil {
-			if YId, ok := (*backRepo.BackRepoKey.Map_KeyPtr_KeyDBID)[scatter.Y]; ok {
+			if YId, ok := backRepo.BackRepoKey.Map_KeyPtr_KeyDBID[scatter.Y]; ok {
 				scatterDB.YID.Int64 = int64(YId)
 				scatterDB.YID.Valid = true
 			}
+		} else {
+			scatterDB.YID.Int64 = 0
+			scatterDB.YID.Valid = true
 		}
 
 		// commit pointer value scatter.Text translates to updating the scatter.TextID
 		scatterDB.TextID.Valid = true // allow for a 0 value (nil association)
 		if scatter.Text != nil {
-			if TextId, ok := (*backRepo.BackRepoKey.Map_KeyPtr_KeyDBID)[scatter.Text]; ok {
+			if TextId, ok := backRepo.BackRepoKey.Map_KeyPtr_KeyDBID[scatter.Text]; ok {
 				scatterDB.TextID.Int64 = int64(TextId)
 				scatterDB.TextID.Valid = true
 			}
+		} else {
+			scatterDB.TextID.Int64 = 0
+			scatterDB.TextID.Valid = true
 		}
 
 		// This loop encodes the slice of pointers scatter.Set into the back repo.
@@ -355,7 +332,7 @@ func (backRepoScatter *BackRepoScatterStruct) CheckoutPhaseOne() (Error error) {
 
 		// do not remove this instance from the stage, therefore
 		// remove instance from the list of instances to be be removed from the stage
-		scatter, ok := (*backRepoScatter.Map_ScatterDBID_ScatterPtr)[scatterDB.ID]
+		scatter, ok := backRepoScatter.Map_ScatterDBID_ScatterPtr[scatterDB.ID]
 		if ok {
 			delete(scatterInstancesToBeRemovedFromTheStage, scatter)
 		}
@@ -366,10 +343,10 @@ func (backRepoScatter *BackRepoScatterStruct) CheckoutPhaseOne() (Error error) {
 		scatter.Unstage(backRepoScatter.GetStage())
 
 		// remove instance from the back repo 3 maps
-		scatterID := (*backRepoScatter.Map_ScatterPtr_ScatterDBID)[scatter]
-		delete((*backRepoScatter.Map_ScatterPtr_ScatterDBID), scatter)
-		delete((*backRepoScatter.Map_ScatterDBID_ScatterDB), scatterID)
-		delete((*backRepoScatter.Map_ScatterDBID_ScatterPtr), scatterID)
+		scatterID := backRepoScatter.Map_ScatterPtr_ScatterDBID[scatter]
+		delete(backRepoScatter.Map_ScatterPtr_ScatterDBID, scatter)
+		delete(backRepoScatter.Map_ScatterDBID_ScatterDB, scatterID)
+		delete(backRepoScatter.Map_ScatterDBID_ScatterPtr, scatterID)
 	}
 
 	return
@@ -379,12 +356,12 @@ func (backRepoScatter *BackRepoScatterStruct) CheckoutPhaseOne() (Error error) {
 // models version of the scatterDB
 func (backRepoScatter *BackRepoScatterStruct) CheckoutPhaseOneInstance(scatterDB *ScatterDB) (Error error) {
 
-	scatter, ok := (*backRepoScatter.Map_ScatterDBID_ScatterPtr)[scatterDB.ID]
+	scatter, ok := backRepoScatter.Map_ScatterDBID_ScatterPtr[scatterDB.ID]
 	if !ok {
 		scatter = new(models.Scatter)
 
-		(*backRepoScatter.Map_ScatterDBID_ScatterPtr)[scatterDB.ID] = scatter
-		(*backRepoScatter.Map_ScatterPtr_ScatterDBID)[scatter] = scatterDB.ID
+		backRepoScatter.Map_ScatterDBID_ScatterPtr[scatterDB.ID] = scatter
+		backRepoScatter.Map_ScatterPtr_ScatterDBID[scatter] = scatterDB.ID
 
 		// append model store with the new element
 		scatter.Name = scatterDB.Name_Data.String
@@ -399,7 +376,7 @@ func (backRepoScatter *BackRepoScatterStruct) CheckoutPhaseOneInstance(scatterDB
 	// Map_ScatterDBID_ScatterDB)[scatterDB hold variable pointers
 	scatterDB_Data := *scatterDB
 	preservedPtrToScatter := &scatterDB_Data
-	(*backRepoScatter.Map_ScatterDBID_ScatterDB)[scatterDB.ID] = preservedPtrToScatter
+	backRepoScatter.Map_ScatterDBID_ScatterDB[scatterDB.ID] = preservedPtrToScatter
 
 	return
 }
@@ -409,7 +386,7 @@ func (backRepoScatter *BackRepoScatterStruct) CheckoutPhaseOneInstance(scatterDB
 func (backRepoScatter *BackRepoScatterStruct) CheckoutPhaseTwo(backRepo *BackRepoStruct) (Error error) {
 
 	// parse all DB instance and update all pointer fields of the translated models instance
-	for _, scatterDB := range *backRepoScatter.Map_ScatterDBID_ScatterDB {
+	for _, scatterDB := range backRepoScatter.Map_ScatterDBID_ScatterDB {
 		backRepoScatter.CheckoutPhaseTwoInstance(backRepo, scatterDB)
 	}
 	return
@@ -419,21 +396,24 @@ func (backRepoScatter *BackRepoScatterStruct) CheckoutPhaseTwo(backRepo *BackRep
 // Phase Two is the update of instance with the field in the database
 func (backRepoScatter *BackRepoScatterStruct) CheckoutPhaseTwoInstance(backRepo *BackRepoStruct, scatterDB *ScatterDB) (Error error) {
 
-	scatter := (*backRepoScatter.Map_ScatterDBID_ScatterPtr)[scatterDB.ID]
+	scatter := backRepoScatter.Map_ScatterDBID_ScatterPtr[scatterDB.ID]
 	_ = scatter // sometimes, there is no code generated. This lines voids the "unused variable" compilation error
 
 	// insertion point for checkout of pointer encoding
 	// X field
+	scatter.X = nil
 	if scatterDB.XID.Int64 != 0 {
-		scatter.X = (*backRepo.BackRepoKey.Map_KeyDBID_KeyPtr)[uint(scatterDB.XID.Int64)]
+		scatter.X = backRepo.BackRepoKey.Map_KeyDBID_KeyPtr[uint(scatterDB.XID.Int64)]
 	}
 	// Y field
+	scatter.Y = nil
 	if scatterDB.YID.Int64 != 0 {
-		scatter.Y = (*backRepo.BackRepoKey.Map_KeyDBID_KeyPtr)[uint(scatterDB.YID.Int64)]
+		scatter.Y = backRepo.BackRepoKey.Map_KeyDBID_KeyPtr[uint(scatterDB.YID.Int64)]
 	}
 	// Text field
+	scatter.Text = nil
 	if scatterDB.TextID.Int64 != 0 {
-		scatter.Text = (*backRepo.BackRepoKey.Map_KeyDBID_KeyPtr)[uint(scatterDB.TextID.Int64)]
+		scatter.Text = backRepo.BackRepoKey.Map_KeyDBID_KeyPtr[uint(scatterDB.TextID.Int64)]
 	}
 	// This loop redeem scatter.Set in the stage from the encode in the back repo
 	// It parses all SerieDB in the back repo and if the reverse pointer encoding matches the back repo ID
@@ -441,11 +421,11 @@ func (backRepoScatter *BackRepoScatterStruct) CheckoutPhaseTwoInstance(backRepo 
 	// 1. reset the slice
 	scatter.Set = scatter.Set[:0]
 	// 2. loop all instances in the type in the association end
-	for _, serieDB_AssocEnd := range *backRepo.BackRepoSerie.Map_SerieDBID_SerieDB {
+	for _, serieDB_AssocEnd := range backRepo.BackRepoSerie.Map_SerieDBID_SerieDB {
 		// 3. Does the ID encoding at the end and the ID at the start matches ?
 		if serieDB_AssocEnd.Scatter_SetDBID.Int64 == int64(scatterDB.ID) {
 			// 4. fetch the associated instance in the stage
-			serie_AssocEnd := (*backRepo.BackRepoSerie.Map_SerieDBID_SeriePtr)[serieDB_AssocEnd.ID]
+			serie_AssocEnd := backRepo.BackRepoSerie.Map_SerieDBID_SeriePtr[serieDB_AssocEnd.ID]
 			// 5. append it the association slice
 			scatter.Set = append(scatter.Set, serie_AssocEnd)
 		}
@@ -453,11 +433,11 @@ func (backRepoScatter *BackRepoScatterStruct) CheckoutPhaseTwoInstance(backRepo 
 
 	// sort the array according to the order
 	sort.Slice(scatter.Set, func(i, j int) bool {
-		serieDB_i_ID := (*backRepo.BackRepoSerie.Map_SeriePtr_SerieDBID)[scatter.Set[i]]
-		serieDB_j_ID := (*backRepo.BackRepoSerie.Map_SeriePtr_SerieDBID)[scatter.Set[j]]
+		serieDB_i_ID := backRepo.BackRepoSerie.Map_SeriePtr_SerieDBID[scatter.Set[i]]
+		serieDB_j_ID := backRepo.BackRepoSerie.Map_SeriePtr_SerieDBID[scatter.Set[j]]
 
-		serieDB_i := (*backRepo.BackRepoSerie.Map_SerieDBID_SerieDB)[serieDB_i_ID]
-		serieDB_j := (*backRepo.BackRepoSerie.Map_SerieDBID_SerieDB)[serieDB_j_ID]
+		serieDB_i := backRepo.BackRepoSerie.Map_SerieDBID_SerieDB[serieDB_i_ID]
+		serieDB_j := backRepo.BackRepoSerie.Map_SerieDBID_SerieDB[serieDB_j_ID]
 
 		return serieDB_i.Scatter_SetDBID_Index.Int64 < serieDB_j.Scatter_SetDBID_Index.Int64
 	})
@@ -468,7 +448,7 @@ func (backRepoScatter *BackRepoScatterStruct) CheckoutPhaseTwoInstance(backRepo 
 // CommitScatter allows commit of a single scatter (if already staged)
 func (backRepo *BackRepoStruct) CommitScatter(scatter *models.Scatter) {
 	backRepo.BackRepoScatter.CommitPhaseOneInstance(scatter)
-	if id, ok := (*backRepo.BackRepoScatter.Map_ScatterPtr_ScatterDBID)[scatter]; ok {
+	if id, ok := backRepo.BackRepoScatter.Map_ScatterPtr_ScatterDBID[scatter]; ok {
 		backRepo.BackRepoScatter.CommitPhaseTwoInstance(backRepo, id, scatter)
 	}
 	backRepo.CommitFromBackNb = backRepo.CommitFromBackNb + 1
@@ -477,9 +457,9 @@ func (backRepo *BackRepoStruct) CommitScatter(scatter *models.Scatter) {
 // CommitScatter allows checkout of a single scatter (if already staged and with a BackRepo id)
 func (backRepo *BackRepoStruct) CheckoutScatter(scatter *models.Scatter) {
 	// check if the scatter is staged
-	if _, ok := (*backRepo.BackRepoScatter.Map_ScatterPtr_ScatterDBID)[scatter]; ok {
+	if _, ok := backRepo.BackRepoScatter.Map_ScatterPtr_ScatterDBID[scatter]; ok {
 
-		if id, ok := (*backRepo.BackRepoScatter.Map_ScatterPtr_ScatterDBID)[scatter]; ok {
+		if id, ok := backRepo.BackRepoScatter.Map_ScatterPtr_ScatterDBID[scatter]; ok {
 			var scatterDB ScatterDB
 			scatterDB.ID = id
 
@@ -553,7 +533,7 @@ func (backRepoScatter *BackRepoScatterStruct) Backup(dirPath string) {
 	// organize the map into an array with increasing IDs, in order to have repoductible
 	// backup file
 	forBackup := make([]*ScatterDB, 0)
-	for _, scatterDB := range *backRepoScatter.Map_ScatterDBID_ScatterDB {
+	for _, scatterDB := range backRepoScatter.Map_ScatterDBID_ScatterDB {
 		forBackup = append(forBackup, scatterDB)
 	}
 
@@ -579,7 +559,7 @@ func (backRepoScatter *BackRepoScatterStruct) BackupXL(file *xlsx.File) {
 	// organize the map into an array with increasing IDs, in order to have repoductible
 	// backup file
 	forBackup := make([]*ScatterDB, 0)
-	for _, scatterDB := range *backRepoScatter.Map_ScatterDBID_ScatterDB {
+	for _, scatterDB := range backRepoScatter.Map_ScatterDBID_ScatterDB {
 		forBackup = append(forBackup, scatterDB)
 	}
 
@@ -644,7 +624,7 @@ func (backRepoScatter *BackRepoScatterStruct) rowVisitorScatter(row *xlsx.Row) e
 		if query.Error != nil {
 			log.Panic(query.Error)
 		}
-		(*backRepoScatter.Map_ScatterDBID_ScatterDB)[scatterDB.ID] = scatterDB
+		backRepoScatter.Map_ScatterDBID_ScatterDB[scatterDB.ID] = scatterDB
 		BackRepoScatterid_atBckpTime_newID[scatterDB_ID_atBackupTime] = scatterDB.ID
 	}
 	return nil
@@ -681,7 +661,7 @@ func (backRepoScatter *BackRepoScatterStruct) RestorePhaseOne(dirPath string) {
 		if query.Error != nil {
 			log.Panic(query.Error)
 		}
-		(*backRepoScatter.Map_ScatterDBID_ScatterDB)[scatterDB.ID] = scatterDB
+		backRepoScatter.Map_ScatterDBID_ScatterDB[scatterDB.ID] = scatterDB
 		BackRepoScatterid_atBckpTime_newID[scatterDB_ID_atBackupTime] = scatterDB.ID
 	}
 
@@ -694,7 +674,7 @@ func (backRepoScatter *BackRepoScatterStruct) RestorePhaseOne(dirPath string) {
 // to compute new index
 func (backRepoScatter *BackRepoScatterStruct) RestorePhaseTwo() {
 
-	for _, scatterDB := range *backRepoScatter.Map_ScatterDBID_ScatterDB {
+	for _, scatterDB := range backRepoScatter.Map_ScatterDBID_ScatterDB {
 
 		// next line of code is to avert unused variable compilation error
 		_ = scatterDB
@@ -725,6 +705,30 @@ func (backRepoScatter *BackRepoScatterStruct) RestorePhaseTwo() {
 		}
 	}
 
+}
+
+// BackRepoScatter.ResetReversePointers commits all staged instances of Scatter to the BackRepo
+// Phase Two is the update of instance with the field in the database
+func (backRepoScatter *BackRepoScatterStruct) ResetReversePointers(backRepo *BackRepoStruct) (Error error) {
+
+	for idx, scatter := range backRepoScatter.Map_ScatterDBID_ScatterPtr {
+		backRepoScatter.ResetReversePointersInstance(backRepo, idx, scatter)
+	}
+
+	return
+}
+
+func (backRepoScatter *BackRepoScatterStruct) ResetReversePointersInstance(backRepo *BackRepoStruct, idx uint, astruct *models.Scatter) (Error error) {
+
+	// fetch matching scatterDB
+	if scatterDB, ok := backRepoScatter.Map_ScatterDBID_ScatterDB[idx]; ok {
+		_ = scatterDB // to avoid unused variable error if there are no reverse to reset
+
+		// insertion point for reverse pointers reset
+		// end of insertion point for reverse pointers reset
+	}
+
+	return
 }
 
 // this field is used during the restauration process.

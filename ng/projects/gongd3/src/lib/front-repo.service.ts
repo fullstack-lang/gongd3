@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 
-import { Observable, combineLatest, BehaviorSubject } from 'rxjs';
+import { Observable, combineLatest, BehaviorSubject, of } from 'rxjs';
 
 // insertion point sub template for services imports 
 import { BarDB } from './bar-db'
@@ -44,11 +44,6 @@ export class FrontRepo { // insertion point sub template
   Values = new Map<number, ValueDB>(); // map of repo instances
   Values_batch = new Map<number, ValueDB>(); // same but only in last GET (for finding repo instances to delete)
 }
-
-//
-// Store of all instances of the stack
-//
-export const FrontRepoSingloton = new (FrontRepo)
 
 // the table component is called in different ways
 //
@@ -103,6 +98,11 @@ export class FrontRepoService {
     headers: new HttpHeaders({ 'Content-Type': 'application/json' })
   };
 
+  //
+  // Store of all instances of the stack
+  //
+  frontRepo = new (FrontRepo)
+
   constructor(
     private http: HttpClient, // insertion point sub template 
     private barService: BarService,
@@ -140,14 +140,25 @@ export class FrontRepoService {
   }
 
   // typing of observable can be messy in typescript. Therefore, one force the type
-  observableFrontRepo: [ // insertion point sub template 
+  observableFrontRepo: [ 
+    Observable<null>, // see below for the of(null) observable
+    // insertion point sub template 
     Observable<BarDB[]>,
     Observable<KeyDB[]>,
     Observable<PieDB[]>,
     Observable<ScatterDB[]>,
     Observable<SerieDB[]>,
     Observable<ValueDB[]>,
-  ] = [ // insertion point sub template
+  ] = [ 
+    // Using "combineLatest" with a placeholder observable.
+    //
+    // This allows the typescript compiler to pass when no GongStruct is present in the front API
+    //
+    // The "of(null)" is a "meaningless" observable that emits a single value (null) and completes.
+    // This is used as a workaround to satisfy TypeScript requirements and the "combineLatest" 
+    // expectation for a non-empty array of observables.
+    of(null), // 
+    // insertion point sub template
       this.barService.getBars(this.GONG__StackPath),
       this.keyService.getKeys(this.GONG__StackPath),
       this.pieService.getPies(this.GONG__StackPath),
@@ -166,7 +177,9 @@ export class FrontRepoService {
 
     this.GONG__StackPath = GONG__StackPath
 
-    this.observableFrontRepo = [ // insertion point sub template
+    this.observableFrontRepo = [ 
+      of(null), // see above for justification
+      // insertion point sub template
       this.barService.getBars(this.GONG__StackPath),
       this.keyService.getKeys(this.GONG__StackPath),
       this.pieService.getPies(this.GONG__StackPath),
@@ -180,7 +193,9 @@ export class FrontRepoService {
         combineLatest(
           this.observableFrontRepo
         ).subscribe(
-          ([ // insertion point sub template for declarations 
+          ([ 
+            ___of_null, // see above for the explanation about of
+            // insertion point sub template for declarations 
             bars_,
             keys_,
             pies_,
@@ -207,29 +222,29 @@ export class FrontRepoService {
             // First Step: init map of instances
             // insertion point sub template for init 
             // init the array
-            FrontRepoSingloton.Bars_array = bars
+            this.frontRepo.Bars_array = bars
 
             // clear the map that counts Bar in the GET
-            FrontRepoSingloton.Bars_batch.clear()
+            this.frontRepo.Bars_batch.clear()
 
             bars.forEach(
               bar => {
-                FrontRepoSingloton.Bars.set(bar.ID, bar)
-                FrontRepoSingloton.Bars_batch.set(bar.ID, bar)
+                this.frontRepo.Bars.set(bar.ID, bar)
+                this.frontRepo.Bars_batch.set(bar.ID, bar)
               }
             )
 
             // clear bars that are absent from the batch
-            FrontRepoSingloton.Bars.forEach(
+            this.frontRepo.Bars.forEach(
               bar => {
-                if (FrontRepoSingloton.Bars_batch.get(bar.ID) == undefined) {
-                  FrontRepoSingloton.Bars.delete(bar.ID)
+                if (this.frontRepo.Bars_batch.get(bar.ID) == undefined) {
+                  this.frontRepo.Bars.delete(bar.ID)
                 }
               }
             )
 
             // sort Bars_array array
-            FrontRepoSingloton.Bars_array.sort((t1, t2) => {
+            this.frontRepo.Bars_array.sort((t1, t2) => {
               if (t1.Name > t2.Name) {
                 return 1;
               }
@@ -240,29 +255,29 @@ export class FrontRepoService {
             });
 
             // init the array
-            FrontRepoSingloton.Keys_array = keys
+            this.frontRepo.Keys_array = keys
 
             // clear the map that counts Key in the GET
-            FrontRepoSingloton.Keys_batch.clear()
+            this.frontRepo.Keys_batch.clear()
 
             keys.forEach(
               key => {
-                FrontRepoSingloton.Keys.set(key.ID, key)
-                FrontRepoSingloton.Keys_batch.set(key.ID, key)
+                this.frontRepo.Keys.set(key.ID, key)
+                this.frontRepo.Keys_batch.set(key.ID, key)
               }
             )
 
             // clear keys that are absent from the batch
-            FrontRepoSingloton.Keys.forEach(
+            this.frontRepo.Keys.forEach(
               key => {
-                if (FrontRepoSingloton.Keys_batch.get(key.ID) == undefined) {
-                  FrontRepoSingloton.Keys.delete(key.ID)
+                if (this.frontRepo.Keys_batch.get(key.ID) == undefined) {
+                  this.frontRepo.Keys.delete(key.ID)
                 }
               }
             )
 
             // sort Keys_array array
-            FrontRepoSingloton.Keys_array.sort((t1, t2) => {
+            this.frontRepo.Keys_array.sort((t1, t2) => {
               if (t1.Name > t2.Name) {
                 return 1;
               }
@@ -273,29 +288,29 @@ export class FrontRepoService {
             });
 
             // init the array
-            FrontRepoSingloton.Pies_array = pies
+            this.frontRepo.Pies_array = pies
 
             // clear the map that counts Pie in the GET
-            FrontRepoSingloton.Pies_batch.clear()
+            this.frontRepo.Pies_batch.clear()
 
             pies.forEach(
               pie => {
-                FrontRepoSingloton.Pies.set(pie.ID, pie)
-                FrontRepoSingloton.Pies_batch.set(pie.ID, pie)
+                this.frontRepo.Pies.set(pie.ID, pie)
+                this.frontRepo.Pies_batch.set(pie.ID, pie)
               }
             )
 
             // clear pies that are absent from the batch
-            FrontRepoSingloton.Pies.forEach(
+            this.frontRepo.Pies.forEach(
               pie => {
-                if (FrontRepoSingloton.Pies_batch.get(pie.ID) == undefined) {
-                  FrontRepoSingloton.Pies.delete(pie.ID)
+                if (this.frontRepo.Pies_batch.get(pie.ID) == undefined) {
+                  this.frontRepo.Pies.delete(pie.ID)
                 }
               }
             )
 
             // sort Pies_array array
-            FrontRepoSingloton.Pies_array.sort((t1, t2) => {
+            this.frontRepo.Pies_array.sort((t1, t2) => {
               if (t1.Name > t2.Name) {
                 return 1;
               }
@@ -306,29 +321,29 @@ export class FrontRepoService {
             });
 
             // init the array
-            FrontRepoSingloton.Scatters_array = scatters
+            this.frontRepo.Scatters_array = scatters
 
             // clear the map that counts Scatter in the GET
-            FrontRepoSingloton.Scatters_batch.clear()
+            this.frontRepo.Scatters_batch.clear()
 
             scatters.forEach(
               scatter => {
-                FrontRepoSingloton.Scatters.set(scatter.ID, scatter)
-                FrontRepoSingloton.Scatters_batch.set(scatter.ID, scatter)
+                this.frontRepo.Scatters.set(scatter.ID, scatter)
+                this.frontRepo.Scatters_batch.set(scatter.ID, scatter)
               }
             )
 
             // clear scatters that are absent from the batch
-            FrontRepoSingloton.Scatters.forEach(
+            this.frontRepo.Scatters.forEach(
               scatter => {
-                if (FrontRepoSingloton.Scatters_batch.get(scatter.ID) == undefined) {
-                  FrontRepoSingloton.Scatters.delete(scatter.ID)
+                if (this.frontRepo.Scatters_batch.get(scatter.ID) == undefined) {
+                  this.frontRepo.Scatters.delete(scatter.ID)
                 }
               }
             )
 
             // sort Scatters_array array
-            FrontRepoSingloton.Scatters_array.sort((t1, t2) => {
+            this.frontRepo.Scatters_array.sort((t1, t2) => {
               if (t1.Name > t2.Name) {
                 return 1;
               }
@@ -339,29 +354,29 @@ export class FrontRepoService {
             });
 
             // init the array
-            FrontRepoSingloton.Series_array = series
+            this.frontRepo.Series_array = series
 
             // clear the map that counts Serie in the GET
-            FrontRepoSingloton.Series_batch.clear()
+            this.frontRepo.Series_batch.clear()
 
             series.forEach(
               serie => {
-                FrontRepoSingloton.Series.set(serie.ID, serie)
-                FrontRepoSingloton.Series_batch.set(serie.ID, serie)
+                this.frontRepo.Series.set(serie.ID, serie)
+                this.frontRepo.Series_batch.set(serie.ID, serie)
               }
             )
 
             // clear series that are absent from the batch
-            FrontRepoSingloton.Series.forEach(
+            this.frontRepo.Series.forEach(
               serie => {
-                if (FrontRepoSingloton.Series_batch.get(serie.ID) == undefined) {
-                  FrontRepoSingloton.Series.delete(serie.ID)
+                if (this.frontRepo.Series_batch.get(serie.ID) == undefined) {
+                  this.frontRepo.Series.delete(serie.ID)
                 }
               }
             )
 
             // sort Series_array array
-            FrontRepoSingloton.Series_array.sort((t1, t2) => {
+            this.frontRepo.Series_array.sort((t1, t2) => {
               if (t1.Name > t2.Name) {
                 return 1;
               }
@@ -372,29 +387,29 @@ export class FrontRepoService {
             });
 
             // init the array
-            FrontRepoSingloton.Values_array = values
+            this.frontRepo.Values_array = values
 
             // clear the map that counts Value in the GET
-            FrontRepoSingloton.Values_batch.clear()
+            this.frontRepo.Values_batch.clear()
 
             values.forEach(
               value => {
-                FrontRepoSingloton.Values.set(value.ID, value)
-                FrontRepoSingloton.Values_batch.set(value.ID, value)
+                this.frontRepo.Values.set(value.ID, value)
+                this.frontRepo.Values_batch.set(value.ID, value)
               }
             )
 
             // clear values that are absent from the batch
-            FrontRepoSingloton.Values.forEach(
+            this.frontRepo.Values.forEach(
               value => {
-                if (FrontRepoSingloton.Values_batch.get(value.ID) == undefined) {
-                  FrontRepoSingloton.Values.delete(value.ID)
+                if (this.frontRepo.Values_batch.get(value.ID) == undefined) {
+                  this.frontRepo.Values.delete(value.ID)
                 }
               }
             )
 
             // sort Values_array array
-            FrontRepoSingloton.Values_array.sort((t1, t2) => {
+            this.frontRepo.Values_array.sort((t1, t2) => {
               if (t1.Name > t2.Name) {
                 return 1;
               }
@@ -413,14 +428,14 @@ export class FrontRepoService {
                 // insertion point sub sub template for ONE-/ZERO-ONE associations pointers redeeming
                 // insertion point for pointer field X redeeming
                 {
-                  let _key = FrontRepoSingloton.Keys.get(bar.XID.Int64)
+                  let _key = this.frontRepo.Keys.get(bar.XID.Int64)
                   if (_key) {
                     bar.X = _key
                   }
                 }
                 // insertion point for pointer field Y redeeming
                 {
-                  let _key = FrontRepoSingloton.Keys.get(bar.YID.Int64)
+                  let _key = this.frontRepo.Keys.get(bar.YID.Int64)
                   if (_key) {
                     bar.Y = _key
                   }
@@ -441,14 +456,14 @@ export class FrontRepoService {
                 // insertion point sub sub template for ONE-/ZERO-ONE associations pointers redeeming
                 // insertion point for pointer field X redeeming
                 {
-                  let _key = FrontRepoSingloton.Keys.get(pie.XID.Int64)
+                  let _key = this.frontRepo.Keys.get(pie.XID.Int64)
                   if (_key) {
                     pie.X = _key
                   }
                 }
                 // insertion point for pointer field Y redeeming
                 {
-                  let _key = FrontRepoSingloton.Keys.get(pie.YID.Int64)
+                  let _key = this.frontRepo.Keys.get(pie.YID.Int64)
                   if (_key) {
                     pie.Y = _key
                   }
@@ -462,21 +477,21 @@ export class FrontRepoService {
                 // insertion point sub sub template for ONE-/ZERO-ONE associations pointers redeeming
                 // insertion point for pointer field X redeeming
                 {
-                  let _key = FrontRepoSingloton.Keys.get(scatter.XID.Int64)
+                  let _key = this.frontRepo.Keys.get(scatter.XID.Int64)
                   if (_key) {
                     scatter.X = _key
                   }
                 }
                 // insertion point for pointer field Y redeeming
                 {
-                  let _key = FrontRepoSingloton.Keys.get(scatter.YID.Int64)
+                  let _key = this.frontRepo.Keys.get(scatter.YID.Int64)
                   if (_key) {
                     scatter.Y = _key
                   }
                 }
                 // insertion point for pointer field Text redeeming
                 {
-                  let _key = FrontRepoSingloton.Keys.get(scatter.TextID.Int64)
+                  let _key = this.frontRepo.Keys.get(scatter.TextID.Int64)
                   if (_key) {
                     scatter.Text = _key
                   }
@@ -490,7 +505,7 @@ export class FrontRepoService {
                 // insertion point sub sub template for ONE-/ZERO-ONE associations pointers redeeming
                 // insertion point for pointer field Key redeeming
                 {
-                  let _key = FrontRepoSingloton.Keys.get(serie.KeyID.Int64)
+                  let _key = this.frontRepo.Keys.get(serie.KeyID.Int64)
                   if (_key) {
                     serie.Key = _key
                   }
@@ -499,7 +514,7 @@ export class FrontRepoService {
                 // insertion point for redeeming ONE-MANY associations
                 // insertion point for slice of pointer field Bar.Set redeeming
                 {
-                  let _bar = FrontRepoSingloton.Bars.get(serie.Bar_SetDBID.Int64)
+                  let _bar = this.frontRepo.Bars.get(serie.Bar_SetDBID.Int64)
                   if (_bar) {
                     if (_bar.Set == undefined) {
                       _bar.Set = new Array<SerieDB>()
@@ -512,7 +527,7 @@ export class FrontRepoService {
                 }
                 // insertion point for slice of pointer field Pie.Set redeeming
                 {
-                  let _pie = FrontRepoSingloton.Pies.get(serie.Pie_SetDBID.Int64)
+                  let _pie = this.frontRepo.Pies.get(serie.Pie_SetDBID.Int64)
                   if (_pie) {
                     if (_pie.Set == undefined) {
                       _pie.Set = new Array<SerieDB>()
@@ -525,7 +540,7 @@ export class FrontRepoService {
                 }
                 // insertion point for slice of pointer field Scatter.Set redeeming
                 {
-                  let _scatter = FrontRepoSingloton.Scatters.get(serie.Scatter_SetDBID.Int64)
+                  let _scatter = this.frontRepo.Scatters.get(serie.Scatter_SetDBID.Int64)
                   if (_scatter) {
                     if (_scatter.Set == undefined) {
                       _scatter.Set = new Array<SerieDB>()
@@ -545,7 +560,7 @@ export class FrontRepoService {
                 // insertion point for redeeming ONE-MANY associations
                 // insertion point for slice of pointer field Serie.Values redeeming
                 {
-                  let _serie = FrontRepoSingloton.Series.get(value.Serie_ValuesDBID.Int64)
+                  let _serie = this.frontRepo.Series.get(value.Serie_ValuesDBID.Int64)
                   if (_serie) {
                     if (_serie.Values == undefined) {
                       _serie.Values = new Array<ValueDB>()
@@ -559,8 +574,82 @@ export class FrontRepoService {
               }
             )
 
+            // 
+            // Third Step: sort arrays (slices in go) according to their index
+            // insertion point sub template for redeem 
+            bars.forEach(
+              bar => {
+                // insertion point for sorting
+                bar.Set?.sort((t1, t2) => {
+                  if (t1.Bar_SetDBID_Index.Int64 > t2.Bar_SetDBID_Index.Int64) {
+                    return 1;
+                  }
+                  if (t1.Bar_SetDBID_Index.Int64 < t2.Bar_SetDBID_Index.Int64) {
+                    return -1;
+                  }
+                  return 0;
+                })
+
+              }
+            )
+            keys.forEach(
+              key => {
+                // insertion point for sorting
+              }
+            )
+            pies.forEach(
+              pie => {
+                // insertion point for sorting
+                pie.Set?.sort((t1, t2) => {
+                  if (t1.Pie_SetDBID_Index.Int64 > t2.Pie_SetDBID_Index.Int64) {
+                    return 1;
+                  }
+                  if (t1.Pie_SetDBID_Index.Int64 < t2.Pie_SetDBID_Index.Int64) {
+                    return -1;
+                  }
+                  return 0;
+                })
+
+              }
+            )
+            scatters.forEach(
+              scatter => {
+                // insertion point for sorting
+                scatter.Set?.sort((t1, t2) => {
+                  if (t1.Scatter_SetDBID_Index.Int64 > t2.Scatter_SetDBID_Index.Int64) {
+                    return 1;
+                  }
+                  if (t1.Scatter_SetDBID_Index.Int64 < t2.Scatter_SetDBID_Index.Int64) {
+                    return -1;
+                  }
+                  return 0;
+                })
+
+              }
+            )
+            series.forEach(
+              serie => {
+                // insertion point for sorting
+                serie.Values?.sort((t1, t2) => {
+                  if (t1.Serie_ValuesDBID_Index.Int64 > t2.Serie_ValuesDBID_Index.Int64) {
+                    return 1;
+                  }
+                  if (t1.Serie_ValuesDBID_Index.Int64 < t2.Serie_ValuesDBID_Index.Int64) {
+                    return -1;
+                  }
+                  return 0;
+                })
+
+              }
+            )
+            values.forEach(
+              value => {
+                // insertion point for sorting
+              }
+            )
+
             // hand over control flow to observer
-            observer.next(FrontRepoSingloton)
+            observer.next(this.frontRepo)
           }
         )
       }
@@ -574,36 +663,36 @@ export class FrontRepoService {
     return new Observable<FrontRepo>(
       (observer) => {
         combineLatest([
-          this.barService.getBars()
+          this.barService.getBars(this.GONG__StackPath)
         ]).subscribe(
           ([ // insertion point sub template 
             bars,
           ]) => {
             // init the array
-            FrontRepoSingloton.Bars_array = bars
+            this.frontRepo.Bars_array = bars
 
             // clear the map that counts Bar in the GET
-            FrontRepoSingloton.Bars_batch.clear()
+            this.frontRepo.Bars_batch.clear()
 
             // 
             // First Step: init map of instances
             // insertion point sub template 
             bars.forEach(
               bar => {
-                FrontRepoSingloton.Bars.set(bar.ID, bar)
-                FrontRepoSingloton.Bars_batch.set(bar.ID, bar)
+                this.frontRepo.Bars.set(bar.ID, bar)
+                this.frontRepo.Bars_batch.set(bar.ID, bar)
 
                 // insertion point for redeeming ONE/ZERO-ONE associations
                 // insertion point for pointer field X redeeming
                 {
-                  let _key = FrontRepoSingloton.Keys.get(bar.XID.Int64)
+                  let _key = this.frontRepo.Keys.get(bar.XID.Int64)
                   if (_key) {
                     bar.X = _key
                   }
                 }
                 // insertion point for pointer field Y redeeming
                 {
-                  let _key = FrontRepoSingloton.Keys.get(bar.YID.Int64)
+                  let _key = this.frontRepo.Keys.get(bar.YID.Int64)
                   if (_key) {
                     bar.Y = _key
                   }
@@ -614,10 +703,10 @@ export class FrontRepoService {
             )
 
             // clear bars that are absent from the GET
-            FrontRepoSingloton.Bars.forEach(
+            this.frontRepo.Bars.forEach(
               bar => {
-                if (FrontRepoSingloton.Bars_batch.get(bar.ID) == undefined) {
-                  FrontRepoSingloton.Bars.delete(bar.ID)
+                if (this.frontRepo.Bars_batch.get(bar.ID) == undefined) {
+                  this.frontRepo.Bars.delete(bar.ID)
                 }
               }
             )
@@ -627,7 +716,7 @@ export class FrontRepoService {
             // insertion point sub template 
 
             // hand over control flow to observer
-            observer.next(FrontRepoSingloton)
+            observer.next(this.frontRepo)
           }
         )
       }
@@ -639,24 +728,24 @@ export class FrontRepoService {
     return new Observable<FrontRepo>(
       (observer) => {
         combineLatest([
-          this.keyService.getKeys()
+          this.keyService.getKeys(this.GONG__StackPath)
         ]).subscribe(
           ([ // insertion point sub template 
             keys,
           ]) => {
             // init the array
-            FrontRepoSingloton.Keys_array = keys
+            this.frontRepo.Keys_array = keys
 
             // clear the map that counts Key in the GET
-            FrontRepoSingloton.Keys_batch.clear()
+            this.frontRepo.Keys_batch.clear()
 
             // 
             // First Step: init map of instances
             // insertion point sub template 
             keys.forEach(
               key => {
-                FrontRepoSingloton.Keys.set(key.ID, key)
-                FrontRepoSingloton.Keys_batch.set(key.ID, key)
+                this.frontRepo.Keys.set(key.ID, key)
+                this.frontRepo.Keys_batch.set(key.ID, key)
 
                 // insertion point for redeeming ONE/ZERO-ONE associations
 
@@ -665,10 +754,10 @@ export class FrontRepoService {
             )
 
             // clear keys that are absent from the GET
-            FrontRepoSingloton.Keys.forEach(
+            this.frontRepo.Keys.forEach(
               key => {
-                if (FrontRepoSingloton.Keys_batch.get(key.ID) == undefined) {
-                  FrontRepoSingloton.Keys.delete(key.ID)
+                if (this.frontRepo.Keys_batch.get(key.ID) == undefined) {
+                  this.frontRepo.Keys.delete(key.ID)
                 }
               }
             )
@@ -678,7 +767,7 @@ export class FrontRepoService {
             // insertion point sub template 
 
             // hand over control flow to observer
-            observer.next(FrontRepoSingloton)
+            observer.next(this.frontRepo)
           }
         )
       }
@@ -690,36 +779,36 @@ export class FrontRepoService {
     return new Observable<FrontRepo>(
       (observer) => {
         combineLatest([
-          this.pieService.getPies()
+          this.pieService.getPies(this.GONG__StackPath)
         ]).subscribe(
           ([ // insertion point sub template 
             pies,
           ]) => {
             // init the array
-            FrontRepoSingloton.Pies_array = pies
+            this.frontRepo.Pies_array = pies
 
             // clear the map that counts Pie in the GET
-            FrontRepoSingloton.Pies_batch.clear()
+            this.frontRepo.Pies_batch.clear()
 
             // 
             // First Step: init map of instances
             // insertion point sub template 
             pies.forEach(
               pie => {
-                FrontRepoSingloton.Pies.set(pie.ID, pie)
-                FrontRepoSingloton.Pies_batch.set(pie.ID, pie)
+                this.frontRepo.Pies.set(pie.ID, pie)
+                this.frontRepo.Pies_batch.set(pie.ID, pie)
 
                 // insertion point for redeeming ONE/ZERO-ONE associations
                 // insertion point for pointer field X redeeming
                 {
-                  let _key = FrontRepoSingloton.Keys.get(pie.XID.Int64)
+                  let _key = this.frontRepo.Keys.get(pie.XID.Int64)
                   if (_key) {
                     pie.X = _key
                   }
                 }
                 // insertion point for pointer field Y redeeming
                 {
-                  let _key = FrontRepoSingloton.Keys.get(pie.YID.Int64)
+                  let _key = this.frontRepo.Keys.get(pie.YID.Int64)
                   if (_key) {
                     pie.Y = _key
                   }
@@ -730,10 +819,10 @@ export class FrontRepoService {
             )
 
             // clear pies that are absent from the GET
-            FrontRepoSingloton.Pies.forEach(
+            this.frontRepo.Pies.forEach(
               pie => {
-                if (FrontRepoSingloton.Pies_batch.get(pie.ID) == undefined) {
-                  FrontRepoSingloton.Pies.delete(pie.ID)
+                if (this.frontRepo.Pies_batch.get(pie.ID) == undefined) {
+                  this.frontRepo.Pies.delete(pie.ID)
                 }
               }
             )
@@ -743,7 +832,7 @@ export class FrontRepoService {
             // insertion point sub template 
 
             // hand over control flow to observer
-            observer.next(FrontRepoSingloton)
+            observer.next(this.frontRepo)
           }
         )
       }
@@ -755,43 +844,43 @@ export class FrontRepoService {
     return new Observable<FrontRepo>(
       (observer) => {
         combineLatest([
-          this.scatterService.getScatters()
+          this.scatterService.getScatters(this.GONG__StackPath)
         ]).subscribe(
           ([ // insertion point sub template 
             scatters,
           ]) => {
             // init the array
-            FrontRepoSingloton.Scatters_array = scatters
+            this.frontRepo.Scatters_array = scatters
 
             // clear the map that counts Scatter in the GET
-            FrontRepoSingloton.Scatters_batch.clear()
+            this.frontRepo.Scatters_batch.clear()
 
             // 
             // First Step: init map of instances
             // insertion point sub template 
             scatters.forEach(
               scatter => {
-                FrontRepoSingloton.Scatters.set(scatter.ID, scatter)
-                FrontRepoSingloton.Scatters_batch.set(scatter.ID, scatter)
+                this.frontRepo.Scatters.set(scatter.ID, scatter)
+                this.frontRepo.Scatters_batch.set(scatter.ID, scatter)
 
                 // insertion point for redeeming ONE/ZERO-ONE associations
                 // insertion point for pointer field X redeeming
                 {
-                  let _key = FrontRepoSingloton.Keys.get(scatter.XID.Int64)
+                  let _key = this.frontRepo.Keys.get(scatter.XID.Int64)
                   if (_key) {
                     scatter.X = _key
                   }
                 }
                 // insertion point for pointer field Y redeeming
                 {
-                  let _key = FrontRepoSingloton.Keys.get(scatter.YID.Int64)
+                  let _key = this.frontRepo.Keys.get(scatter.YID.Int64)
                   if (_key) {
                     scatter.Y = _key
                   }
                 }
                 // insertion point for pointer field Text redeeming
                 {
-                  let _key = FrontRepoSingloton.Keys.get(scatter.TextID.Int64)
+                  let _key = this.frontRepo.Keys.get(scatter.TextID.Int64)
                   if (_key) {
                     scatter.Text = _key
                   }
@@ -802,10 +891,10 @@ export class FrontRepoService {
             )
 
             // clear scatters that are absent from the GET
-            FrontRepoSingloton.Scatters.forEach(
+            this.frontRepo.Scatters.forEach(
               scatter => {
-                if (FrontRepoSingloton.Scatters_batch.get(scatter.ID) == undefined) {
-                  FrontRepoSingloton.Scatters.delete(scatter.ID)
+                if (this.frontRepo.Scatters_batch.get(scatter.ID) == undefined) {
+                  this.frontRepo.Scatters.delete(scatter.ID)
                 }
               }
             )
@@ -815,7 +904,7 @@ export class FrontRepoService {
             // insertion point sub template 
 
             // hand over control flow to observer
-            observer.next(FrontRepoSingloton)
+            observer.next(this.frontRepo)
           }
         )
       }
@@ -827,29 +916,29 @@ export class FrontRepoService {
     return new Observable<FrontRepo>(
       (observer) => {
         combineLatest([
-          this.serieService.getSeries()
+          this.serieService.getSeries(this.GONG__StackPath)
         ]).subscribe(
           ([ // insertion point sub template 
             series,
           ]) => {
             // init the array
-            FrontRepoSingloton.Series_array = series
+            this.frontRepo.Series_array = series
 
             // clear the map that counts Serie in the GET
-            FrontRepoSingloton.Series_batch.clear()
+            this.frontRepo.Series_batch.clear()
 
             // 
             // First Step: init map of instances
             // insertion point sub template 
             series.forEach(
               serie => {
-                FrontRepoSingloton.Series.set(serie.ID, serie)
-                FrontRepoSingloton.Series_batch.set(serie.ID, serie)
+                this.frontRepo.Series.set(serie.ID, serie)
+                this.frontRepo.Series_batch.set(serie.ID, serie)
 
                 // insertion point for redeeming ONE/ZERO-ONE associations
                 // insertion point for pointer field Key redeeming
                 {
-                  let _key = FrontRepoSingloton.Keys.get(serie.KeyID.Int64)
+                  let _key = this.frontRepo.Keys.get(serie.KeyID.Int64)
                   if (_key) {
                     serie.Key = _key
                   }
@@ -858,7 +947,7 @@ export class FrontRepoService {
                 // insertion point for redeeming ONE-MANY associations
                 // insertion point for slice of pointer field Bar.Set redeeming
                 {
-                  let _bar = FrontRepoSingloton.Bars.get(serie.Bar_SetDBID.Int64)
+                  let _bar = this.frontRepo.Bars.get(serie.Bar_SetDBID.Int64)
                   if (_bar) {
                     if (_bar.Set == undefined) {
                       _bar.Set = new Array<SerieDB>()
@@ -871,7 +960,7 @@ export class FrontRepoService {
                 }
                 // insertion point for slice of pointer field Pie.Set redeeming
                 {
-                  let _pie = FrontRepoSingloton.Pies.get(serie.Pie_SetDBID.Int64)
+                  let _pie = this.frontRepo.Pies.get(serie.Pie_SetDBID.Int64)
                   if (_pie) {
                     if (_pie.Set == undefined) {
                       _pie.Set = new Array<SerieDB>()
@@ -884,7 +973,7 @@ export class FrontRepoService {
                 }
                 // insertion point for slice of pointer field Scatter.Set redeeming
                 {
-                  let _scatter = FrontRepoSingloton.Scatters.get(serie.Scatter_SetDBID.Int64)
+                  let _scatter = this.frontRepo.Scatters.get(serie.Scatter_SetDBID.Int64)
                   if (_scatter) {
                     if (_scatter.Set == undefined) {
                       _scatter.Set = new Array<SerieDB>()
@@ -899,10 +988,10 @@ export class FrontRepoService {
             )
 
             // clear series that are absent from the GET
-            FrontRepoSingloton.Series.forEach(
+            this.frontRepo.Series.forEach(
               serie => {
-                if (FrontRepoSingloton.Series_batch.get(serie.ID) == undefined) {
-                  FrontRepoSingloton.Series.delete(serie.ID)
+                if (this.frontRepo.Series_batch.get(serie.ID) == undefined) {
+                  this.frontRepo.Series.delete(serie.ID)
                 }
               }
             )
@@ -912,7 +1001,7 @@ export class FrontRepoService {
             // insertion point sub template 
 
             // hand over control flow to observer
-            observer.next(FrontRepoSingloton)
+            observer.next(this.frontRepo)
           }
         )
       }
@@ -924,31 +1013,31 @@ export class FrontRepoService {
     return new Observable<FrontRepo>(
       (observer) => {
         combineLatest([
-          this.valueService.getValues()
+          this.valueService.getValues(this.GONG__StackPath)
         ]).subscribe(
           ([ // insertion point sub template 
             values,
           ]) => {
             // init the array
-            FrontRepoSingloton.Values_array = values
+            this.frontRepo.Values_array = values
 
             // clear the map that counts Value in the GET
-            FrontRepoSingloton.Values_batch.clear()
+            this.frontRepo.Values_batch.clear()
 
             // 
             // First Step: init map of instances
             // insertion point sub template 
             values.forEach(
               value => {
-                FrontRepoSingloton.Values.set(value.ID, value)
-                FrontRepoSingloton.Values_batch.set(value.ID, value)
+                this.frontRepo.Values.set(value.ID, value)
+                this.frontRepo.Values_batch.set(value.ID, value)
 
                 // insertion point for redeeming ONE/ZERO-ONE associations
 
                 // insertion point for redeeming ONE-MANY associations
                 // insertion point for slice of pointer field Serie.Values redeeming
                 {
-                  let _serie = FrontRepoSingloton.Series.get(value.Serie_ValuesDBID.Int64)
+                  let _serie = this.frontRepo.Series.get(value.Serie_ValuesDBID.Int64)
                   if (_serie) {
                     if (_serie.Values == undefined) {
                       _serie.Values = new Array<ValueDB>()
@@ -963,10 +1052,10 @@ export class FrontRepoService {
             )
 
             // clear values that are absent from the GET
-            FrontRepoSingloton.Values.forEach(
+            this.frontRepo.Values.forEach(
               value => {
-                if (FrontRepoSingloton.Values_batch.get(value.ID) == undefined) {
-                  FrontRepoSingloton.Values.delete(value.ID)
+                if (this.frontRepo.Values_batch.get(value.ID) == undefined) {
+                  this.frontRepo.Values.delete(value.ID)
                 }
               }
             )
@@ -976,7 +1065,7 @@ export class FrontRepoService {
             // insertion point sub template 
 
             // hand over control flow to observer
-            observer.next(FrontRepoSingloton)
+            observer.next(this.frontRepo)
           }
         )
       }

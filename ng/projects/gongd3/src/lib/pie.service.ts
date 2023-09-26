@@ -39,36 +39,54 @@ export class PieService {
     origin = origin.replace("4200", "8080")
 
     // compute path to the service
-    this.piesUrl = origin + '/api/gongd3/go/v1/pies';
+    this.piesUrl = origin + '/api/github.com/fullstack-lang/gongd3/go/v1/pies';
   }
 
   /** GET pies from the server */
-  getPies(GONG__StackPath: string = ""): Observable<PieDB[]> {
+  // gets is more robust to refactoring
+  gets(GONG__StackPath: string): Observable<PieDB[]> {
+    return this.getPies(GONG__StackPath)
+  }
+  getPies(GONG__StackPath: string): Observable<PieDB[]> {
 
-	let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
+    let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
 
     return this.http.get<PieDB[]>(this.piesUrl, { params: params })
       .pipe(
-        tap(_ => this.log('fetched pies')),
+        tap(),
+		// tap(_ => this.log('fetched pies')),
         catchError(this.handleError<PieDB[]>('getPies', []))
       );
   }
 
   /** GET pie by id. Will 404 if id not found */
-  getPie(id: number): Observable<PieDB> {
+  // more robust API to refactoring
+  get(id: number, GONG__StackPath: string): Observable<PieDB> {
+	return this.getPie(id, GONG__StackPath)
+  }
+  getPie(id: number, GONG__StackPath: string): Observable<PieDB> {
+
+    let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
+
     const url = `${this.piesUrl}/${id}`;
-    return this.http.get<PieDB>(url).pipe(
-      tap(_ => this.log(`fetched pie id=${id}`)),
+    return this.http.get<PieDB>(url, { params: params }).pipe(
+      // tap(_ => this.log(`fetched pie id=${id}`)),
       catchError(this.handleError<PieDB>(`getPie id=${id}`))
     );
   }
 
   /** POST: add a new pie to the server */
+  post(piedb: PieDB, GONG__StackPath: string): Observable<PieDB> {
+    return this.postPie(piedb, GONG__StackPath)	
+  }
   postPie(piedb: PieDB, GONG__StackPath: string): Observable<PieDB> {
 
     // insertion point for reset of pointers and reverse pointers (to avoid circular JSON)
+    let X = piedb.X
     piedb.X = new KeyDB
+    let Y = piedb.Y
     piedb.Y = new KeyDB
+    let Set = piedb.Set
     piedb.Set = []
 
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
@@ -77,16 +95,20 @@ export class PieService {
       params: params
     }
 
-	return this.http.post<PieDB>(this.piesUrl, piedb, httpOptions).pipe(
+    return this.http.post<PieDB>(this.piesUrl, piedb, httpOptions).pipe(
       tap(_ => {
         // insertion point for restoration of reverse pointers
-        this.log(`posted piedb id=${piedb.ID}`)
+	      piedb.Set = Set
+        // this.log(`posted piedb id=${piedb.ID}`)
       }),
       catchError(this.handleError<PieDB>('postPie'))
     );
   }
 
   /** DELETE: delete the piedb from the server */
+  delete(piedb: PieDB | number, GONG__StackPath: string): Observable<PieDB> {
+    return this.deletePie(piedb, GONG__StackPath)
+  }
   deletePie(piedb: PieDB | number, GONG__StackPath: string): Observable<PieDB> {
     const id = typeof piedb === 'number' ? piedb : piedb.ID;
     const url = `${this.piesUrl}/${id}`;
@@ -104,13 +126,19 @@ export class PieService {
   }
 
   /** PUT: update the piedb on the server */
+  update(piedb: PieDB, GONG__StackPath: string): Observable<PieDB> {
+    return this.updatePie(piedb, GONG__StackPath)
+  }
   updatePie(piedb: PieDB, GONG__StackPath: string): Observable<PieDB> {
     const id = typeof piedb === 'number' ? piedb : piedb.ID;
     const url = `${this.piesUrl}/${id}`;
 
     // insertion point for reset of pointers and reverse pointers (to avoid circular JSON)
+    let X = piedb.X
     piedb.X = new KeyDB
+    let Y = piedb.Y
     piedb.Y = new KeyDB
+    let Set = piedb.Set
     piedb.Set = []
 
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
@@ -122,7 +150,8 @@ export class PieService {
     return this.http.put<PieDB>(url, piedb, httpOptions).pipe(
       tap(_ => {
         // insertion point for restoration of reverse pointers
-        this.log(`updated piedb id=${piedb.ID}`)
+	      piedb.Set = Set
+        // this.log(`updated piedb id=${piedb.ID}`)
       }),
       catchError(this.handleError<PieDB>('updatePie'))
     );
@@ -134,11 +163,11 @@ export class PieService {
    * @param operation - name of the operation that failed
    * @param result - optional value to return as the observable result
    */
-  private handleError<T>(operation = 'operation', result?: T) {
+  private handleError<T>(operation = 'operation in PieService', result?: T) {
     return (error: any): Observable<T> => {
 
       // TODO: send the error to remote logging infrastructure
-      console.error(error); // log to console instead
+      console.error("PieService" + error); // log to console instead
 
       // TODO: better job of transforming error for user consumption
       this.log(`${operation} failed: ${error.message}`);
@@ -149,6 +178,6 @@ export class PieService {
   }
 
   private log(message: string) {
-
+      console.log(message)
   }
 }

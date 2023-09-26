@@ -1,9 +1,10 @@
+// generated code - do not edit
 package controllers
 
 import (
 	"sync"
 
-	gongd3_orm "gongd3/go/orm"
+	gongd3_orm "github.com/fullstack-lang/gongd3/go/orm"
 
 	"github.com/gin-gonic/gin"
 )
@@ -17,21 +18,26 @@ type Controller struct {
 	Map_BackRepos map[string]*gongd3_orm.BackRepoStruct
 }
 
-var instance *Controller
-var once sync.Once
+var _controllerSingloton *Controller
+var doRegisterOnce sync.Once
 
 func Register(r *gin.Engine) {
-	once.Do(func() {
-		RegisterControllers(r)
+	doRegisterOnce.Do(func() {
+		registerControllers(r)
 	})
 }
 
+var doControllerInitOnce sync.Once
+
 func GetController() *Controller {
-	once.Do(func() {
-		instance = &Controller{
+	doControllerInitOnce.Do(func() {
+		_controllerSingloton = &Controller{
 			Map_BackRepos: make(map[string]*gongd3_orm.BackRepoStruct),
 		}
-		instance.Map_BackRepos[""] = &gongd3_orm.BackRepo
 	})
-	return instance
+	return _controllerSingloton
+}
+
+func (controller *Controller) AddBackRepo(backRepo *gongd3_orm.BackRepoStruct, stackPath string) {
+	GetController().Map_BackRepos[stackPath] = backRepo
 }

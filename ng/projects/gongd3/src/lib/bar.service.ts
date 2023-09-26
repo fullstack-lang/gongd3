@@ -39,36 +39,54 @@ export class BarService {
     origin = origin.replace("4200", "8080")
 
     // compute path to the service
-    this.barsUrl = origin + '/api/gongd3/go/v1/bars';
+    this.barsUrl = origin + '/api/github.com/fullstack-lang/gongd3/go/v1/bars';
   }
 
   /** GET bars from the server */
-  getBars(GONG__StackPath: string = ""): Observable<BarDB[]> {
+  // gets is more robust to refactoring
+  gets(GONG__StackPath: string): Observable<BarDB[]> {
+    return this.getBars(GONG__StackPath)
+  }
+  getBars(GONG__StackPath: string): Observable<BarDB[]> {
 
-	let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
+    let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
 
     return this.http.get<BarDB[]>(this.barsUrl, { params: params })
       .pipe(
-        tap(_ => this.log('fetched bars')),
+        tap(),
+		// tap(_ => this.log('fetched bars')),
         catchError(this.handleError<BarDB[]>('getBars', []))
       );
   }
 
   /** GET bar by id. Will 404 if id not found */
-  getBar(id: number): Observable<BarDB> {
+  // more robust API to refactoring
+  get(id: number, GONG__StackPath: string): Observable<BarDB> {
+	return this.getBar(id, GONG__StackPath)
+  }
+  getBar(id: number, GONG__StackPath: string): Observable<BarDB> {
+
+    let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
+
     const url = `${this.barsUrl}/${id}`;
-    return this.http.get<BarDB>(url).pipe(
-      tap(_ => this.log(`fetched bar id=${id}`)),
+    return this.http.get<BarDB>(url, { params: params }).pipe(
+      // tap(_ => this.log(`fetched bar id=${id}`)),
       catchError(this.handleError<BarDB>(`getBar id=${id}`))
     );
   }
 
   /** POST: add a new bar to the server */
+  post(bardb: BarDB, GONG__StackPath: string): Observable<BarDB> {
+    return this.postBar(bardb, GONG__StackPath)	
+  }
   postBar(bardb: BarDB, GONG__StackPath: string): Observable<BarDB> {
 
     // insertion point for reset of pointers and reverse pointers (to avoid circular JSON)
+    let X = bardb.X
     bardb.X = new KeyDB
+    let Y = bardb.Y
     bardb.Y = new KeyDB
+    let Set = bardb.Set
     bardb.Set = []
 
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
@@ -77,16 +95,20 @@ export class BarService {
       params: params
     }
 
-	return this.http.post<BarDB>(this.barsUrl, bardb, httpOptions).pipe(
+    return this.http.post<BarDB>(this.barsUrl, bardb, httpOptions).pipe(
       tap(_ => {
         // insertion point for restoration of reverse pointers
-        this.log(`posted bardb id=${bardb.ID}`)
+	      bardb.Set = Set
+        // this.log(`posted bardb id=${bardb.ID}`)
       }),
       catchError(this.handleError<BarDB>('postBar'))
     );
   }
 
   /** DELETE: delete the bardb from the server */
+  delete(bardb: BarDB | number, GONG__StackPath: string): Observable<BarDB> {
+    return this.deleteBar(bardb, GONG__StackPath)
+  }
   deleteBar(bardb: BarDB | number, GONG__StackPath: string): Observable<BarDB> {
     const id = typeof bardb === 'number' ? bardb : bardb.ID;
     const url = `${this.barsUrl}/${id}`;
@@ -104,13 +126,19 @@ export class BarService {
   }
 
   /** PUT: update the bardb on the server */
+  update(bardb: BarDB, GONG__StackPath: string): Observable<BarDB> {
+    return this.updateBar(bardb, GONG__StackPath)
+  }
   updateBar(bardb: BarDB, GONG__StackPath: string): Observable<BarDB> {
     const id = typeof bardb === 'number' ? bardb : bardb.ID;
     const url = `${this.barsUrl}/${id}`;
 
     // insertion point for reset of pointers and reverse pointers (to avoid circular JSON)
+    let X = bardb.X
     bardb.X = new KeyDB
+    let Y = bardb.Y
     bardb.Y = new KeyDB
+    let Set = bardb.Set
     bardb.Set = []
 
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
@@ -122,7 +150,8 @@ export class BarService {
     return this.http.put<BarDB>(url, bardb, httpOptions).pipe(
       tap(_ => {
         // insertion point for restoration of reverse pointers
-        this.log(`updated bardb id=${bardb.ID}`)
+	      bardb.Set = Set
+        // this.log(`updated bardb id=${bardb.ID}`)
       }),
       catchError(this.handleError<BarDB>('updateBar'))
     );
@@ -134,11 +163,11 @@ export class BarService {
    * @param operation - name of the operation that failed
    * @param result - optional value to return as the observable result
    */
-  private handleError<T>(operation = 'operation', result?: T) {
+  private handleError<T>(operation = 'operation in BarService', result?: T) {
     return (error: any): Observable<T> => {
 
       // TODO: send the error to remote logging infrastructure
-      console.error(error); // log to console instead
+      console.error("BarService" + error); // log to console instead
 
       // TODO: better job of transforming error for user consumption
       this.log(`${operation} failed: ${error.message}`);
@@ -149,6 +178,6 @@ export class BarService {
   }
 
   private log(message: string) {
-
+      console.log(message)
   }
 }

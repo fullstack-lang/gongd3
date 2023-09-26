@@ -26,74 +26,10 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
 
 import { AngularSplitModule, SplitComponent } from 'angular-split';
 
-import {
-	NgxMatDatetimePickerModule,
-	NgxMatNativeDateModule,
-	NgxMatTimepickerModule
-} from '@angular-material-components/datetime-picker';
-
 import { AppRoutingModule } from './app-routing.module';
-
-import { SplitterComponent } from './splitter/splitter.component'
-import { SidebarComponent } from './sidebar/sidebar.component';
-import { GongstructSelectionService } from './gongstruct-selection.service'
-
-// insertion point for imports 
-import { BarsTableComponent } from './bars-table/bars-table.component'
-import { BarSortingComponent } from './bar-sorting/bar-sorting.component'
-import { BarDetailComponent } from './bar-detail/bar-detail.component'
-
-import { KeysTableComponent } from './keys-table/keys-table.component'
-import { KeySortingComponent } from './key-sorting/key-sorting.component'
-import { KeyDetailComponent } from './key-detail/key-detail.component'
-
-import { PiesTableComponent } from './pies-table/pies-table.component'
-import { PieSortingComponent } from './pie-sorting/pie-sorting.component'
-import { PieDetailComponent } from './pie-detail/pie-detail.component'
-
-import { ScattersTableComponent } from './scatters-table/scatters-table.component'
-import { ScatterSortingComponent } from './scatter-sorting/scatter-sorting.component'
-import { ScatterDetailComponent } from './scatter-detail/scatter-detail.component'
-
-import { SeriesTableComponent } from './series-table/series-table.component'
-import { SerieSortingComponent } from './serie-sorting/serie-sorting.component'
-import { SerieDetailComponent } from './serie-detail/serie-detail.component'
-
-import { ValuesTableComponent } from './values-table/values-table.component'
-import { ValueSortingComponent } from './value-sorting/value-sorting.component'
-import { ValueDetailComponent } from './value-detail/value-detail.component'
-
 
 @NgModule({
 	declarations: [
-		// insertion point for declarations 
-		BarsTableComponent,
-		BarSortingComponent,
-		BarDetailComponent,
-
-		KeysTableComponent,
-		KeySortingComponent,
-		KeyDetailComponent,
-
-		PiesTableComponent,
-		PieSortingComponent,
-		PieDetailComponent,
-
-		ScattersTableComponent,
-		ScatterSortingComponent,
-		ScatterDetailComponent,
-
-		SeriesTableComponent,
-		SerieSortingComponent,
-		SerieDetailComponent,
-
-		ValuesTableComponent,
-		ValueSortingComponent,
-		ValueDetailComponent,
-
-
-		SplitterComponent,
-		SidebarComponent
 	],
 	imports: [
 		FormsModule,
@@ -122,49 +58,12 @@ import { ValueDetailComponent } from './value-detail/value-detail.component'
 		MatTreeModule,
 		DragDropModule,
 
-		NgxMatDatetimePickerModule,
-		NgxMatNativeDateModule,
-		NgxMatTimepickerModule,
-
 		AngularSplitModule,
 	],
 	exports: [
-		// insertion point for declarations 
-		BarsTableComponent,
-		BarSortingComponent,
-		BarDetailComponent,
-
-		KeysTableComponent,
-		KeySortingComponent,
-		KeyDetailComponent,
-
-		PiesTableComponent,
-		PieSortingComponent,
-		PieDetailComponent,
-
-		ScattersTableComponent,
-		ScatterSortingComponent,
-		ScatterDetailComponent,
-
-		SeriesTableComponent,
-		SerieSortingComponent,
-		SerieDetailComponent,
-
-		ValuesTableComponent,
-		ValueSortingComponent,
-		ValueDetailComponent,
-
-
-		SplitterComponent,
-		SidebarComponent,
-
 	],
 	providers: [
-		GongstructSelectionService,
-		{
-			provide: MatDialogRef,
-			useValue: {}
-		},
+		{ provide: MatDialogRef, useValue: { close: () => { } } }
 	],
 })
 export class Gongd3Module { }

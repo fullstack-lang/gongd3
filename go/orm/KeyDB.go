@@ -17,7 +17,7 @@ import (
 
 	"github.com/tealeg/xlsx/v3"
 
-	"gongd3/go/models"
+	"github.com/fullstack-lang/gongd3/go/models"
 )
 
 // dummy variable to have the import declaration wihthout compile failure (even if no code needing this import is generated)
@@ -93,13 +93,13 @@ var Key_Fields = []string{
 
 type BackRepoKeyStruct struct {
 	// stores KeyDB according to their gorm ID
-	Map_KeyDBID_KeyDB *map[uint]*KeyDB
+	Map_KeyDBID_KeyDB map[uint]*KeyDB
 
 	// stores KeyDB ID according to Key address
-	Map_KeyPtr_KeyDBID *map[*models.Key]uint
+	Map_KeyPtr_KeyDBID map[*models.Key]uint
 
 	// stores Key according to their gorm ID
-	Map_KeyDBID_KeyPtr *map[uint]*models.Key
+	Map_KeyDBID_KeyPtr map[uint]*models.Key
 
 	db *gorm.DB
 
@@ -117,40 +117,8 @@ func (backRepoKey *BackRepoKeyStruct) GetDB() *gorm.DB {
 
 // GetKeyDBFromKeyPtr is a handy function to access the back repo instance from the stage instance
 func (backRepoKey *BackRepoKeyStruct) GetKeyDBFromKeyPtr(key *models.Key) (keyDB *KeyDB) {
-	id := (*backRepoKey.Map_KeyPtr_KeyDBID)[key]
-	keyDB = (*backRepoKey.Map_KeyDBID_KeyDB)[id]
-	return
-}
-
-// BackRepoKey.Init set up the BackRepo of the Key
-func (backRepoKey *BackRepoKeyStruct) Init(stage *models.StageStruct, db *gorm.DB) (Error error) {
-
-	if backRepoKey.Map_KeyDBID_KeyPtr != nil {
-		err := errors.New("In Init, backRepoKey.Map_KeyDBID_KeyPtr should be nil")
-		return err
-	}
-
-	if backRepoKey.Map_KeyDBID_KeyDB != nil {
-		err := errors.New("In Init, backRepoKey.Map_KeyDBID_KeyDB should be nil")
-		return err
-	}
-
-	if backRepoKey.Map_KeyPtr_KeyDBID != nil {
-		err := errors.New("In Init, backRepoKey.Map_KeyPtr_KeyDBID should be nil")
-		return err
-	}
-
-	tmp := make(map[uint]*models.Key, 0)
-	backRepoKey.Map_KeyDBID_KeyPtr = &tmp
-
-	tmpDB := make(map[uint]*KeyDB, 0)
-	backRepoKey.Map_KeyDBID_KeyDB = &tmpDB
-
-	tmpID := make(map[*models.Key]uint, 0)
-	backRepoKey.Map_KeyPtr_KeyDBID = &tmpID
-
-	backRepoKey.db = db
-	backRepoKey.stage = stage
+	id := backRepoKey.Map_KeyPtr_KeyDBID[key]
+	keyDB = backRepoKey.Map_KeyDBID_KeyDB[id]
 	return
 }
 
@@ -164,7 +132,7 @@ func (backRepoKey *BackRepoKeyStruct) CommitPhaseOne(stage *models.StageStruct) 
 
 	// parse all backRepo instance and checks wether some instance have been unstaged
 	// in this case, remove them from the back repo
-	for id, key := range *backRepoKey.Map_KeyDBID_KeyPtr {
+	for id, key := range backRepoKey.Map_KeyDBID_KeyPtr {
 		if _, ok := stage.Keys[key]; !ok {
 			backRepoKey.CommitDeleteInstance(id)
 		}
@@ -176,19 +144,19 @@ func (backRepoKey *BackRepoKeyStruct) CommitPhaseOne(stage *models.StageStruct) 
 // BackRepoKey.CommitDeleteInstance commits deletion of Key to the BackRepo
 func (backRepoKey *BackRepoKeyStruct) CommitDeleteInstance(id uint) (Error error) {
 
-	key := (*backRepoKey.Map_KeyDBID_KeyPtr)[id]
+	key := backRepoKey.Map_KeyDBID_KeyPtr[id]
 
 	// key is not staged anymore, remove keyDB
-	keyDB := (*backRepoKey.Map_KeyDBID_KeyDB)[id]
+	keyDB := backRepoKey.Map_KeyDBID_KeyDB[id]
 	query := backRepoKey.db.Unscoped().Delete(&keyDB)
 	if query.Error != nil {
 		return query.Error
 	}
 
 	// update stores
-	delete((*backRepoKey.Map_KeyPtr_KeyDBID), key)
-	delete((*backRepoKey.Map_KeyDBID_KeyPtr), id)
-	delete((*backRepoKey.Map_KeyDBID_KeyDB), id)
+	delete(backRepoKey.Map_KeyPtr_KeyDBID, key)
+	delete(backRepoKey.Map_KeyDBID_KeyPtr, id)
+	delete(backRepoKey.Map_KeyDBID_KeyDB, id)
 
 	return
 }
@@ -198,7 +166,7 @@ func (backRepoKey *BackRepoKeyStruct) CommitDeleteInstance(id uint) (Error error
 func (backRepoKey *BackRepoKeyStruct) CommitPhaseOneInstance(key *models.Key) (Error error) {
 
 	// check if the key is not commited yet
-	if _, ok := (*backRepoKey.Map_KeyPtr_KeyDBID)[key]; ok {
+	if _, ok := backRepoKey.Map_KeyPtr_KeyDBID[key]; ok {
 		return
 	}
 
@@ -212,9 +180,9 @@ func (backRepoKey *BackRepoKeyStruct) CommitPhaseOneInstance(key *models.Key) (E
 	}
 
 	// update stores
-	(*backRepoKey.Map_KeyPtr_KeyDBID)[key] = keyDB.ID
-	(*backRepoKey.Map_KeyDBID_KeyPtr)[keyDB.ID] = key
-	(*backRepoKey.Map_KeyDBID_KeyDB)[keyDB.ID] = &keyDB
+	backRepoKey.Map_KeyPtr_KeyDBID[key] = keyDB.ID
+	backRepoKey.Map_KeyDBID_KeyPtr[keyDB.ID] = key
+	backRepoKey.Map_KeyDBID_KeyDB[keyDB.ID] = &keyDB
 
 	return
 }
@@ -223,7 +191,7 @@ func (backRepoKey *BackRepoKeyStruct) CommitPhaseOneInstance(key *models.Key) (E
 // Phase Two is the update of instance with the field in the database
 func (backRepoKey *BackRepoKeyStruct) CommitPhaseTwo(backRepo *BackRepoStruct) (Error error) {
 
-	for idx, key := range *backRepoKey.Map_KeyDBID_KeyPtr {
+	for idx, key := range backRepoKey.Map_KeyDBID_KeyPtr {
 		backRepoKey.CommitPhaseTwoInstance(backRepo, idx, key)
 	}
 
@@ -235,7 +203,7 @@ func (backRepoKey *BackRepoKeyStruct) CommitPhaseTwo(backRepo *BackRepoStruct) (
 func (backRepoKey *BackRepoKeyStruct) CommitPhaseTwoInstance(backRepo *BackRepoStruct, idx uint, key *models.Key) (Error error) {
 
 	// fetch matching keyDB
-	if keyDB, ok := (*backRepoKey.Map_KeyDBID_KeyDB)[idx]; ok {
+	if keyDB, ok := backRepoKey.Map_KeyDBID_KeyDB[idx]; ok {
 
 		keyDB.CopyBasicFieldsFromKey(key)
 
@@ -279,7 +247,7 @@ func (backRepoKey *BackRepoKeyStruct) CheckoutPhaseOne() (Error error) {
 
 		// do not remove this instance from the stage, therefore
 		// remove instance from the list of instances to be be removed from the stage
-		key, ok := (*backRepoKey.Map_KeyDBID_KeyPtr)[keyDB.ID]
+		key, ok := backRepoKey.Map_KeyDBID_KeyPtr[keyDB.ID]
 		if ok {
 			delete(keyInstancesToBeRemovedFromTheStage, key)
 		}
@@ -290,10 +258,10 @@ func (backRepoKey *BackRepoKeyStruct) CheckoutPhaseOne() (Error error) {
 		key.Unstage(backRepoKey.GetStage())
 
 		// remove instance from the back repo 3 maps
-		keyID := (*backRepoKey.Map_KeyPtr_KeyDBID)[key]
-		delete((*backRepoKey.Map_KeyPtr_KeyDBID), key)
-		delete((*backRepoKey.Map_KeyDBID_KeyDB), keyID)
-		delete((*backRepoKey.Map_KeyDBID_KeyPtr), keyID)
+		keyID := backRepoKey.Map_KeyPtr_KeyDBID[key]
+		delete(backRepoKey.Map_KeyPtr_KeyDBID, key)
+		delete(backRepoKey.Map_KeyDBID_KeyDB, keyID)
+		delete(backRepoKey.Map_KeyDBID_KeyPtr, keyID)
 	}
 
 	return
@@ -303,12 +271,12 @@ func (backRepoKey *BackRepoKeyStruct) CheckoutPhaseOne() (Error error) {
 // models version of the keyDB
 func (backRepoKey *BackRepoKeyStruct) CheckoutPhaseOneInstance(keyDB *KeyDB) (Error error) {
 
-	key, ok := (*backRepoKey.Map_KeyDBID_KeyPtr)[keyDB.ID]
+	key, ok := backRepoKey.Map_KeyDBID_KeyPtr[keyDB.ID]
 	if !ok {
 		key = new(models.Key)
 
-		(*backRepoKey.Map_KeyDBID_KeyPtr)[keyDB.ID] = key
-		(*backRepoKey.Map_KeyPtr_KeyDBID)[key] = keyDB.ID
+		backRepoKey.Map_KeyDBID_KeyPtr[keyDB.ID] = key
+		backRepoKey.Map_KeyPtr_KeyDBID[key] = keyDB.ID
 
 		// append model store with the new element
 		key.Name = keyDB.Name_Data.String
@@ -323,7 +291,7 @@ func (backRepoKey *BackRepoKeyStruct) CheckoutPhaseOneInstance(keyDB *KeyDB) (Er
 	// Map_KeyDBID_KeyDB)[keyDB hold variable pointers
 	keyDB_Data := *keyDB
 	preservedPtrToKey := &keyDB_Data
-	(*backRepoKey.Map_KeyDBID_KeyDB)[keyDB.ID] = preservedPtrToKey
+	backRepoKey.Map_KeyDBID_KeyDB[keyDB.ID] = preservedPtrToKey
 
 	return
 }
@@ -333,7 +301,7 @@ func (backRepoKey *BackRepoKeyStruct) CheckoutPhaseOneInstance(keyDB *KeyDB) (Er
 func (backRepoKey *BackRepoKeyStruct) CheckoutPhaseTwo(backRepo *BackRepoStruct) (Error error) {
 
 	// parse all DB instance and update all pointer fields of the translated models instance
-	for _, keyDB := range *backRepoKey.Map_KeyDBID_KeyDB {
+	for _, keyDB := range backRepoKey.Map_KeyDBID_KeyDB {
 		backRepoKey.CheckoutPhaseTwoInstance(backRepo, keyDB)
 	}
 	return
@@ -343,7 +311,7 @@ func (backRepoKey *BackRepoKeyStruct) CheckoutPhaseTwo(backRepo *BackRepoStruct)
 // Phase Two is the update of instance with the field in the database
 func (backRepoKey *BackRepoKeyStruct) CheckoutPhaseTwoInstance(backRepo *BackRepoStruct, keyDB *KeyDB) (Error error) {
 
-	key := (*backRepoKey.Map_KeyDBID_KeyPtr)[keyDB.ID]
+	key := backRepoKey.Map_KeyDBID_KeyPtr[keyDB.ID]
 	_ = key // sometimes, there is no code generated. This lines voids the "unused variable" compilation error
 
 	// insertion point for checkout of pointer encoding
@@ -353,7 +321,7 @@ func (backRepoKey *BackRepoKeyStruct) CheckoutPhaseTwoInstance(backRepo *BackRep
 // CommitKey allows commit of a single key (if already staged)
 func (backRepo *BackRepoStruct) CommitKey(key *models.Key) {
 	backRepo.BackRepoKey.CommitPhaseOneInstance(key)
-	if id, ok := (*backRepo.BackRepoKey.Map_KeyPtr_KeyDBID)[key]; ok {
+	if id, ok := backRepo.BackRepoKey.Map_KeyPtr_KeyDBID[key]; ok {
 		backRepo.BackRepoKey.CommitPhaseTwoInstance(backRepo, id, key)
 	}
 	backRepo.CommitFromBackNb = backRepo.CommitFromBackNb + 1
@@ -362,9 +330,9 @@ func (backRepo *BackRepoStruct) CommitKey(key *models.Key) {
 // CommitKey allows checkout of a single key (if already staged and with a BackRepo id)
 func (backRepo *BackRepoStruct) CheckoutKey(key *models.Key) {
 	// check if the key is staged
-	if _, ok := (*backRepo.BackRepoKey.Map_KeyPtr_KeyDBID)[key]; ok {
+	if _, ok := backRepo.BackRepoKey.Map_KeyPtr_KeyDBID[key]; ok {
 
-		if id, ok := (*backRepo.BackRepoKey.Map_KeyPtr_KeyDBID)[key]; ok {
+		if id, ok := backRepo.BackRepoKey.Map_KeyPtr_KeyDBID[key]; ok {
 			var keyDB KeyDB
 			keyDB.ID = id
 
@@ -414,7 +382,7 @@ func (backRepoKey *BackRepoKeyStruct) Backup(dirPath string) {
 	// organize the map into an array with increasing IDs, in order to have repoductible
 	// backup file
 	forBackup := make([]*KeyDB, 0)
-	for _, keyDB := range *backRepoKey.Map_KeyDBID_KeyDB {
+	for _, keyDB := range backRepoKey.Map_KeyDBID_KeyDB {
 		forBackup = append(forBackup, keyDB)
 	}
 
@@ -440,7 +408,7 @@ func (backRepoKey *BackRepoKeyStruct) BackupXL(file *xlsx.File) {
 	// organize the map into an array with increasing IDs, in order to have repoductible
 	// backup file
 	forBackup := make([]*KeyDB, 0)
-	for _, keyDB := range *backRepoKey.Map_KeyDBID_KeyDB {
+	for _, keyDB := range backRepoKey.Map_KeyDBID_KeyDB {
 		forBackup = append(forBackup, keyDB)
 	}
 
@@ -505,7 +473,7 @@ func (backRepoKey *BackRepoKeyStruct) rowVisitorKey(row *xlsx.Row) error {
 		if query.Error != nil {
 			log.Panic(query.Error)
 		}
-		(*backRepoKey.Map_KeyDBID_KeyDB)[keyDB.ID] = keyDB
+		backRepoKey.Map_KeyDBID_KeyDB[keyDB.ID] = keyDB
 		BackRepoKeyid_atBckpTime_newID[keyDB_ID_atBackupTime] = keyDB.ID
 	}
 	return nil
@@ -542,7 +510,7 @@ func (backRepoKey *BackRepoKeyStruct) RestorePhaseOne(dirPath string) {
 		if query.Error != nil {
 			log.Panic(query.Error)
 		}
-		(*backRepoKey.Map_KeyDBID_KeyDB)[keyDB.ID] = keyDB
+		backRepoKey.Map_KeyDBID_KeyDB[keyDB.ID] = keyDB
 		BackRepoKeyid_atBckpTime_newID[keyDB_ID_atBackupTime] = keyDB.ID
 	}
 
@@ -555,7 +523,7 @@ func (backRepoKey *BackRepoKeyStruct) RestorePhaseOne(dirPath string) {
 // to compute new index
 func (backRepoKey *BackRepoKeyStruct) RestorePhaseTwo() {
 
-	for _, keyDB := range *backRepoKey.Map_KeyDBID_KeyDB {
+	for _, keyDB := range backRepoKey.Map_KeyDBID_KeyDB {
 
 		// next line of code is to avert unused variable compilation error
 		_ = keyDB
@@ -568,6 +536,30 @@ func (backRepoKey *BackRepoKeyStruct) RestorePhaseTwo() {
 		}
 	}
 
+}
+
+// BackRepoKey.ResetReversePointers commits all staged instances of Key to the BackRepo
+// Phase Two is the update of instance with the field in the database
+func (backRepoKey *BackRepoKeyStruct) ResetReversePointers(backRepo *BackRepoStruct) (Error error) {
+
+	for idx, key := range backRepoKey.Map_KeyDBID_KeyPtr {
+		backRepoKey.ResetReversePointersInstance(backRepo, idx, key)
+	}
+
+	return
+}
+
+func (backRepoKey *BackRepoKeyStruct) ResetReversePointersInstance(backRepo *BackRepoStruct, idx uint, astruct *models.Key) (Error error) {
+
+	// fetch matching keyDB
+	if keyDB, ok := backRepoKey.Map_KeyDBID_KeyDB[idx]; ok {
+		_ = keyDB // to avoid unused variable error if there are no reverse to reset
+
+		// insertion point for reverse pointers reset
+		// end of insertion point for reverse pointers reset
+	}
+
+	return
 }
 
 // this field is used during the restauration process.

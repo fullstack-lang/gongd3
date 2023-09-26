@@ -17,7 +17,7 @@ import (
 
 	"github.com/tealeg/xlsx/v3"
 
-	"gongd3/go/models"
+	"github.com/fullstack-lang/gongd3/go/models"
 )
 
 // dummy variable to have the import declaration wihthout compile failure (even if no code needing this import is generated)
@@ -99,13 +99,13 @@ var Value_Fields = []string{
 
 type BackRepoValueStruct struct {
 	// stores ValueDB according to their gorm ID
-	Map_ValueDBID_ValueDB *map[uint]*ValueDB
+	Map_ValueDBID_ValueDB map[uint]*ValueDB
 
 	// stores ValueDB ID according to Value address
-	Map_ValuePtr_ValueDBID *map[*models.Value]uint
+	Map_ValuePtr_ValueDBID map[*models.Value]uint
 
 	// stores Value according to their gorm ID
-	Map_ValueDBID_ValuePtr *map[uint]*models.Value
+	Map_ValueDBID_ValuePtr map[uint]*models.Value
 
 	db *gorm.DB
 
@@ -123,40 +123,8 @@ func (backRepoValue *BackRepoValueStruct) GetDB() *gorm.DB {
 
 // GetValueDBFromValuePtr is a handy function to access the back repo instance from the stage instance
 func (backRepoValue *BackRepoValueStruct) GetValueDBFromValuePtr(value *models.Value) (valueDB *ValueDB) {
-	id := (*backRepoValue.Map_ValuePtr_ValueDBID)[value]
-	valueDB = (*backRepoValue.Map_ValueDBID_ValueDB)[id]
-	return
-}
-
-// BackRepoValue.Init set up the BackRepo of the Value
-func (backRepoValue *BackRepoValueStruct) Init(stage *models.StageStruct, db *gorm.DB) (Error error) {
-
-	if backRepoValue.Map_ValueDBID_ValuePtr != nil {
-		err := errors.New("In Init, backRepoValue.Map_ValueDBID_ValuePtr should be nil")
-		return err
-	}
-
-	if backRepoValue.Map_ValueDBID_ValueDB != nil {
-		err := errors.New("In Init, backRepoValue.Map_ValueDBID_ValueDB should be nil")
-		return err
-	}
-
-	if backRepoValue.Map_ValuePtr_ValueDBID != nil {
-		err := errors.New("In Init, backRepoValue.Map_ValuePtr_ValueDBID should be nil")
-		return err
-	}
-
-	tmp := make(map[uint]*models.Value, 0)
-	backRepoValue.Map_ValueDBID_ValuePtr = &tmp
-
-	tmpDB := make(map[uint]*ValueDB, 0)
-	backRepoValue.Map_ValueDBID_ValueDB = &tmpDB
-
-	tmpID := make(map[*models.Value]uint, 0)
-	backRepoValue.Map_ValuePtr_ValueDBID = &tmpID
-
-	backRepoValue.db = db
-	backRepoValue.stage = stage
+	id := backRepoValue.Map_ValuePtr_ValueDBID[value]
+	valueDB = backRepoValue.Map_ValueDBID_ValueDB[id]
 	return
 }
 
@@ -170,7 +138,7 @@ func (backRepoValue *BackRepoValueStruct) CommitPhaseOne(stage *models.StageStru
 
 	// parse all backRepo instance and checks wether some instance have been unstaged
 	// in this case, remove them from the back repo
-	for id, value := range *backRepoValue.Map_ValueDBID_ValuePtr {
+	for id, value := range backRepoValue.Map_ValueDBID_ValuePtr {
 		if _, ok := stage.Values[value]; !ok {
 			backRepoValue.CommitDeleteInstance(id)
 		}
@@ -182,19 +150,19 @@ func (backRepoValue *BackRepoValueStruct) CommitPhaseOne(stage *models.StageStru
 // BackRepoValue.CommitDeleteInstance commits deletion of Value to the BackRepo
 func (backRepoValue *BackRepoValueStruct) CommitDeleteInstance(id uint) (Error error) {
 
-	value := (*backRepoValue.Map_ValueDBID_ValuePtr)[id]
+	value := backRepoValue.Map_ValueDBID_ValuePtr[id]
 
 	// value is not staged anymore, remove valueDB
-	valueDB := (*backRepoValue.Map_ValueDBID_ValueDB)[id]
+	valueDB := backRepoValue.Map_ValueDBID_ValueDB[id]
 	query := backRepoValue.db.Unscoped().Delete(&valueDB)
 	if query.Error != nil {
 		return query.Error
 	}
 
 	// update stores
-	delete((*backRepoValue.Map_ValuePtr_ValueDBID), value)
-	delete((*backRepoValue.Map_ValueDBID_ValuePtr), id)
-	delete((*backRepoValue.Map_ValueDBID_ValueDB), id)
+	delete(backRepoValue.Map_ValuePtr_ValueDBID, value)
+	delete(backRepoValue.Map_ValueDBID_ValuePtr, id)
+	delete(backRepoValue.Map_ValueDBID_ValueDB, id)
 
 	return
 }
@@ -204,7 +172,7 @@ func (backRepoValue *BackRepoValueStruct) CommitDeleteInstance(id uint) (Error e
 func (backRepoValue *BackRepoValueStruct) CommitPhaseOneInstance(value *models.Value) (Error error) {
 
 	// check if the value is not commited yet
-	if _, ok := (*backRepoValue.Map_ValuePtr_ValueDBID)[value]; ok {
+	if _, ok := backRepoValue.Map_ValuePtr_ValueDBID[value]; ok {
 		return
 	}
 
@@ -218,9 +186,9 @@ func (backRepoValue *BackRepoValueStruct) CommitPhaseOneInstance(value *models.V
 	}
 
 	// update stores
-	(*backRepoValue.Map_ValuePtr_ValueDBID)[value] = valueDB.ID
-	(*backRepoValue.Map_ValueDBID_ValuePtr)[valueDB.ID] = value
-	(*backRepoValue.Map_ValueDBID_ValueDB)[valueDB.ID] = &valueDB
+	backRepoValue.Map_ValuePtr_ValueDBID[value] = valueDB.ID
+	backRepoValue.Map_ValueDBID_ValuePtr[valueDB.ID] = value
+	backRepoValue.Map_ValueDBID_ValueDB[valueDB.ID] = &valueDB
 
 	return
 }
@@ -229,7 +197,7 @@ func (backRepoValue *BackRepoValueStruct) CommitPhaseOneInstance(value *models.V
 // Phase Two is the update of instance with the field in the database
 func (backRepoValue *BackRepoValueStruct) CommitPhaseTwo(backRepo *BackRepoStruct) (Error error) {
 
-	for idx, value := range *backRepoValue.Map_ValueDBID_ValuePtr {
+	for idx, value := range backRepoValue.Map_ValueDBID_ValuePtr {
 		backRepoValue.CommitPhaseTwoInstance(backRepo, idx, value)
 	}
 
@@ -241,7 +209,7 @@ func (backRepoValue *BackRepoValueStruct) CommitPhaseTwo(backRepo *BackRepoStruc
 func (backRepoValue *BackRepoValueStruct) CommitPhaseTwoInstance(backRepo *BackRepoStruct, idx uint, value *models.Value) (Error error) {
 
 	// fetch matching valueDB
-	if valueDB, ok := (*backRepoValue.Map_ValueDBID_ValueDB)[idx]; ok {
+	if valueDB, ok := backRepoValue.Map_ValueDBID_ValueDB[idx]; ok {
 
 		valueDB.CopyBasicFieldsFromValue(value)
 
@@ -285,7 +253,7 @@ func (backRepoValue *BackRepoValueStruct) CheckoutPhaseOne() (Error error) {
 
 		// do not remove this instance from the stage, therefore
 		// remove instance from the list of instances to be be removed from the stage
-		value, ok := (*backRepoValue.Map_ValueDBID_ValuePtr)[valueDB.ID]
+		value, ok := backRepoValue.Map_ValueDBID_ValuePtr[valueDB.ID]
 		if ok {
 			delete(valueInstancesToBeRemovedFromTheStage, value)
 		}
@@ -296,10 +264,10 @@ func (backRepoValue *BackRepoValueStruct) CheckoutPhaseOne() (Error error) {
 		value.Unstage(backRepoValue.GetStage())
 
 		// remove instance from the back repo 3 maps
-		valueID := (*backRepoValue.Map_ValuePtr_ValueDBID)[value]
-		delete((*backRepoValue.Map_ValuePtr_ValueDBID), value)
-		delete((*backRepoValue.Map_ValueDBID_ValueDB), valueID)
-		delete((*backRepoValue.Map_ValueDBID_ValuePtr), valueID)
+		valueID := backRepoValue.Map_ValuePtr_ValueDBID[value]
+		delete(backRepoValue.Map_ValuePtr_ValueDBID, value)
+		delete(backRepoValue.Map_ValueDBID_ValueDB, valueID)
+		delete(backRepoValue.Map_ValueDBID_ValuePtr, valueID)
 	}
 
 	return
@@ -309,12 +277,12 @@ func (backRepoValue *BackRepoValueStruct) CheckoutPhaseOne() (Error error) {
 // models version of the valueDB
 func (backRepoValue *BackRepoValueStruct) CheckoutPhaseOneInstance(valueDB *ValueDB) (Error error) {
 
-	value, ok := (*backRepoValue.Map_ValueDBID_ValuePtr)[valueDB.ID]
+	value, ok := backRepoValue.Map_ValueDBID_ValuePtr[valueDB.ID]
 	if !ok {
 		value = new(models.Value)
 
-		(*backRepoValue.Map_ValueDBID_ValuePtr)[valueDB.ID] = value
-		(*backRepoValue.Map_ValuePtr_ValueDBID)[value] = valueDB.ID
+		backRepoValue.Map_ValueDBID_ValuePtr[valueDB.ID] = value
+		backRepoValue.Map_ValuePtr_ValueDBID[value] = valueDB.ID
 
 		// append model store with the new element
 		value.Name = valueDB.Name_Data.String
@@ -329,7 +297,7 @@ func (backRepoValue *BackRepoValueStruct) CheckoutPhaseOneInstance(valueDB *Valu
 	// Map_ValueDBID_ValueDB)[valueDB hold variable pointers
 	valueDB_Data := *valueDB
 	preservedPtrToValue := &valueDB_Data
-	(*backRepoValue.Map_ValueDBID_ValueDB)[valueDB.ID] = preservedPtrToValue
+	backRepoValue.Map_ValueDBID_ValueDB[valueDB.ID] = preservedPtrToValue
 
 	return
 }
@@ -339,7 +307,7 @@ func (backRepoValue *BackRepoValueStruct) CheckoutPhaseOneInstance(valueDB *Valu
 func (backRepoValue *BackRepoValueStruct) CheckoutPhaseTwo(backRepo *BackRepoStruct) (Error error) {
 
 	// parse all DB instance and update all pointer fields of the translated models instance
-	for _, valueDB := range *backRepoValue.Map_ValueDBID_ValueDB {
+	for _, valueDB := range backRepoValue.Map_ValueDBID_ValueDB {
 		backRepoValue.CheckoutPhaseTwoInstance(backRepo, valueDB)
 	}
 	return
@@ -349,7 +317,7 @@ func (backRepoValue *BackRepoValueStruct) CheckoutPhaseTwo(backRepo *BackRepoStr
 // Phase Two is the update of instance with the field in the database
 func (backRepoValue *BackRepoValueStruct) CheckoutPhaseTwoInstance(backRepo *BackRepoStruct, valueDB *ValueDB) (Error error) {
 
-	value := (*backRepoValue.Map_ValueDBID_ValuePtr)[valueDB.ID]
+	value := backRepoValue.Map_ValueDBID_ValuePtr[valueDB.ID]
 	_ = value // sometimes, there is no code generated. This lines voids the "unused variable" compilation error
 
 	// insertion point for checkout of pointer encoding
@@ -359,7 +327,7 @@ func (backRepoValue *BackRepoValueStruct) CheckoutPhaseTwoInstance(backRepo *Bac
 // CommitValue allows commit of a single value (if already staged)
 func (backRepo *BackRepoStruct) CommitValue(value *models.Value) {
 	backRepo.BackRepoValue.CommitPhaseOneInstance(value)
-	if id, ok := (*backRepo.BackRepoValue.Map_ValuePtr_ValueDBID)[value]; ok {
+	if id, ok := backRepo.BackRepoValue.Map_ValuePtr_ValueDBID[value]; ok {
 		backRepo.BackRepoValue.CommitPhaseTwoInstance(backRepo, id, value)
 	}
 	backRepo.CommitFromBackNb = backRepo.CommitFromBackNb + 1
@@ -368,9 +336,9 @@ func (backRepo *BackRepoStruct) CommitValue(value *models.Value) {
 // CommitValue allows checkout of a single value (if already staged and with a BackRepo id)
 func (backRepo *BackRepoStruct) CheckoutValue(value *models.Value) {
 	// check if the value is staged
-	if _, ok := (*backRepo.BackRepoValue.Map_ValuePtr_ValueDBID)[value]; ok {
+	if _, ok := backRepo.BackRepoValue.Map_ValuePtr_ValueDBID[value]; ok {
 
-		if id, ok := (*backRepo.BackRepoValue.Map_ValuePtr_ValueDBID)[value]; ok {
+		if id, ok := backRepo.BackRepoValue.Map_ValuePtr_ValueDBID[value]; ok {
 			var valueDB ValueDB
 			valueDB.ID = id
 
@@ -420,7 +388,7 @@ func (backRepoValue *BackRepoValueStruct) Backup(dirPath string) {
 	// organize the map into an array with increasing IDs, in order to have repoductible
 	// backup file
 	forBackup := make([]*ValueDB, 0)
-	for _, valueDB := range *backRepoValue.Map_ValueDBID_ValueDB {
+	for _, valueDB := range backRepoValue.Map_ValueDBID_ValueDB {
 		forBackup = append(forBackup, valueDB)
 	}
 
@@ -446,7 +414,7 @@ func (backRepoValue *BackRepoValueStruct) BackupXL(file *xlsx.File) {
 	// organize the map into an array with increasing IDs, in order to have repoductible
 	// backup file
 	forBackup := make([]*ValueDB, 0)
-	for _, valueDB := range *backRepoValue.Map_ValueDBID_ValueDB {
+	for _, valueDB := range backRepoValue.Map_ValueDBID_ValueDB {
 		forBackup = append(forBackup, valueDB)
 	}
 
@@ -511,7 +479,7 @@ func (backRepoValue *BackRepoValueStruct) rowVisitorValue(row *xlsx.Row) error {
 		if query.Error != nil {
 			log.Panic(query.Error)
 		}
-		(*backRepoValue.Map_ValueDBID_ValueDB)[valueDB.ID] = valueDB
+		backRepoValue.Map_ValueDBID_ValueDB[valueDB.ID] = valueDB
 		BackRepoValueid_atBckpTime_newID[valueDB_ID_atBackupTime] = valueDB.ID
 	}
 	return nil
@@ -548,7 +516,7 @@ func (backRepoValue *BackRepoValueStruct) RestorePhaseOne(dirPath string) {
 		if query.Error != nil {
 			log.Panic(query.Error)
 		}
-		(*backRepoValue.Map_ValueDBID_ValueDB)[valueDB.ID] = valueDB
+		backRepoValue.Map_ValueDBID_ValueDB[valueDB.ID] = valueDB
 		BackRepoValueid_atBckpTime_newID[valueDB_ID_atBackupTime] = valueDB.ID
 	}
 
@@ -561,7 +529,7 @@ func (backRepoValue *BackRepoValueStruct) RestorePhaseOne(dirPath string) {
 // to compute new index
 func (backRepoValue *BackRepoValueStruct) RestorePhaseTwo() {
 
-	for _, valueDB := range *backRepoValue.Map_ValueDBID_ValueDB {
+	for _, valueDB := range backRepoValue.Map_ValueDBID_ValueDB {
 
 		// next line of code is to avert unused variable compilation error
 		_ = valueDB
@@ -580,6 +548,39 @@ func (backRepoValue *BackRepoValueStruct) RestorePhaseTwo() {
 		}
 	}
 
+}
+
+// BackRepoValue.ResetReversePointers commits all staged instances of Value to the BackRepo
+// Phase Two is the update of instance with the field in the database
+func (backRepoValue *BackRepoValueStruct) ResetReversePointers(backRepo *BackRepoStruct) (Error error) {
+
+	for idx, value := range backRepoValue.Map_ValueDBID_ValuePtr {
+		backRepoValue.ResetReversePointersInstance(backRepo, idx, value)
+	}
+
+	return
+}
+
+func (backRepoValue *BackRepoValueStruct) ResetReversePointersInstance(backRepo *BackRepoStruct, idx uint, astruct *models.Value) (Error error) {
+
+	// fetch matching valueDB
+	if valueDB, ok := backRepoValue.Map_ValueDBID_ValueDB[idx]; ok {
+		_ = valueDB // to avoid unused variable error if there are no reverse to reset
+
+		// insertion point for reverse pointers reset
+		if valueDB.Serie_ValuesDBID.Int64 != 0 {
+			valueDB.Serie_ValuesDBID.Int64 = 0
+			valueDB.Serie_ValuesDBID.Valid = true
+
+			// save the reset
+			if q := backRepoValue.db.Save(valueDB); q.Error != nil {
+				return q.Error
+			}
+		}
+		// end of insertion point for reverse pointers reset
+	}
+
+	return
 }
 
 // this field is used during the restauration process.

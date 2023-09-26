@@ -43,27 +43,42 @@ export class MetaReferenceService {
   }
 
   /** GET metareferences from the server */
-  getMetaReferences(GONG__StackPath: string = ""): Observable<MetaReferenceDB[]> {
+  // gets is more robust to refactoring
+  gets(GONG__StackPath: string): Observable<MetaReferenceDB[]> {
+    return this.getMetaReferences(GONG__StackPath)
+  }
+  getMetaReferences(GONG__StackPath: string): Observable<MetaReferenceDB[]> {
 
-	let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
+    let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
 
     return this.http.get<MetaReferenceDB[]>(this.metareferencesUrl, { params: params })
       .pipe(
-        tap(_ => this.log('fetched metareferences')),
+        tap(),
+		// tap(_ => this.log('fetched metareferences')),
         catchError(this.handleError<MetaReferenceDB[]>('getMetaReferences', []))
       );
   }
 
   /** GET metareference by id. Will 404 if id not found */
-  getMetaReference(id: number): Observable<MetaReferenceDB> {
+  // more robust API to refactoring
+  get(id: number, GONG__StackPath: string): Observable<MetaReferenceDB> {
+	return this.getMetaReference(id, GONG__StackPath)
+  }
+  getMetaReference(id: number, GONG__StackPath: string): Observable<MetaReferenceDB> {
+
+    let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
+
     const url = `${this.metareferencesUrl}/${id}`;
-    return this.http.get<MetaReferenceDB>(url).pipe(
-      tap(_ => this.log(`fetched metareference id=${id}`)),
+    return this.http.get<MetaReferenceDB>(url, { params: params }).pipe(
+      // tap(_ => this.log(`fetched metareference id=${id}`)),
       catchError(this.handleError<MetaReferenceDB>(`getMetaReference id=${id}`))
     );
   }
 
   /** POST: add a new metareference to the server */
+  post(metareferencedb: MetaReferenceDB, GONG__StackPath: string): Observable<MetaReferenceDB> {
+    return this.postMetaReference(metareferencedb, GONG__StackPath)	
+  }
   postMetaReference(metareferencedb: MetaReferenceDB, GONG__StackPath: string): Observable<MetaReferenceDB> {
 
     // insertion point for reset of pointers and reverse pointers (to avoid circular JSON)
@@ -76,17 +91,20 @@ export class MetaReferenceService {
       params: params
     }
 
-	return this.http.post<MetaReferenceDB>(this.metareferencesUrl, metareferencedb, httpOptions).pipe(
+    return this.http.post<MetaReferenceDB>(this.metareferencesUrl, metareferencedb, httpOptions).pipe(
       tap(_ => {
         // insertion point for restoration of reverse pointers
         metareferencedb.Meta_MetaReferences_reverse = _Meta_MetaReferences_reverse
-        this.log(`posted metareferencedb id=${metareferencedb.ID}`)
+        // this.log(`posted metareferencedb id=${metareferencedb.ID}`)
       }),
       catchError(this.handleError<MetaReferenceDB>('postMetaReference'))
     );
   }
 
   /** DELETE: delete the metareferencedb from the server */
+  delete(metareferencedb: MetaReferenceDB | number, GONG__StackPath: string): Observable<MetaReferenceDB> {
+    return this.deleteMetaReference(metareferencedb, GONG__StackPath)
+  }
   deleteMetaReference(metareferencedb: MetaReferenceDB | number, GONG__StackPath: string): Observable<MetaReferenceDB> {
     const id = typeof metareferencedb === 'number' ? metareferencedb : metareferencedb.ID;
     const url = `${this.metareferencesUrl}/${id}`;
@@ -104,6 +122,9 @@ export class MetaReferenceService {
   }
 
   /** PUT: update the metareferencedb on the server */
+  update(metareferencedb: MetaReferenceDB, GONG__StackPath: string): Observable<MetaReferenceDB> {
+    return this.updateMetaReference(metareferencedb, GONG__StackPath)
+  }
   updateMetaReference(metareferencedb: MetaReferenceDB, GONG__StackPath: string): Observable<MetaReferenceDB> {
     const id = typeof metareferencedb === 'number' ? metareferencedb : metareferencedb.ID;
     const url = `${this.metareferencesUrl}/${id}`;
@@ -122,7 +143,7 @@ export class MetaReferenceService {
       tap(_ => {
         // insertion point for restoration of reverse pointers
         metareferencedb.Meta_MetaReferences_reverse = _Meta_MetaReferences_reverse
-        this.log(`updated metareferencedb id=${metareferencedb.ID}`)
+        // this.log(`updated metareferencedb id=${metareferencedb.ID}`)
       }),
       catchError(this.handleError<MetaReferenceDB>('updateMetaReference'))
     );
@@ -134,11 +155,11 @@ export class MetaReferenceService {
    * @param operation - name of the operation that failed
    * @param result - optional value to return as the observable result
    */
-  private handleError<T>(operation = 'operation', result?: T) {
+  private handleError<T>(operation = 'operation in MetaReferenceService', result?: T) {
     return (error: any): Observable<T> => {
 
       // TODO: send the error to remote logging infrastructure
-      console.error(error); // log to console instead
+      console.error("MetaReferenceService" + error); // log to console instead
 
       // TODO: better job of transforming error for user consumption
       this.log(`${operation} failed: ${error.message}`);
@@ -149,6 +170,6 @@ export class MetaReferenceService {
   }
 
   private log(message: string) {
-
+      console.log(message)
   }
 }

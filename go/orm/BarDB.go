@@ -17,7 +17,7 @@ import (
 
 	"github.com/tealeg/xlsx/v3"
 
-	"gongd3/go/models"
+	"github.com/fullstack-lang/gongd3/go/models"
 )
 
 // dummy variable to have the import declaration wihthout compile failure (even if no code needing this import is generated)
@@ -183,13 +183,13 @@ var Bar_Fields = []string{
 
 type BackRepoBarStruct struct {
 	// stores BarDB according to their gorm ID
-	Map_BarDBID_BarDB *map[uint]*BarDB
+	Map_BarDBID_BarDB map[uint]*BarDB
 
 	// stores BarDB ID according to Bar address
-	Map_BarPtr_BarDBID *map[*models.Bar]uint
+	Map_BarPtr_BarDBID map[*models.Bar]uint
 
 	// stores Bar according to their gorm ID
-	Map_BarDBID_BarPtr *map[uint]*models.Bar
+	Map_BarDBID_BarPtr map[uint]*models.Bar
 
 	db *gorm.DB
 
@@ -207,40 +207,8 @@ func (backRepoBar *BackRepoBarStruct) GetDB() *gorm.DB {
 
 // GetBarDBFromBarPtr is a handy function to access the back repo instance from the stage instance
 func (backRepoBar *BackRepoBarStruct) GetBarDBFromBarPtr(bar *models.Bar) (barDB *BarDB) {
-	id := (*backRepoBar.Map_BarPtr_BarDBID)[bar]
-	barDB = (*backRepoBar.Map_BarDBID_BarDB)[id]
-	return
-}
-
-// BackRepoBar.Init set up the BackRepo of the Bar
-func (backRepoBar *BackRepoBarStruct) Init(stage *models.StageStruct, db *gorm.DB) (Error error) {
-
-	if backRepoBar.Map_BarDBID_BarPtr != nil {
-		err := errors.New("In Init, backRepoBar.Map_BarDBID_BarPtr should be nil")
-		return err
-	}
-
-	if backRepoBar.Map_BarDBID_BarDB != nil {
-		err := errors.New("In Init, backRepoBar.Map_BarDBID_BarDB should be nil")
-		return err
-	}
-
-	if backRepoBar.Map_BarPtr_BarDBID != nil {
-		err := errors.New("In Init, backRepoBar.Map_BarPtr_BarDBID should be nil")
-		return err
-	}
-
-	tmp := make(map[uint]*models.Bar, 0)
-	backRepoBar.Map_BarDBID_BarPtr = &tmp
-
-	tmpDB := make(map[uint]*BarDB, 0)
-	backRepoBar.Map_BarDBID_BarDB = &tmpDB
-
-	tmpID := make(map[*models.Bar]uint, 0)
-	backRepoBar.Map_BarPtr_BarDBID = &tmpID
-
-	backRepoBar.db = db
-	backRepoBar.stage = stage
+	id := backRepoBar.Map_BarPtr_BarDBID[bar]
+	barDB = backRepoBar.Map_BarDBID_BarDB[id]
 	return
 }
 
@@ -254,7 +222,7 @@ func (backRepoBar *BackRepoBarStruct) CommitPhaseOne(stage *models.StageStruct) 
 
 	// parse all backRepo instance and checks wether some instance have been unstaged
 	// in this case, remove them from the back repo
-	for id, bar := range *backRepoBar.Map_BarDBID_BarPtr {
+	for id, bar := range backRepoBar.Map_BarDBID_BarPtr {
 		if _, ok := stage.Bars[bar]; !ok {
 			backRepoBar.CommitDeleteInstance(id)
 		}
@@ -266,19 +234,19 @@ func (backRepoBar *BackRepoBarStruct) CommitPhaseOne(stage *models.StageStruct) 
 // BackRepoBar.CommitDeleteInstance commits deletion of Bar to the BackRepo
 func (backRepoBar *BackRepoBarStruct) CommitDeleteInstance(id uint) (Error error) {
 
-	bar := (*backRepoBar.Map_BarDBID_BarPtr)[id]
+	bar := backRepoBar.Map_BarDBID_BarPtr[id]
 
 	// bar is not staged anymore, remove barDB
-	barDB := (*backRepoBar.Map_BarDBID_BarDB)[id]
+	barDB := backRepoBar.Map_BarDBID_BarDB[id]
 	query := backRepoBar.db.Unscoped().Delete(&barDB)
 	if query.Error != nil {
 		return query.Error
 	}
 
 	// update stores
-	delete((*backRepoBar.Map_BarPtr_BarDBID), bar)
-	delete((*backRepoBar.Map_BarDBID_BarPtr), id)
-	delete((*backRepoBar.Map_BarDBID_BarDB), id)
+	delete(backRepoBar.Map_BarPtr_BarDBID, bar)
+	delete(backRepoBar.Map_BarDBID_BarPtr, id)
+	delete(backRepoBar.Map_BarDBID_BarDB, id)
 
 	return
 }
@@ -288,7 +256,7 @@ func (backRepoBar *BackRepoBarStruct) CommitDeleteInstance(id uint) (Error error
 func (backRepoBar *BackRepoBarStruct) CommitPhaseOneInstance(bar *models.Bar) (Error error) {
 
 	// check if the bar is not commited yet
-	if _, ok := (*backRepoBar.Map_BarPtr_BarDBID)[bar]; ok {
+	if _, ok := backRepoBar.Map_BarPtr_BarDBID[bar]; ok {
 		return
 	}
 
@@ -302,9 +270,9 @@ func (backRepoBar *BackRepoBarStruct) CommitPhaseOneInstance(bar *models.Bar) (E
 	}
 
 	// update stores
-	(*backRepoBar.Map_BarPtr_BarDBID)[bar] = barDB.ID
-	(*backRepoBar.Map_BarDBID_BarPtr)[barDB.ID] = bar
-	(*backRepoBar.Map_BarDBID_BarDB)[barDB.ID] = &barDB
+	backRepoBar.Map_BarPtr_BarDBID[bar] = barDB.ID
+	backRepoBar.Map_BarDBID_BarPtr[barDB.ID] = bar
+	backRepoBar.Map_BarDBID_BarDB[barDB.ID] = &barDB
 
 	return
 }
@@ -313,7 +281,7 @@ func (backRepoBar *BackRepoBarStruct) CommitPhaseOneInstance(bar *models.Bar) (E
 // Phase Two is the update of instance with the field in the database
 func (backRepoBar *BackRepoBarStruct) CommitPhaseTwo(backRepo *BackRepoStruct) (Error error) {
 
-	for idx, bar := range *backRepoBar.Map_BarDBID_BarPtr {
+	for idx, bar := range backRepoBar.Map_BarDBID_BarPtr {
 		backRepoBar.CommitPhaseTwoInstance(backRepo, idx, bar)
 	}
 
@@ -325,7 +293,7 @@ func (backRepoBar *BackRepoBarStruct) CommitPhaseTwo(backRepo *BackRepoStruct) (
 func (backRepoBar *BackRepoBarStruct) CommitPhaseTwoInstance(backRepo *BackRepoStruct, idx uint, bar *models.Bar) (Error error) {
 
 	// fetch matching barDB
-	if barDB, ok := (*backRepoBar.Map_BarDBID_BarDB)[idx]; ok {
+	if barDB, ok := backRepoBar.Map_BarDBID_BarDB[idx]; ok {
 
 		barDB.CopyBasicFieldsFromBar(bar)
 
@@ -333,19 +301,25 @@ func (backRepoBar *BackRepoBarStruct) CommitPhaseTwoInstance(backRepo *BackRepoS
 		// commit pointer value bar.X translates to updating the bar.XID
 		barDB.XID.Valid = true // allow for a 0 value (nil association)
 		if bar.X != nil {
-			if XId, ok := (*backRepo.BackRepoKey.Map_KeyPtr_KeyDBID)[bar.X]; ok {
+			if XId, ok := backRepo.BackRepoKey.Map_KeyPtr_KeyDBID[bar.X]; ok {
 				barDB.XID.Int64 = int64(XId)
 				barDB.XID.Valid = true
 			}
+		} else {
+			barDB.XID.Int64 = 0
+			barDB.XID.Valid = true
 		}
 
 		// commit pointer value bar.Y translates to updating the bar.YID
 		barDB.YID.Valid = true // allow for a 0 value (nil association)
 		if bar.Y != nil {
-			if YId, ok := (*backRepo.BackRepoKey.Map_KeyPtr_KeyDBID)[bar.Y]; ok {
+			if YId, ok := backRepo.BackRepoKey.Map_KeyPtr_KeyDBID[bar.Y]; ok {
 				barDB.YID.Int64 = int64(YId)
 				barDB.YID.Valid = true
 			}
+		} else {
+			barDB.YID.Int64 = 0
+			barDB.YID.Valid = true
 		}
 
 		// This loop encodes the slice of pointers bar.Set into the back repo.
@@ -406,7 +380,7 @@ func (backRepoBar *BackRepoBarStruct) CheckoutPhaseOne() (Error error) {
 
 		// do not remove this instance from the stage, therefore
 		// remove instance from the list of instances to be be removed from the stage
-		bar, ok := (*backRepoBar.Map_BarDBID_BarPtr)[barDB.ID]
+		bar, ok := backRepoBar.Map_BarDBID_BarPtr[barDB.ID]
 		if ok {
 			delete(barInstancesToBeRemovedFromTheStage, bar)
 		}
@@ -417,10 +391,10 @@ func (backRepoBar *BackRepoBarStruct) CheckoutPhaseOne() (Error error) {
 		bar.Unstage(backRepoBar.GetStage())
 
 		// remove instance from the back repo 3 maps
-		barID := (*backRepoBar.Map_BarPtr_BarDBID)[bar]
-		delete((*backRepoBar.Map_BarPtr_BarDBID), bar)
-		delete((*backRepoBar.Map_BarDBID_BarDB), barID)
-		delete((*backRepoBar.Map_BarDBID_BarPtr), barID)
+		barID := backRepoBar.Map_BarPtr_BarDBID[bar]
+		delete(backRepoBar.Map_BarPtr_BarDBID, bar)
+		delete(backRepoBar.Map_BarDBID_BarDB, barID)
+		delete(backRepoBar.Map_BarDBID_BarPtr, barID)
 	}
 
 	return
@@ -430,12 +404,12 @@ func (backRepoBar *BackRepoBarStruct) CheckoutPhaseOne() (Error error) {
 // models version of the barDB
 func (backRepoBar *BackRepoBarStruct) CheckoutPhaseOneInstance(barDB *BarDB) (Error error) {
 
-	bar, ok := (*backRepoBar.Map_BarDBID_BarPtr)[barDB.ID]
+	bar, ok := backRepoBar.Map_BarDBID_BarPtr[barDB.ID]
 	if !ok {
 		bar = new(models.Bar)
 
-		(*backRepoBar.Map_BarDBID_BarPtr)[barDB.ID] = bar
-		(*backRepoBar.Map_BarPtr_BarDBID)[bar] = barDB.ID
+		backRepoBar.Map_BarDBID_BarPtr[barDB.ID] = bar
+		backRepoBar.Map_BarPtr_BarDBID[bar] = barDB.ID
 
 		// append model store with the new element
 		bar.Name = barDB.Name_Data.String
@@ -450,7 +424,7 @@ func (backRepoBar *BackRepoBarStruct) CheckoutPhaseOneInstance(barDB *BarDB) (Er
 	// Map_BarDBID_BarDB)[barDB hold variable pointers
 	barDB_Data := *barDB
 	preservedPtrToBar := &barDB_Data
-	(*backRepoBar.Map_BarDBID_BarDB)[barDB.ID] = preservedPtrToBar
+	backRepoBar.Map_BarDBID_BarDB[barDB.ID] = preservedPtrToBar
 
 	return
 }
@@ -460,7 +434,7 @@ func (backRepoBar *BackRepoBarStruct) CheckoutPhaseOneInstance(barDB *BarDB) (Er
 func (backRepoBar *BackRepoBarStruct) CheckoutPhaseTwo(backRepo *BackRepoStruct) (Error error) {
 
 	// parse all DB instance and update all pointer fields of the translated models instance
-	for _, barDB := range *backRepoBar.Map_BarDBID_BarDB {
+	for _, barDB := range backRepoBar.Map_BarDBID_BarDB {
 		backRepoBar.CheckoutPhaseTwoInstance(backRepo, barDB)
 	}
 	return
@@ -470,17 +444,19 @@ func (backRepoBar *BackRepoBarStruct) CheckoutPhaseTwo(backRepo *BackRepoStruct)
 // Phase Two is the update of instance with the field in the database
 func (backRepoBar *BackRepoBarStruct) CheckoutPhaseTwoInstance(backRepo *BackRepoStruct, barDB *BarDB) (Error error) {
 
-	bar := (*backRepoBar.Map_BarDBID_BarPtr)[barDB.ID]
+	bar := backRepoBar.Map_BarDBID_BarPtr[barDB.ID]
 	_ = bar // sometimes, there is no code generated. This lines voids the "unused variable" compilation error
 
 	// insertion point for checkout of pointer encoding
 	// X field
+	bar.X = nil
 	if barDB.XID.Int64 != 0 {
-		bar.X = (*backRepo.BackRepoKey.Map_KeyDBID_KeyPtr)[uint(barDB.XID.Int64)]
+		bar.X = backRepo.BackRepoKey.Map_KeyDBID_KeyPtr[uint(barDB.XID.Int64)]
 	}
 	// Y field
+	bar.Y = nil
 	if barDB.YID.Int64 != 0 {
-		bar.Y = (*backRepo.BackRepoKey.Map_KeyDBID_KeyPtr)[uint(barDB.YID.Int64)]
+		bar.Y = backRepo.BackRepoKey.Map_KeyDBID_KeyPtr[uint(barDB.YID.Int64)]
 	}
 	// This loop redeem bar.Set in the stage from the encode in the back repo
 	// It parses all SerieDB in the back repo and if the reverse pointer encoding matches the back repo ID
@@ -488,11 +464,11 @@ func (backRepoBar *BackRepoBarStruct) CheckoutPhaseTwoInstance(backRepo *BackRep
 	// 1. reset the slice
 	bar.Set = bar.Set[:0]
 	// 2. loop all instances in the type in the association end
-	for _, serieDB_AssocEnd := range *backRepo.BackRepoSerie.Map_SerieDBID_SerieDB {
+	for _, serieDB_AssocEnd := range backRepo.BackRepoSerie.Map_SerieDBID_SerieDB {
 		// 3. Does the ID encoding at the end and the ID at the start matches ?
 		if serieDB_AssocEnd.Bar_SetDBID.Int64 == int64(barDB.ID) {
 			// 4. fetch the associated instance in the stage
-			serie_AssocEnd := (*backRepo.BackRepoSerie.Map_SerieDBID_SeriePtr)[serieDB_AssocEnd.ID]
+			serie_AssocEnd := backRepo.BackRepoSerie.Map_SerieDBID_SeriePtr[serieDB_AssocEnd.ID]
 			// 5. append it the association slice
 			bar.Set = append(bar.Set, serie_AssocEnd)
 		}
@@ -500,11 +476,11 @@ func (backRepoBar *BackRepoBarStruct) CheckoutPhaseTwoInstance(backRepo *BackRep
 
 	// sort the array according to the order
 	sort.Slice(bar.Set, func(i, j int) bool {
-		serieDB_i_ID := (*backRepo.BackRepoSerie.Map_SeriePtr_SerieDBID)[bar.Set[i]]
-		serieDB_j_ID := (*backRepo.BackRepoSerie.Map_SeriePtr_SerieDBID)[bar.Set[j]]
+		serieDB_i_ID := backRepo.BackRepoSerie.Map_SeriePtr_SerieDBID[bar.Set[i]]
+		serieDB_j_ID := backRepo.BackRepoSerie.Map_SeriePtr_SerieDBID[bar.Set[j]]
 
-		serieDB_i := (*backRepo.BackRepoSerie.Map_SerieDBID_SerieDB)[serieDB_i_ID]
-		serieDB_j := (*backRepo.BackRepoSerie.Map_SerieDBID_SerieDB)[serieDB_j_ID]
+		serieDB_i := backRepo.BackRepoSerie.Map_SerieDBID_SerieDB[serieDB_i_ID]
+		serieDB_j := backRepo.BackRepoSerie.Map_SerieDBID_SerieDB[serieDB_j_ID]
 
 		return serieDB_i.Bar_SetDBID_Index.Int64 < serieDB_j.Bar_SetDBID_Index.Int64
 	})
@@ -515,7 +491,7 @@ func (backRepoBar *BackRepoBarStruct) CheckoutPhaseTwoInstance(backRepo *BackRep
 // CommitBar allows commit of a single bar (if already staged)
 func (backRepo *BackRepoStruct) CommitBar(bar *models.Bar) {
 	backRepo.BackRepoBar.CommitPhaseOneInstance(bar)
-	if id, ok := (*backRepo.BackRepoBar.Map_BarPtr_BarDBID)[bar]; ok {
+	if id, ok := backRepo.BackRepoBar.Map_BarPtr_BarDBID[bar]; ok {
 		backRepo.BackRepoBar.CommitPhaseTwoInstance(backRepo, id, bar)
 	}
 	backRepo.CommitFromBackNb = backRepo.CommitFromBackNb + 1
@@ -524,9 +500,9 @@ func (backRepo *BackRepoStruct) CommitBar(bar *models.Bar) {
 // CommitBar allows checkout of a single bar (if already staged and with a BackRepo id)
 func (backRepo *BackRepoStruct) CheckoutBar(bar *models.Bar) {
 	// check if the bar is staged
-	if _, ok := (*backRepo.BackRepoBar.Map_BarPtr_BarDBID)[bar]; ok {
+	if _, ok := backRepo.BackRepoBar.Map_BarPtr_BarDBID[bar]; ok {
 
-		if id, ok := (*backRepo.BackRepoBar.Map_BarPtr_BarDBID)[bar]; ok {
+		if id, ok := backRepo.BackRepoBar.Map_BarPtr_BarDBID[bar]; ok {
 			var barDB BarDB
 			barDB.ID = id
 
@@ -680,7 +656,7 @@ func (backRepoBar *BackRepoBarStruct) Backup(dirPath string) {
 	// organize the map into an array with increasing IDs, in order to have repoductible
 	// backup file
 	forBackup := make([]*BarDB, 0)
-	for _, barDB := range *backRepoBar.Map_BarDBID_BarDB {
+	for _, barDB := range backRepoBar.Map_BarDBID_BarDB {
 		forBackup = append(forBackup, barDB)
 	}
 
@@ -706,7 +682,7 @@ func (backRepoBar *BackRepoBarStruct) BackupXL(file *xlsx.File) {
 	// organize the map into an array with increasing IDs, in order to have repoductible
 	// backup file
 	forBackup := make([]*BarDB, 0)
-	for _, barDB := range *backRepoBar.Map_BarDBID_BarDB {
+	for _, barDB := range backRepoBar.Map_BarDBID_BarDB {
 		forBackup = append(forBackup, barDB)
 	}
 
@@ -771,7 +747,7 @@ func (backRepoBar *BackRepoBarStruct) rowVisitorBar(row *xlsx.Row) error {
 		if query.Error != nil {
 			log.Panic(query.Error)
 		}
-		(*backRepoBar.Map_BarDBID_BarDB)[barDB.ID] = barDB
+		backRepoBar.Map_BarDBID_BarDB[barDB.ID] = barDB
 		BackRepoBarid_atBckpTime_newID[barDB_ID_atBackupTime] = barDB.ID
 	}
 	return nil
@@ -808,7 +784,7 @@ func (backRepoBar *BackRepoBarStruct) RestorePhaseOne(dirPath string) {
 		if query.Error != nil {
 			log.Panic(query.Error)
 		}
-		(*backRepoBar.Map_BarDBID_BarDB)[barDB.ID] = barDB
+		backRepoBar.Map_BarDBID_BarDB[barDB.ID] = barDB
 		BackRepoBarid_atBckpTime_newID[barDB_ID_atBackupTime] = barDB.ID
 	}
 
@@ -821,7 +797,7 @@ func (backRepoBar *BackRepoBarStruct) RestorePhaseOne(dirPath string) {
 // to compute new index
 func (backRepoBar *BackRepoBarStruct) RestorePhaseTwo() {
 
-	for _, barDB := range *backRepoBar.Map_BarDBID_BarDB {
+	for _, barDB := range backRepoBar.Map_BarDBID_BarDB {
 
 		// next line of code is to avert unused variable compilation error
 		_ = barDB
@@ -846,6 +822,30 @@ func (backRepoBar *BackRepoBarStruct) RestorePhaseTwo() {
 		}
 	}
 
+}
+
+// BackRepoBar.ResetReversePointers commits all staged instances of Bar to the BackRepo
+// Phase Two is the update of instance with the field in the database
+func (backRepoBar *BackRepoBarStruct) ResetReversePointers(backRepo *BackRepoStruct) (Error error) {
+
+	for idx, bar := range backRepoBar.Map_BarDBID_BarPtr {
+		backRepoBar.ResetReversePointersInstance(backRepo, idx, bar)
+	}
+
+	return
+}
+
+func (backRepoBar *BackRepoBarStruct) ResetReversePointersInstance(backRepo *BackRepoStruct, idx uint, astruct *models.Bar) (Error error) {
+
+	// fetch matching barDB
+	if barDB, ok := backRepoBar.Map_BarDBID_BarDB[idx]; ok {
+		_ = barDB // to avoid unused variable error if there are no reverse to reset
+
+		// insertion point for reverse pointers reset
+		// end of insertion point for reverse pointers reset
+	}
+
+	return
 }
 
 // this field is used during the restauration process.

@@ -42,30 +42,46 @@ export class GongNoteService {
   }
 
   /** GET gongnotes from the server */
-  getGongNotes(GONG__StackPath: string = ""): Observable<GongNoteDB[]> {
+  // gets is more robust to refactoring
+  gets(GONG__StackPath: string): Observable<GongNoteDB[]> {
+    return this.getGongNotes(GONG__StackPath)
+  }
+  getGongNotes(GONG__StackPath: string): Observable<GongNoteDB[]> {
 
-	let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
+    let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
 
     return this.http.get<GongNoteDB[]>(this.gongnotesUrl, { params: params })
       .pipe(
-        tap(_ => this.log('fetched gongnotes')),
+        tap(),
+		// tap(_ => this.log('fetched gongnotes')),
         catchError(this.handleError<GongNoteDB[]>('getGongNotes', []))
       );
   }
 
   /** GET gongnote by id. Will 404 if id not found */
-  getGongNote(id: number): Observable<GongNoteDB> {
+  // more robust API to refactoring
+  get(id: number, GONG__StackPath: string): Observable<GongNoteDB> {
+	return this.getGongNote(id, GONG__StackPath)
+  }
+  getGongNote(id: number, GONG__StackPath: string): Observable<GongNoteDB> {
+
+    let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
+
     const url = `${this.gongnotesUrl}/${id}`;
-    return this.http.get<GongNoteDB>(url).pipe(
-      tap(_ => this.log(`fetched gongnote id=${id}`)),
+    return this.http.get<GongNoteDB>(url, { params: params }).pipe(
+      // tap(_ => this.log(`fetched gongnote id=${id}`)),
       catchError(this.handleError<GongNoteDB>(`getGongNote id=${id}`))
     );
   }
 
   /** POST: add a new gongnote to the server */
+  post(gongnotedb: GongNoteDB, GONG__StackPath: string): Observable<GongNoteDB> {
+    return this.postGongNote(gongnotedb, GONG__StackPath)	
+  }
   postGongNote(gongnotedb: GongNoteDB, GONG__StackPath: string): Observable<GongNoteDB> {
 
     // insertion point for reset of pointers and reverse pointers (to avoid circular JSON)
+    let Links = gongnotedb.Links
     gongnotedb.Links = []
 
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
@@ -74,16 +90,20 @@ export class GongNoteService {
       params: params
     }
 
-	return this.http.post<GongNoteDB>(this.gongnotesUrl, gongnotedb, httpOptions).pipe(
+    return this.http.post<GongNoteDB>(this.gongnotesUrl, gongnotedb, httpOptions).pipe(
       tap(_ => {
         // insertion point for restoration of reverse pointers
-        this.log(`posted gongnotedb id=${gongnotedb.ID}`)
+	      gongnotedb.Links = Links
+        // this.log(`posted gongnotedb id=${gongnotedb.ID}`)
       }),
       catchError(this.handleError<GongNoteDB>('postGongNote'))
     );
   }
 
   /** DELETE: delete the gongnotedb from the server */
+  delete(gongnotedb: GongNoteDB | number, GONG__StackPath: string): Observable<GongNoteDB> {
+    return this.deleteGongNote(gongnotedb, GONG__StackPath)
+  }
   deleteGongNote(gongnotedb: GongNoteDB | number, GONG__StackPath: string): Observable<GongNoteDB> {
     const id = typeof gongnotedb === 'number' ? gongnotedb : gongnotedb.ID;
     const url = `${this.gongnotesUrl}/${id}`;
@@ -101,11 +121,15 @@ export class GongNoteService {
   }
 
   /** PUT: update the gongnotedb on the server */
+  update(gongnotedb: GongNoteDB, GONG__StackPath: string): Observable<GongNoteDB> {
+    return this.updateGongNote(gongnotedb, GONG__StackPath)
+  }
   updateGongNote(gongnotedb: GongNoteDB, GONG__StackPath: string): Observable<GongNoteDB> {
     const id = typeof gongnotedb === 'number' ? gongnotedb : gongnotedb.ID;
     const url = `${this.gongnotesUrl}/${id}`;
 
     // insertion point for reset of pointers and reverse pointers (to avoid circular JSON)
+    let Links = gongnotedb.Links
     gongnotedb.Links = []
 
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
@@ -117,7 +141,8 @@ export class GongNoteService {
     return this.http.put<GongNoteDB>(url, gongnotedb, httpOptions).pipe(
       tap(_ => {
         // insertion point for restoration of reverse pointers
-        this.log(`updated gongnotedb id=${gongnotedb.ID}`)
+	      gongnotedb.Links = Links
+        // this.log(`updated gongnotedb id=${gongnotedb.ID}`)
       }),
       catchError(this.handleError<GongNoteDB>('updateGongNote'))
     );
@@ -129,11 +154,11 @@ export class GongNoteService {
    * @param operation - name of the operation that failed
    * @param result - optional value to return as the observable result
    */
-  private handleError<T>(operation = 'operation', result?: T) {
+  private handleError<T>(operation = 'operation in GongNoteService', result?: T) {
     return (error: any): Observable<T> => {
 
       // TODO: send the error to remote logging infrastructure
-      console.error(error); // log to console instead
+      console.error("GongNoteService" + error); // log to console instead
 
       // TODO: better job of transforming error for user consumption
       this.log(`${operation} failed: ${error.message}`);
@@ -144,6 +169,6 @@ export class GongNoteService {
   }
 
   private log(message: string) {
-
+      console.log(message)
   }
 }

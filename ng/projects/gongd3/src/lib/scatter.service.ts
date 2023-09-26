@@ -39,37 +39,56 @@ export class ScatterService {
     origin = origin.replace("4200", "8080")
 
     // compute path to the service
-    this.scattersUrl = origin + '/api/gongd3/go/v1/scatters';
+    this.scattersUrl = origin + '/api/github.com/fullstack-lang/gongd3/go/v1/scatters';
   }
 
   /** GET scatters from the server */
-  getScatters(GONG__StackPath: string = ""): Observable<ScatterDB[]> {
+  // gets is more robust to refactoring
+  gets(GONG__StackPath: string): Observable<ScatterDB[]> {
+    return this.getScatters(GONG__StackPath)
+  }
+  getScatters(GONG__StackPath: string): Observable<ScatterDB[]> {
 
-	let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
+    let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
 
     return this.http.get<ScatterDB[]>(this.scattersUrl, { params: params })
       .pipe(
-        tap(_ => this.log('fetched scatters')),
+        tap(),
+		// tap(_ => this.log('fetched scatters')),
         catchError(this.handleError<ScatterDB[]>('getScatters', []))
       );
   }
 
   /** GET scatter by id. Will 404 if id not found */
-  getScatter(id: number): Observable<ScatterDB> {
+  // more robust API to refactoring
+  get(id: number, GONG__StackPath: string): Observable<ScatterDB> {
+	return this.getScatter(id, GONG__StackPath)
+  }
+  getScatter(id: number, GONG__StackPath: string): Observable<ScatterDB> {
+
+    let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
+
     const url = `${this.scattersUrl}/${id}`;
-    return this.http.get<ScatterDB>(url).pipe(
-      tap(_ => this.log(`fetched scatter id=${id}`)),
+    return this.http.get<ScatterDB>(url, { params: params }).pipe(
+      // tap(_ => this.log(`fetched scatter id=${id}`)),
       catchError(this.handleError<ScatterDB>(`getScatter id=${id}`))
     );
   }
 
   /** POST: add a new scatter to the server */
+  post(scatterdb: ScatterDB, GONG__StackPath: string): Observable<ScatterDB> {
+    return this.postScatter(scatterdb, GONG__StackPath)	
+  }
   postScatter(scatterdb: ScatterDB, GONG__StackPath: string): Observable<ScatterDB> {
 
     // insertion point for reset of pointers and reverse pointers (to avoid circular JSON)
+    let X = scatterdb.X
     scatterdb.X = new KeyDB
+    let Y = scatterdb.Y
     scatterdb.Y = new KeyDB
+    let Text = scatterdb.Text
     scatterdb.Text = new KeyDB
+    let Set = scatterdb.Set
     scatterdb.Set = []
 
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
@@ -78,16 +97,20 @@ export class ScatterService {
       params: params
     }
 
-	return this.http.post<ScatterDB>(this.scattersUrl, scatterdb, httpOptions).pipe(
+    return this.http.post<ScatterDB>(this.scattersUrl, scatterdb, httpOptions).pipe(
       tap(_ => {
         // insertion point for restoration of reverse pointers
-        this.log(`posted scatterdb id=${scatterdb.ID}`)
+	      scatterdb.Set = Set
+        // this.log(`posted scatterdb id=${scatterdb.ID}`)
       }),
       catchError(this.handleError<ScatterDB>('postScatter'))
     );
   }
 
   /** DELETE: delete the scatterdb from the server */
+  delete(scatterdb: ScatterDB | number, GONG__StackPath: string): Observable<ScatterDB> {
+    return this.deleteScatter(scatterdb, GONG__StackPath)
+  }
   deleteScatter(scatterdb: ScatterDB | number, GONG__StackPath: string): Observable<ScatterDB> {
     const id = typeof scatterdb === 'number' ? scatterdb : scatterdb.ID;
     const url = `${this.scattersUrl}/${id}`;
@@ -105,14 +128,21 @@ export class ScatterService {
   }
 
   /** PUT: update the scatterdb on the server */
+  update(scatterdb: ScatterDB, GONG__StackPath: string): Observable<ScatterDB> {
+    return this.updateScatter(scatterdb, GONG__StackPath)
+  }
   updateScatter(scatterdb: ScatterDB, GONG__StackPath: string): Observable<ScatterDB> {
     const id = typeof scatterdb === 'number' ? scatterdb : scatterdb.ID;
     const url = `${this.scattersUrl}/${id}`;
 
     // insertion point for reset of pointers and reverse pointers (to avoid circular JSON)
+    let X = scatterdb.X
     scatterdb.X = new KeyDB
+    let Y = scatterdb.Y
     scatterdb.Y = new KeyDB
+    let Text = scatterdb.Text
     scatterdb.Text = new KeyDB
+    let Set = scatterdb.Set
     scatterdb.Set = []
 
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
@@ -124,7 +154,8 @@ export class ScatterService {
     return this.http.put<ScatterDB>(url, scatterdb, httpOptions).pipe(
       tap(_ => {
         // insertion point for restoration of reverse pointers
-        this.log(`updated scatterdb id=${scatterdb.ID}`)
+	      scatterdb.Set = Set
+        // this.log(`updated scatterdb id=${scatterdb.ID}`)
       }),
       catchError(this.handleError<ScatterDB>('updateScatter'))
     );
@@ -136,11 +167,11 @@ export class ScatterService {
    * @param operation - name of the operation that failed
    * @param result - optional value to return as the observable result
    */
-  private handleError<T>(operation = 'operation', result?: T) {
+  private handleError<T>(operation = 'operation in ScatterService', result?: T) {
     return (error: any): Observable<T> => {
 
       // TODO: send the error to remote logging infrastructure
-      console.error(error); // log to console instead
+      console.error("ScatterService" + error); // log to console instead
 
       // TODO: better job of transforming error for user consumption
       this.log(`${operation} failed: ${error.message}`);
@@ -151,6 +182,6 @@ export class ScatterService {
   }
 
   private log(message: string) {
-
+      console.log(message)
   }
 }

@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnInit } from '@angular/core';
+import { Component, ElementRef, Input, OnInit } from '@angular/core';
 
 import * as d3 from 'd3';
 import * as d3_selection from 'd3-selection'
@@ -29,6 +29,8 @@ export class GeojsonComponent implements OnInit {
 
   drawStateLines: boolean = true
   drawCountiesLines: boolean = false
+
+  @Input() StackName: string = ""
 
   constructor(
     private topographyService: TopographyService,

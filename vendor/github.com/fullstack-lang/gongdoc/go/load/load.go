@@ -11,8 +11,21 @@ import (
 	gongdoc_fullstack "github.com/fullstack-lang/gongdoc/go/fullstack"
 	gongdoc_models "github.com/fullstack-lang/gongdoc/go/models"
 
+	"github.com/fullstack-lang/gongdoc/go/doc2svg"
+	gongsvg_fullstack "github.com/fullstack-lang/gongsvg/go/fullstack"
+	gongtree_fullstack "github.com/fullstack-lang/gongtree/go/fullstack"
+
 	"github.com/gin-gonic/gin"
 )
+
+type BeforeCommitImplementation struct {
+	// for generating SVG
+	docSVGMapper *doc2svg.DocSVGMapper
+}
+
+func (beforeCommitImplementation *BeforeCommitImplementation) BeforeCommit(gongdocStage *gongdoc_models.StageStruct) {
+	beforeCommitImplementation.docSVGMapper.GenerateSvg(gongdocStage)
+}
 
 // Load have gongdoc init itself and the gong stack as well
 // then parse the model source code in [goSourceDirectories]
@@ -26,14 +39,32 @@ import (
 func Load(
 	stackName string,
 	pkgPath string,
-	goSourceDirectories embed.FS,
+	goModelsDir embed.FS,
+	goDiagramsDir embed.FS,
 	r *gin.Engine,
 	embeddedDiagrams bool,
 	map_StructName_InstanceNb *map[string]int) {
 
-	gongStack, _ := gong_fullstack.NewStackInstance(r, "")
-	gongdoc_fullstack.Init(r)
-	modelPackage, _ := gong_models.LoadEmbedded(gongStack, goSourceDirectories)
+	gongStage, _ := gong_fullstack.NewStackInstance(r, pkgPath)
+	gongdocStage, _ := gongdoc_fullstack.NewStackInstance(r, pkgPath)
+	gongsvgStage, _ := gongsvg_fullstack.NewStackInstance(r, pkgPath)
+	gongtreeStage, _ := gongtree_fullstack.NewStackInstance(r, pkgPath)
+
+	beforeCommitImplementation := new(BeforeCommitImplementation)
+
+	docSVGMapper := doc2svg.NewDocSVGMapper(gongtreeStage, gongsvgStage)
+
+	beforeCommitImplementation.docSVGMapper = docSVGMapper
+
+	gongdocStage.OnInitCommitFromFrontCallback = beforeCommitImplementation
+	gongdocStage.OnInitCommitFromBackCallback = beforeCommitImplementation
+
+	diagramPackageCallbackSingloton := new(DiagramPackageCallbacksSingloton)
+	diagramPackageCallbackSingloton.gongtreeStage = gongtreeStage
+	gongdocStage.OnAfterDiagramPackageUpdateCallback = diagramPackageCallbackSingloton
+
+	modelPackage, _ := gong_models.LoadEmbedded(gongStage, goModelsDir)
+
 	modelPackage.Name = stackName
 	modelPackage.PkgPath = pkgPath
 
@@ -41,21 +72,18 @@ func Load(
 	// prepare the model views
 	var diagramPackage *gongdoc_models.DiagramPackage
 
-	gongStage := gong_models.Stage
-	_ = gongStage
-
-	gongdoc_models.Stage.MetaPackageImportAlias = stackName
-	gongdoc_models.Stage.MetaPackageImportPath = pkgPath
+	gongdocStage.MetaPackageImportAlias = stackName
+	gongdocStage.MetaPackageImportPath = pkgPath
 
 	if embeddedDiagrams {
-		diagramPackage, _ = LoadEmbeddedDiagramPackage(goSourceDirectories, modelPackage)
+		diagramPackage, _ = LoadEmbeddedDiagramPackage(gongdocStage, gongtreeStage, goDiagramsDir, modelPackage)
 	} else {
-		diagramPackage, _ = LoadDiagramPackage(filepath.Join("../../diagrams"), modelPackage, true)
+		diagramPackage, _ = LoadDiagramPackage(gongdocStage, gongtreeStage, filepath.Join("../../diagrams"), modelPackage, true)
 	}
 	diagramPackage.GongModelPath = pkgPath
 
 	// first, get all gong struct in the model
-	for gongStruct := range gong_models.Stage.GongStructs {
+	for gongStruct := range gongStage.GongStructs {
 		nbInstances, ok := (*map_StructName_InstanceNb)[gongStruct.Name]
 		if ok {
 			diagramPackage.Map_Identifier_NbInstances[gongStruct.Name] = nbInstances
@@ -63,13 +91,13 @@ func Load(
 	}
 
 	// to be removed after fix of [issue](https://github.com/golang/go/issues/57559)
-	gongdoc_models.SetupMapDocLinkRenaming(diagramPackage.Stage_)
+	gongdoc_models.SetupMapDocLinkRenaming(gongStage, diagramPackage.Stage_)
 	// end of the be removed
 
 	// set up the number of instance per classshape
 	if map_StructName_InstanceNb != nil {
 
-		for gongStruct := range *gong_models.GetGongstructInstancesSet[gong_models.GongStruct]() {
+		for gongStruct := range *gong_models.GetGongstructInstancesSet[gong_models.GongStruct](modelPackage.GetStage()) {
 			diagramPackage.Map_Identifier_NbInstances[gongStruct.Name] =
 				(*map_StructName_InstanceNb)[gongStruct.Name]
 

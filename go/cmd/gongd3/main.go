@@ -1,38 +1,30 @@
 package main
 
 import (
-	"embed"
 	"flag"
 	"fmt"
-	"io/fs"
 	"log"
-	"net/http"
 	"os"
-	"strings"
+	"strconv"
 
-	"github.com/gin-contrib/cors"
-	"github.com/gin-contrib/static"
-	"github.com/gin-gonic/gin"
-
-	"gongd3/go/fullstack"
-	"gongd3/go/models"
-
-	gongdoc_load "github.com/fullstack-lang/gongdoc/go/load"
-
-	gongd3 "gongd3"
+	gongd3_go "github.com/fullstack-lang/gongd3/go"
+	gongd3_fullstack "github.com/fullstack-lang/gongd3/go/fullstack"
+	gongd3_models "github.com/fullstack-lang/gongd3/go/models"
+	gongd3_orm "github.com/fullstack-lang/gongd3/go/orm"
+	gongd3_probe "github.com/fullstack-lang/gongd3/go/probe"
+	gongd3_static "github.com/fullstack-lang/gongd3/go/static"
 )
 
 var (
-	logDBFlag  = flag.Bool("logDB", false, "log mode for db")
 	logGINFlag = flag.Bool("logGIN", false, "log mode for gin")
 
-	marshallOnStartup  = flag.String("marshallOnStartup", "", "at startup, marshall staged data to a go file with the marshall name and '.go' (must be lowercased without spaces). If marshall arg is '', no marshalling")
 	unmarshallFromCode = flag.String("unmarshallFromCode", "", "unmarshall data from go file and '.go' (must be lowercased without spaces), If unmarshallFromCode arg is '', no unmarshalling")
-	unmarshall         = flag.String("unmarshall", "", "unmarshall data from marshall name and '.go' (must be lowercased without spaces), If unmarshall arg is '', no unmarshalling")
 	marshallOnCommit   = flag.String("marshallOnCommit", "", "on all commits, marshall staged data to a go file with the marshall name and '.go' (must be lowercased without spaces). If marshall arg is '', no marshalling")
 
 	diagrams         = flag.Bool("diagrams", true, "parse/analysis go/models and go/diagrams")
 	embeddedDiagrams = flag.Bool("embeddedDiagrams", false, "parse/analysis go/models and go/embeddedDiagrams")
+
+	port = flag.Int("port", 8080, "port server")
 )
 
 // InjectionGateway is the singloton that stores all functions
@@ -44,15 +36,15 @@ var InjectionGateway = make(map[string](func()))
 type BeforeCommitImplementation struct {
 }
 
-func (impl *BeforeCommitImplementation) BeforeCommit(stage *models.StageStruct) {
+func (impl *BeforeCommitImplementation) BeforeCommit(stage *gongd3_models.StageStruct) {
 	file, err := os.Create(fmt.Sprintf("./%s.go", *marshallOnCommit))
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 	defer file.Close()
 
-	models.Stage.Checkout()
-	models.Stage.Marshall(file, "gongd3/go/models", "main")
+	stage.Checkout()
+	stage.Marshall(file, "github.com/fullstack-lang/gongd3/go/models", "main")
 }
 
 func main() {
@@ -63,61 +55,26 @@ func main() {
 	// parse program arguments
 	flag.Parse()
 
-	// setup controlers
-	if !*logGINFlag {
-		myfile, _ := os.Create("/tmp/server.log")
-		gin.DefaultWriter = myfile
-	}
-	r := gin.Default()
-	r.Use(cors.Default())
+	// setup the static file server and get the controller
+	r := gongd3_static.ServeStaticFiles(*logGINFlag)
 
 	// setup stack
+	var stage *gongd3_models.StageStruct
+	var backRepo *gongd3_orm.BackRepoStruct
+
 	if *marshallOnCommit != "" {
-		fullstack.Init(r)
+		// persistence in a SQLite file on disk in memory
+		stage, backRepo = gongd3_fullstack.NewStackInstance(r, "gongd3")
 	} else {
-		fullstack.Init(r, "./test.db")
-	}
-
-	// generate injection code from the stage
-	if *marshallOnStartup != "" {
-
-		if strings.Contains(*marshallOnStartup, " ") {
-			log.Fatalln(*marshallOnStartup + " must not contains blank spaces")
-		}
-		if strings.ToLower(*marshallOnStartup) != *marshallOnStartup {
-			log.Fatalln(*marshallOnStartup + " must be lowercases")
-		}
-
-		file, err := os.Create(fmt.Sprintf("./%s.go", *marshallOnStartup))
-		if err != nil {
-			log.Fatal(err.Error())
-		}
-		defer file.Close()
-
-		models.Stage.Checkout()
-		models.Stage.Marshall(file, "gongd3/go/models", "main")
-		os.Exit(0)
-	}
-
-	// setup the stage by injecting the code from code database
-	if *unmarshall != "" {
-		models.Stage.Checkout()
-		models.Stage.Reset()
-		models.Stage.Commit()
-		if InjectionGateway[*unmarshall] != nil {
-			InjectionGateway[*unmarshall]()
-		}
-		models.Stage.Commit()
-	} else {
-		// in case the database is used, checkout the content to the stage
-		models.Stage.Checkout()
+		// persistence in a SQLite file on disk
+		stage, backRepo = gongd3_fullstack.NewStackInstance(r, "gongd3", "./gongd3.db")
 	}
 
 	if *unmarshallFromCode != "" {
-		models.Stage.Checkout()
-		models.Stage.Reset()
-		models.Stage.Commit()
-		err := models.ParseAstFile(&models.Stage, *unmarshallFromCode)
+		stage.Checkout()
+		stage.Reset()
+		stage.Commit()
+		err := gongd3_models.ParseAstFile(stage, *unmarshallFromCode)
 
 		// if the application is run with -unmarshallFromCode=xxx.go -marshallOnCommit
 		// xxx.go might be absent the first time. However, this shall not be a show stopper.
@@ -125,54 +82,24 @@ func main() {
 			log.Println("no file to read " + err.Error())
 		}
 
-		models.Stage.Commit()
+		stage.Commit()
 	} else {
 		// in case the database is used, checkout the content to the stage
-		models.Stage.Checkout()
+		stage.Checkout()
 	}
 
 	// hook automatic marshall to go code at every commit
 	if *marshallOnCommit != "" {
 		hook := new(BeforeCommitImplementation)
-		models.Stage.OnInitCommitFromFrontCallback = hook
+		stage.OnInitCommitCallback = hook
 	}
 
-	gongdoc_load.Load(
-		"gongd3",
-		"gongd3/go/models",
-		gongd3.GoDir,
-		r,
-		*embeddedDiagrams,
-		&models.Stage.Map_GongStructName_InstancesNb)
+	gongd3_probe.NewProbe(r, gongd3_go.GoModelsDir, gongd3_go.GoDiagramsDir, 
+		*embeddedDiagrams,"gongd3", stage, backRepo)
 
-	// insertion point for serving the static file
-	// provide the static route for the angular pages
-	r.Use(static.Serve("/", EmbedFolder(gongd3.NgDistNg, "ng/dist/ng")))
-	r.NoRoute(func(c *gin.Context) {
-		fmt.Println(c.Request.URL.Path, "doesn't exists, redirect on /")
-		c.Redirect(http.StatusMovedPermanently, "/")
-		c.Abort()
-	})
-
-	log.Printf("Server ready serve on localhost:8080")
-	r.Run()
-}
-
-type embedFileSystem struct {
-	http.FileSystem
-}
-
-func (e embedFileSystem) Exists(prefix string, path string) bool {
-	_, err := e.Open(path)
-	return err == nil
-}
-
-func EmbedFolder(fsEmbed embed.FS, targetPath string) static.ServeFileSystem {
-	fsys, err := fs.Sub(fsEmbed, targetPath)
+	log.Printf("Server ready serve on localhost:" + strconv.Itoa(*port))
+	err := r.Run(":" + strconv.Itoa(*port))
 	if err != nil {
-		panic(err)
-	}
-	return embedFileSystem{
-		FileSystem: http.FS(fsys),
+		log.Fatalln(err.Error())
 	}
 }

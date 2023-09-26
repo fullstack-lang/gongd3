@@ -1,3 +1,4 @@
+// generated code - do not edit
 package controllers
 
 import (
@@ -17,21 +18,26 @@ type Controller struct {
 	Map_BackRepos map[string]*gongdoc_orm.BackRepoStruct
 }
 
-var instance *Controller
-var once sync.Once
+var _controllerSingloton *Controller
+var doRegisterOnce sync.Once
 
 func Register(r *gin.Engine) {
-	once.Do(func() {
-		RegisterControllers(r)
+	doRegisterOnce.Do(func() {
+		registerControllers(r)
 	})
 }
 
+var doControllerInitOnce sync.Once
+
 func GetController() *Controller {
-	once.Do(func() {
-		instance = &Controller{
+	doControllerInitOnce.Do(func() {
+		_controllerSingloton = &Controller{
 			Map_BackRepos: make(map[string]*gongdoc_orm.BackRepoStruct),
 		}
-		instance.Map_BackRepos[""] = &gongdoc_orm.BackRepo
 	})
-	return instance
+	return _controllerSingloton
+}
+
+func (controller *Controller) AddBackRepo(backRepo *gongdoc_orm.BackRepoStruct, stackPath string) {
+	GetController().Map_BackRepos[stackPath] = backRepo
 }

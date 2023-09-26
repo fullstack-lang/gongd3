@@ -1,10 +1,17 @@
+// do not modify, generated file
 package fullstack
 
 import (
-	"gongd3/go/models"
-	"gongd3/go/orm"
+	"github.com/fullstack-lang/gongd3/go/controllers"
+	"github.com/fullstack-lang/gongd3/go/models"
+	"github.com/fullstack-lang/gongd3/go/orm"
 
 	"github.com/gin-gonic/gin"
+
+	// this will import the angular front end source code directory (versionned with git) in the vendor directory
+	// this path will be included in the "tsconfig.json" front end compilation paths
+	// to include this stack front end code
+	_ "github.com/fullstack-lang/gongd3/ng/projects"
 )
 
 // NewStackInstance creates a new stack instance from the Stack Model
@@ -21,12 +28,33 @@ func NewStackInstance(
 	stage *models.StageStruct,
 	backRepo *orm.BackRepoStruct) {
 
-	Init(r, filenames...)
-
 	// temporary
-	stage = &models.Stage
-	backRepo = &orm.BackRepo
+	if stackPath == "" {
+		stage = models.GetDefaultStage()
+	} else {
+		stage = models.NewStage(stackPath)
+	}
+
+	if len(filenames) == 0 {
+		filenames = append(filenames, ":memory:")
+	}
+
+	backRepo = orm.NewBackRepo(stage, filenames[0])
+
+	if stackPath != "" {
+		controllers.GetController().AddBackRepo(backRepo, stackPath)
+	}
+
+	controllers.Register(r)
+
+	// add orchestration
+	// insertion point
+	models.SetOrchestratorOnAfterUpdate[models.Bar](stage)
+	models.SetOrchestratorOnAfterUpdate[models.Key](stage)
+	models.SetOrchestratorOnAfterUpdate[models.Pie](stage)
+	models.SetOrchestratorOnAfterUpdate[models.Scatter](stage)
+	models.SetOrchestratorOnAfterUpdate[models.Serie](stage)
+	models.SetOrchestratorOnAfterUpdate[models.Value](stage)
 
 	return
-
 }

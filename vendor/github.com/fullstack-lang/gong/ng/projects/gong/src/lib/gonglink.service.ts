@@ -43,27 +43,42 @@ export class GongLinkService {
   }
 
   /** GET gonglinks from the server */
-  getGongLinks(GONG__StackPath: string = ""): Observable<GongLinkDB[]> {
+  // gets is more robust to refactoring
+  gets(GONG__StackPath: string): Observable<GongLinkDB[]> {
+    return this.getGongLinks(GONG__StackPath)
+  }
+  getGongLinks(GONG__StackPath: string): Observable<GongLinkDB[]> {
 
-	let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
+    let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
 
     return this.http.get<GongLinkDB[]>(this.gonglinksUrl, { params: params })
       .pipe(
-        tap(_ => this.log('fetched gonglinks')),
+        tap(),
+		// tap(_ => this.log('fetched gonglinks')),
         catchError(this.handleError<GongLinkDB[]>('getGongLinks', []))
       );
   }
 
   /** GET gonglink by id. Will 404 if id not found */
-  getGongLink(id: number): Observable<GongLinkDB> {
+  // more robust API to refactoring
+  get(id: number, GONG__StackPath: string): Observable<GongLinkDB> {
+	return this.getGongLink(id, GONG__StackPath)
+  }
+  getGongLink(id: number, GONG__StackPath: string): Observable<GongLinkDB> {
+
+    let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
+
     const url = `${this.gonglinksUrl}/${id}`;
-    return this.http.get<GongLinkDB>(url).pipe(
-      tap(_ => this.log(`fetched gonglink id=${id}`)),
+    return this.http.get<GongLinkDB>(url, { params: params }).pipe(
+      // tap(_ => this.log(`fetched gonglink id=${id}`)),
       catchError(this.handleError<GongLinkDB>(`getGongLink id=${id}`))
     );
   }
 
   /** POST: add a new gonglink to the server */
+  post(gonglinkdb: GongLinkDB, GONG__StackPath: string): Observable<GongLinkDB> {
+    return this.postGongLink(gonglinkdb, GONG__StackPath)	
+  }
   postGongLink(gonglinkdb: GongLinkDB, GONG__StackPath: string): Observable<GongLinkDB> {
 
     // insertion point for reset of pointers and reverse pointers (to avoid circular JSON)
@@ -76,17 +91,20 @@ export class GongLinkService {
       params: params
     }
 
-	return this.http.post<GongLinkDB>(this.gonglinksUrl, gonglinkdb, httpOptions).pipe(
+    return this.http.post<GongLinkDB>(this.gonglinksUrl, gonglinkdb, httpOptions).pipe(
       tap(_ => {
         // insertion point for restoration of reverse pointers
         gonglinkdb.GongNote_Links_reverse = _GongNote_Links_reverse
-        this.log(`posted gonglinkdb id=${gonglinkdb.ID}`)
+        // this.log(`posted gonglinkdb id=${gonglinkdb.ID}`)
       }),
       catchError(this.handleError<GongLinkDB>('postGongLink'))
     );
   }
 
   /** DELETE: delete the gonglinkdb from the server */
+  delete(gonglinkdb: GongLinkDB | number, GONG__StackPath: string): Observable<GongLinkDB> {
+    return this.deleteGongLink(gonglinkdb, GONG__StackPath)
+  }
   deleteGongLink(gonglinkdb: GongLinkDB | number, GONG__StackPath: string): Observable<GongLinkDB> {
     const id = typeof gonglinkdb === 'number' ? gonglinkdb : gonglinkdb.ID;
     const url = `${this.gonglinksUrl}/${id}`;
@@ -104,6 +122,9 @@ export class GongLinkService {
   }
 
   /** PUT: update the gonglinkdb on the server */
+  update(gonglinkdb: GongLinkDB, GONG__StackPath: string): Observable<GongLinkDB> {
+    return this.updateGongLink(gonglinkdb, GONG__StackPath)
+  }
   updateGongLink(gonglinkdb: GongLinkDB, GONG__StackPath: string): Observable<GongLinkDB> {
     const id = typeof gonglinkdb === 'number' ? gonglinkdb : gonglinkdb.ID;
     const url = `${this.gonglinksUrl}/${id}`;
@@ -122,7 +143,7 @@ export class GongLinkService {
       tap(_ => {
         // insertion point for restoration of reverse pointers
         gonglinkdb.GongNote_Links_reverse = _GongNote_Links_reverse
-        this.log(`updated gonglinkdb id=${gonglinkdb.ID}`)
+        // this.log(`updated gonglinkdb id=${gonglinkdb.ID}`)
       }),
       catchError(this.handleError<GongLinkDB>('updateGongLink'))
     );
@@ -134,11 +155,11 @@ export class GongLinkService {
    * @param operation - name of the operation that failed
    * @param result - optional value to return as the observable result
    */
-  private handleError<T>(operation = 'operation', result?: T) {
+  private handleError<T>(operation = 'operation in GongLinkService', result?: T) {
     return (error: any): Observable<T> => {
 
       // TODO: send the error to remote logging infrastructure
-      console.error(error); // log to console instead
+      console.error("GongLinkService" + error); // log to console instead
 
       // TODO: better job of transforming error for user consumption
       this.log(`${operation} failed: ${error.message}`);
@@ -149,6 +170,6 @@ export class GongLinkService {
   }
 
   private log(message: string) {
-
+      console.log(message)
   }
 }

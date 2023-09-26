@@ -38,31 +38,46 @@ export class KeyService {
     origin = origin.replace("4200", "8080")
 
     // compute path to the service
-    this.keysUrl = origin + '/api/gongd3/go/v1/keys';
+    this.keysUrl = origin + '/api/github.com/fullstack-lang/gongd3/go/v1/keys';
   }
 
   /** GET keys from the server */
-  getKeys(GONG__StackPath: string = ""): Observable<KeyDB[]> {
+  // gets is more robust to refactoring
+  gets(GONG__StackPath: string): Observable<KeyDB[]> {
+    return this.getKeys(GONG__StackPath)
+  }
+  getKeys(GONG__StackPath: string): Observable<KeyDB[]> {
 
-	let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
+    let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
 
     return this.http.get<KeyDB[]>(this.keysUrl, { params: params })
       .pipe(
-        tap(_ => this.log('fetched keys')),
+        tap(),
+		// tap(_ => this.log('fetched keys')),
         catchError(this.handleError<KeyDB[]>('getKeys', []))
       );
   }
 
   /** GET key by id. Will 404 if id not found */
-  getKey(id: number): Observable<KeyDB> {
+  // more robust API to refactoring
+  get(id: number, GONG__StackPath: string): Observable<KeyDB> {
+	return this.getKey(id, GONG__StackPath)
+  }
+  getKey(id: number, GONG__StackPath: string): Observable<KeyDB> {
+
+    let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
+
     const url = `${this.keysUrl}/${id}`;
-    return this.http.get<KeyDB>(url).pipe(
-      tap(_ => this.log(`fetched key id=${id}`)),
+    return this.http.get<KeyDB>(url, { params: params }).pipe(
+      // tap(_ => this.log(`fetched key id=${id}`)),
       catchError(this.handleError<KeyDB>(`getKey id=${id}`))
     );
   }
 
   /** POST: add a new key to the server */
+  post(keydb: KeyDB, GONG__StackPath: string): Observable<KeyDB> {
+    return this.postKey(keydb, GONG__StackPath)	
+  }
   postKey(keydb: KeyDB, GONG__StackPath: string): Observable<KeyDB> {
 
     // insertion point for reset of pointers and reverse pointers (to avoid circular JSON)
@@ -73,16 +88,19 @@ export class KeyService {
       params: params
     }
 
-	return this.http.post<KeyDB>(this.keysUrl, keydb, httpOptions).pipe(
+    return this.http.post<KeyDB>(this.keysUrl, keydb, httpOptions).pipe(
       tap(_ => {
         // insertion point for restoration of reverse pointers
-        this.log(`posted keydb id=${keydb.ID}`)
+        // this.log(`posted keydb id=${keydb.ID}`)
       }),
       catchError(this.handleError<KeyDB>('postKey'))
     );
   }
 
   /** DELETE: delete the keydb from the server */
+  delete(keydb: KeyDB | number, GONG__StackPath: string): Observable<KeyDB> {
+    return this.deleteKey(keydb, GONG__StackPath)
+  }
   deleteKey(keydb: KeyDB | number, GONG__StackPath: string): Observable<KeyDB> {
     const id = typeof keydb === 'number' ? keydb : keydb.ID;
     const url = `${this.keysUrl}/${id}`;
@@ -100,6 +118,9 @@ export class KeyService {
   }
 
   /** PUT: update the keydb on the server */
+  update(keydb: KeyDB, GONG__StackPath: string): Observable<KeyDB> {
+    return this.updateKey(keydb, GONG__StackPath)
+  }
   updateKey(keydb: KeyDB, GONG__StackPath: string): Observable<KeyDB> {
     const id = typeof keydb === 'number' ? keydb : keydb.ID;
     const url = `${this.keysUrl}/${id}`;
@@ -115,7 +136,7 @@ export class KeyService {
     return this.http.put<KeyDB>(url, keydb, httpOptions).pipe(
       tap(_ => {
         // insertion point for restoration of reverse pointers
-        this.log(`updated keydb id=${keydb.ID}`)
+        // this.log(`updated keydb id=${keydb.ID}`)
       }),
       catchError(this.handleError<KeyDB>('updateKey'))
     );
@@ -127,11 +148,11 @@ export class KeyService {
    * @param operation - name of the operation that failed
    * @param result - optional value to return as the observable result
    */
-  private handleError<T>(operation = 'operation', result?: T) {
+  private handleError<T>(operation = 'operation in KeyService', result?: T) {
     return (error: any): Observable<T> => {
 
       // TODO: send the error to remote logging infrastructure
-      console.error(error); // log to console instead
+      console.error("KeyService" + error); // log to console instead
 
       // TODO: better job of transforming error for user consumption
       this.log(`${operation} failed: ${error.message}`);
@@ -142,6 +163,6 @@ export class KeyService {
   }
 
   private log(message: string) {
-
+      console.log(message)
   }
 }

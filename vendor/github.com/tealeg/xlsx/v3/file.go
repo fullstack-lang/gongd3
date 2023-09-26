@@ -83,15 +83,17 @@ func NewFile(options ...FileOption) *File {
 // xlsx.File struct for it.  You may pass it zero, one or
 // many FileOption functions that affect the behaviour of the file.
 func OpenFile(fileName string, options ...FileOption) (file *File, err error) {
-	var z *zip.ReadCloser
 	wrap := func(err error) (*File, error) {
 		return nil, fmt.Errorf("OpenFile: %w", err)
 	}
 
+	var z *zip.ReadCloser
 	z, err = zip.OpenReader(fileName)
 	if err != nil {
 		return wrap(err)
 	}
+	defer z.Close()
+
 	file, err = ReadZip(z, options...)
 	if err != nil {
 		return wrap(err)
@@ -124,10 +126,10 @@ func OpenReaderAt(r io.ReaderAt, size int64, options ...FileOption) (*File, erro
 //
 // For example:
 //
-//    var mySlice [][][]string
-//    var value string
-//    mySlice = xlsx.FileToSlice("myXLSX.xlsx")
-//    value = mySlice[0][0][0]
+//	var mySlice [][][]string
+//	var value string
+//	mySlice = xlsx.FileToSlice("myXLSX.xlsx")
+//	value = mySlice[0][0][0]
 //
 // Here, value would be set to the raw value of the cell A1 in the
 // first sheet in the XLSX file.
@@ -153,22 +155,22 @@ func FileToSliceUnmerged(path string, options ...FileOption) ([][][]string, erro
 
 // Save the File to an xlsx file at the provided path.
 func (f *File) Save(path string) (err error) {
-	wrap := func(err error) error {
-		return fmt.Errorf("File.Save(%s): %w", path, err)
-	}
+	defer func() {
+		if err != nil {
+			err = fmt.Errorf("File.Save(%s): %w", path, err)
+		}
+	}()
 	target, err := os.Create(path)
 	if err != nil {
-		return wrap(err)
+		return err
 	}
+	defer func() {
+		if ie := target.Close(); ie != nil {
+			err = fmt.Errorf("write:%+v close:%w", err, ie)
+		}
+	}()
 	err = f.Write(target)
-	if err != nil {
-		return wrap(err)
-	}
-	err = target.Close()
-	if err != nil {
-		return wrap(err)
-	}
-	return nil
+	return
 }
 
 // Write the File to io.Writer as xlsx
@@ -353,6 +355,7 @@ func (f *File) MakeStreamParts() (map[string]string, error) {
 				PartName:    "/" + partName,
 				ContentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"})
 		workbookRels[rId] = sheetPath
+
 		workbook.Sheets.Sheet[sheetIndex-1] = xlsxSheet{
 			Name:    sheet.Name,
 			SheetId: sheetId,
@@ -372,6 +375,10 @@ func (f *File) MakeStreamParts() (map[string]string, error) {
 			}
 		}
 		sheetIndex++
+	}
+
+	for _, dn := range f.DefinedNames {
+		workbook.DefinedNames.DefinedName = append(workbook.DefinedNames.DefinedName, *dn)
 	}
 
 	workbookMarshal, err := marshal(workbook)
@@ -511,6 +518,10 @@ func (f *File) MarshallParts(zipWriter *zip.Writer) error {
 		sheetIndex++
 	}
 
+	for _, dn := range f.DefinedNames {
+		workbook.DefinedNames.DefinedName = append(workbook.DefinedNames.DefinedName, *dn)
+	}
+
 	workbookMarshal, err := marshal(workbook)
 	if err != nil {
 		return err
@@ -584,10 +595,10 @@ func (f *File) MarshallParts(zipWriter *zip.Writer) error {
 //
 // For example:
 //
-//    var mySlice [][][]string
-//    var value string
-//    mySlice = xlsx.FileToSlice("myXLSX.xlsx")
-//    value = mySlice[0][0][0]
+//	var mySlice [][][]string
+//	var value string
+//	mySlice = xlsx.FileToSlice("myXLSX.xlsx")
+//	value = mySlice[0][0][0]
 //
 // Here, value would be set to the raw value of the cell A1 in the
 // first sheet in the XLSX file.
@@ -635,9 +646,11 @@ func (f *File) ToSlice() (output [][][]string, err error) {
 // | 2012 | 2013 | Egg   | 80 |
 // This sheet will be converted to the slice:
 // [
-//    [2011 2011 Bread 20]
-//    [2011 2011 Fish  70]
-//    [2012 2013 Egg   80]
+//
+//	[2011 2011 Bread 20]
+//	[2011 2011 Fish  70]
+//	[2012 2013 Egg   80]
+//
 // ]
 func (f *File) ToSliceUnmerged() (output [][][]string, err error) {
 	output, err = f.ToSlice()
@@ -668,4 +681,13 @@ func (f *File) ToSliceUnmerged() (output [][][]string, err error) {
 	}
 
 	return output, nil
+}
+
+type DefinedName xlsxDefinedName
+
+// AddDefinedName adds a new Name definition to the workbook.
+func (f *File) AddDefinedName(name DefinedName) error {
+	definedName := xlsxDefinedName(name)
+	f.DefinedNames = append(f.DefinedNames, &definedName)
+	return nil
 }

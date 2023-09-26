@@ -17,7 +17,7 @@ import (
 
 	"github.com/tealeg/xlsx/v3"
 
-	"gongd3/go/models"
+	"github.com/fullstack-lang/gongd3/go/models"
 )
 
 // dummy variable to have the import declaration wihthout compile failure (even if no code needing this import is generated)
@@ -119,13 +119,13 @@ var Pie_Fields = []string{
 
 type BackRepoPieStruct struct {
 	// stores PieDB according to their gorm ID
-	Map_PieDBID_PieDB *map[uint]*PieDB
+	Map_PieDBID_PieDB map[uint]*PieDB
 
 	// stores PieDB ID according to Pie address
-	Map_PiePtr_PieDBID *map[*models.Pie]uint
+	Map_PiePtr_PieDBID map[*models.Pie]uint
 
 	// stores Pie according to their gorm ID
-	Map_PieDBID_PiePtr *map[uint]*models.Pie
+	Map_PieDBID_PiePtr map[uint]*models.Pie
 
 	db *gorm.DB
 
@@ -143,40 +143,8 @@ func (backRepoPie *BackRepoPieStruct) GetDB() *gorm.DB {
 
 // GetPieDBFromPiePtr is a handy function to access the back repo instance from the stage instance
 func (backRepoPie *BackRepoPieStruct) GetPieDBFromPiePtr(pie *models.Pie) (pieDB *PieDB) {
-	id := (*backRepoPie.Map_PiePtr_PieDBID)[pie]
-	pieDB = (*backRepoPie.Map_PieDBID_PieDB)[id]
-	return
-}
-
-// BackRepoPie.Init set up the BackRepo of the Pie
-func (backRepoPie *BackRepoPieStruct) Init(stage *models.StageStruct, db *gorm.DB) (Error error) {
-
-	if backRepoPie.Map_PieDBID_PiePtr != nil {
-		err := errors.New("In Init, backRepoPie.Map_PieDBID_PiePtr should be nil")
-		return err
-	}
-
-	if backRepoPie.Map_PieDBID_PieDB != nil {
-		err := errors.New("In Init, backRepoPie.Map_PieDBID_PieDB should be nil")
-		return err
-	}
-
-	if backRepoPie.Map_PiePtr_PieDBID != nil {
-		err := errors.New("In Init, backRepoPie.Map_PiePtr_PieDBID should be nil")
-		return err
-	}
-
-	tmp := make(map[uint]*models.Pie, 0)
-	backRepoPie.Map_PieDBID_PiePtr = &tmp
-
-	tmpDB := make(map[uint]*PieDB, 0)
-	backRepoPie.Map_PieDBID_PieDB = &tmpDB
-
-	tmpID := make(map[*models.Pie]uint, 0)
-	backRepoPie.Map_PiePtr_PieDBID = &tmpID
-
-	backRepoPie.db = db
-	backRepoPie.stage = stage
+	id := backRepoPie.Map_PiePtr_PieDBID[pie]
+	pieDB = backRepoPie.Map_PieDBID_PieDB[id]
 	return
 }
 
@@ -190,7 +158,7 @@ func (backRepoPie *BackRepoPieStruct) CommitPhaseOne(stage *models.StageStruct) 
 
 	// parse all backRepo instance and checks wether some instance have been unstaged
 	// in this case, remove them from the back repo
-	for id, pie := range *backRepoPie.Map_PieDBID_PiePtr {
+	for id, pie := range backRepoPie.Map_PieDBID_PiePtr {
 		if _, ok := stage.Pies[pie]; !ok {
 			backRepoPie.CommitDeleteInstance(id)
 		}
@@ -202,19 +170,19 @@ func (backRepoPie *BackRepoPieStruct) CommitPhaseOne(stage *models.StageStruct) 
 // BackRepoPie.CommitDeleteInstance commits deletion of Pie to the BackRepo
 func (backRepoPie *BackRepoPieStruct) CommitDeleteInstance(id uint) (Error error) {
 
-	pie := (*backRepoPie.Map_PieDBID_PiePtr)[id]
+	pie := backRepoPie.Map_PieDBID_PiePtr[id]
 
 	// pie is not staged anymore, remove pieDB
-	pieDB := (*backRepoPie.Map_PieDBID_PieDB)[id]
+	pieDB := backRepoPie.Map_PieDBID_PieDB[id]
 	query := backRepoPie.db.Unscoped().Delete(&pieDB)
 	if query.Error != nil {
 		return query.Error
 	}
 
 	// update stores
-	delete((*backRepoPie.Map_PiePtr_PieDBID), pie)
-	delete((*backRepoPie.Map_PieDBID_PiePtr), id)
-	delete((*backRepoPie.Map_PieDBID_PieDB), id)
+	delete(backRepoPie.Map_PiePtr_PieDBID, pie)
+	delete(backRepoPie.Map_PieDBID_PiePtr, id)
+	delete(backRepoPie.Map_PieDBID_PieDB, id)
 
 	return
 }
@@ -224,7 +192,7 @@ func (backRepoPie *BackRepoPieStruct) CommitDeleteInstance(id uint) (Error error
 func (backRepoPie *BackRepoPieStruct) CommitPhaseOneInstance(pie *models.Pie) (Error error) {
 
 	// check if the pie is not commited yet
-	if _, ok := (*backRepoPie.Map_PiePtr_PieDBID)[pie]; ok {
+	if _, ok := backRepoPie.Map_PiePtr_PieDBID[pie]; ok {
 		return
 	}
 
@@ -238,9 +206,9 @@ func (backRepoPie *BackRepoPieStruct) CommitPhaseOneInstance(pie *models.Pie) (E
 	}
 
 	// update stores
-	(*backRepoPie.Map_PiePtr_PieDBID)[pie] = pieDB.ID
-	(*backRepoPie.Map_PieDBID_PiePtr)[pieDB.ID] = pie
-	(*backRepoPie.Map_PieDBID_PieDB)[pieDB.ID] = &pieDB
+	backRepoPie.Map_PiePtr_PieDBID[pie] = pieDB.ID
+	backRepoPie.Map_PieDBID_PiePtr[pieDB.ID] = pie
+	backRepoPie.Map_PieDBID_PieDB[pieDB.ID] = &pieDB
 
 	return
 }
@@ -249,7 +217,7 @@ func (backRepoPie *BackRepoPieStruct) CommitPhaseOneInstance(pie *models.Pie) (E
 // Phase Two is the update of instance with the field in the database
 func (backRepoPie *BackRepoPieStruct) CommitPhaseTwo(backRepo *BackRepoStruct) (Error error) {
 
-	for idx, pie := range *backRepoPie.Map_PieDBID_PiePtr {
+	for idx, pie := range backRepoPie.Map_PieDBID_PiePtr {
 		backRepoPie.CommitPhaseTwoInstance(backRepo, idx, pie)
 	}
 
@@ -261,7 +229,7 @@ func (backRepoPie *BackRepoPieStruct) CommitPhaseTwo(backRepo *BackRepoStruct) (
 func (backRepoPie *BackRepoPieStruct) CommitPhaseTwoInstance(backRepo *BackRepoStruct, idx uint, pie *models.Pie) (Error error) {
 
 	// fetch matching pieDB
-	if pieDB, ok := (*backRepoPie.Map_PieDBID_PieDB)[idx]; ok {
+	if pieDB, ok := backRepoPie.Map_PieDBID_PieDB[idx]; ok {
 
 		pieDB.CopyBasicFieldsFromPie(pie)
 
@@ -269,19 +237,25 @@ func (backRepoPie *BackRepoPieStruct) CommitPhaseTwoInstance(backRepo *BackRepoS
 		// commit pointer value pie.X translates to updating the pie.XID
 		pieDB.XID.Valid = true // allow for a 0 value (nil association)
 		if pie.X != nil {
-			if XId, ok := (*backRepo.BackRepoKey.Map_KeyPtr_KeyDBID)[pie.X]; ok {
+			if XId, ok := backRepo.BackRepoKey.Map_KeyPtr_KeyDBID[pie.X]; ok {
 				pieDB.XID.Int64 = int64(XId)
 				pieDB.XID.Valid = true
 			}
+		} else {
+			pieDB.XID.Int64 = 0
+			pieDB.XID.Valid = true
 		}
 
 		// commit pointer value pie.Y translates to updating the pie.YID
 		pieDB.YID.Valid = true // allow for a 0 value (nil association)
 		if pie.Y != nil {
-			if YId, ok := (*backRepo.BackRepoKey.Map_KeyPtr_KeyDBID)[pie.Y]; ok {
+			if YId, ok := backRepo.BackRepoKey.Map_KeyPtr_KeyDBID[pie.Y]; ok {
 				pieDB.YID.Int64 = int64(YId)
 				pieDB.YID.Valid = true
 			}
+		} else {
+			pieDB.YID.Int64 = 0
+			pieDB.YID.Valid = true
 		}
 
 		// This loop encodes the slice of pointers pie.Set into the back repo.
@@ -342,7 +316,7 @@ func (backRepoPie *BackRepoPieStruct) CheckoutPhaseOne() (Error error) {
 
 		// do not remove this instance from the stage, therefore
 		// remove instance from the list of instances to be be removed from the stage
-		pie, ok := (*backRepoPie.Map_PieDBID_PiePtr)[pieDB.ID]
+		pie, ok := backRepoPie.Map_PieDBID_PiePtr[pieDB.ID]
 		if ok {
 			delete(pieInstancesToBeRemovedFromTheStage, pie)
 		}
@@ -353,10 +327,10 @@ func (backRepoPie *BackRepoPieStruct) CheckoutPhaseOne() (Error error) {
 		pie.Unstage(backRepoPie.GetStage())
 
 		// remove instance from the back repo 3 maps
-		pieID := (*backRepoPie.Map_PiePtr_PieDBID)[pie]
-		delete((*backRepoPie.Map_PiePtr_PieDBID), pie)
-		delete((*backRepoPie.Map_PieDBID_PieDB), pieID)
-		delete((*backRepoPie.Map_PieDBID_PiePtr), pieID)
+		pieID := backRepoPie.Map_PiePtr_PieDBID[pie]
+		delete(backRepoPie.Map_PiePtr_PieDBID, pie)
+		delete(backRepoPie.Map_PieDBID_PieDB, pieID)
+		delete(backRepoPie.Map_PieDBID_PiePtr, pieID)
 	}
 
 	return
@@ -366,12 +340,12 @@ func (backRepoPie *BackRepoPieStruct) CheckoutPhaseOne() (Error error) {
 // models version of the pieDB
 func (backRepoPie *BackRepoPieStruct) CheckoutPhaseOneInstance(pieDB *PieDB) (Error error) {
 
-	pie, ok := (*backRepoPie.Map_PieDBID_PiePtr)[pieDB.ID]
+	pie, ok := backRepoPie.Map_PieDBID_PiePtr[pieDB.ID]
 	if !ok {
 		pie = new(models.Pie)
 
-		(*backRepoPie.Map_PieDBID_PiePtr)[pieDB.ID] = pie
-		(*backRepoPie.Map_PiePtr_PieDBID)[pie] = pieDB.ID
+		backRepoPie.Map_PieDBID_PiePtr[pieDB.ID] = pie
+		backRepoPie.Map_PiePtr_PieDBID[pie] = pieDB.ID
 
 		// append model store with the new element
 		pie.Name = pieDB.Name_Data.String
@@ -386,7 +360,7 @@ func (backRepoPie *BackRepoPieStruct) CheckoutPhaseOneInstance(pieDB *PieDB) (Er
 	// Map_PieDBID_PieDB)[pieDB hold variable pointers
 	pieDB_Data := *pieDB
 	preservedPtrToPie := &pieDB_Data
-	(*backRepoPie.Map_PieDBID_PieDB)[pieDB.ID] = preservedPtrToPie
+	backRepoPie.Map_PieDBID_PieDB[pieDB.ID] = preservedPtrToPie
 
 	return
 }
@@ -396,7 +370,7 @@ func (backRepoPie *BackRepoPieStruct) CheckoutPhaseOneInstance(pieDB *PieDB) (Er
 func (backRepoPie *BackRepoPieStruct) CheckoutPhaseTwo(backRepo *BackRepoStruct) (Error error) {
 
 	// parse all DB instance and update all pointer fields of the translated models instance
-	for _, pieDB := range *backRepoPie.Map_PieDBID_PieDB {
+	for _, pieDB := range backRepoPie.Map_PieDBID_PieDB {
 		backRepoPie.CheckoutPhaseTwoInstance(backRepo, pieDB)
 	}
 	return
@@ -406,17 +380,19 @@ func (backRepoPie *BackRepoPieStruct) CheckoutPhaseTwo(backRepo *BackRepoStruct)
 // Phase Two is the update of instance with the field in the database
 func (backRepoPie *BackRepoPieStruct) CheckoutPhaseTwoInstance(backRepo *BackRepoStruct, pieDB *PieDB) (Error error) {
 
-	pie := (*backRepoPie.Map_PieDBID_PiePtr)[pieDB.ID]
+	pie := backRepoPie.Map_PieDBID_PiePtr[pieDB.ID]
 	_ = pie // sometimes, there is no code generated. This lines voids the "unused variable" compilation error
 
 	// insertion point for checkout of pointer encoding
 	// X field
+	pie.X = nil
 	if pieDB.XID.Int64 != 0 {
-		pie.X = (*backRepo.BackRepoKey.Map_KeyDBID_KeyPtr)[uint(pieDB.XID.Int64)]
+		pie.X = backRepo.BackRepoKey.Map_KeyDBID_KeyPtr[uint(pieDB.XID.Int64)]
 	}
 	// Y field
+	pie.Y = nil
 	if pieDB.YID.Int64 != 0 {
-		pie.Y = (*backRepo.BackRepoKey.Map_KeyDBID_KeyPtr)[uint(pieDB.YID.Int64)]
+		pie.Y = backRepo.BackRepoKey.Map_KeyDBID_KeyPtr[uint(pieDB.YID.Int64)]
 	}
 	// This loop redeem pie.Set in the stage from the encode in the back repo
 	// It parses all SerieDB in the back repo and if the reverse pointer encoding matches the back repo ID
@@ -424,11 +400,11 @@ func (backRepoPie *BackRepoPieStruct) CheckoutPhaseTwoInstance(backRepo *BackRep
 	// 1. reset the slice
 	pie.Set = pie.Set[:0]
 	// 2. loop all instances in the type in the association end
-	for _, serieDB_AssocEnd := range *backRepo.BackRepoSerie.Map_SerieDBID_SerieDB {
+	for _, serieDB_AssocEnd := range backRepo.BackRepoSerie.Map_SerieDBID_SerieDB {
 		// 3. Does the ID encoding at the end and the ID at the start matches ?
 		if serieDB_AssocEnd.Pie_SetDBID.Int64 == int64(pieDB.ID) {
 			// 4. fetch the associated instance in the stage
-			serie_AssocEnd := (*backRepo.BackRepoSerie.Map_SerieDBID_SeriePtr)[serieDB_AssocEnd.ID]
+			serie_AssocEnd := backRepo.BackRepoSerie.Map_SerieDBID_SeriePtr[serieDB_AssocEnd.ID]
 			// 5. append it the association slice
 			pie.Set = append(pie.Set, serie_AssocEnd)
 		}
@@ -436,11 +412,11 @@ func (backRepoPie *BackRepoPieStruct) CheckoutPhaseTwoInstance(backRepo *BackRep
 
 	// sort the array according to the order
 	sort.Slice(pie.Set, func(i, j int) bool {
-		serieDB_i_ID := (*backRepo.BackRepoSerie.Map_SeriePtr_SerieDBID)[pie.Set[i]]
-		serieDB_j_ID := (*backRepo.BackRepoSerie.Map_SeriePtr_SerieDBID)[pie.Set[j]]
+		serieDB_i_ID := backRepo.BackRepoSerie.Map_SeriePtr_SerieDBID[pie.Set[i]]
+		serieDB_j_ID := backRepo.BackRepoSerie.Map_SeriePtr_SerieDBID[pie.Set[j]]
 
-		serieDB_i := (*backRepo.BackRepoSerie.Map_SerieDBID_SerieDB)[serieDB_i_ID]
-		serieDB_j := (*backRepo.BackRepoSerie.Map_SerieDBID_SerieDB)[serieDB_j_ID]
+		serieDB_i := backRepo.BackRepoSerie.Map_SerieDBID_SerieDB[serieDB_i_ID]
+		serieDB_j := backRepo.BackRepoSerie.Map_SerieDBID_SerieDB[serieDB_j_ID]
 
 		return serieDB_i.Pie_SetDBID_Index.Int64 < serieDB_j.Pie_SetDBID_Index.Int64
 	})
@@ -451,7 +427,7 @@ func (backRepoPie *BackRepoPieStruct) CheckoutPhaseTwoInstance(backRepo *BackRep
 // CommitPie allows commit of a single pie (if already staged)
 func (backRepo *BackRepoStruct) CommitPie(pie *models.Pie) {
 	backRepo.BackRepoPie.CommitPhaseOneInstance(pie)
-	if id, ok := (*backRepo.BackRepoPie.Map_PiePtr_PieDBID)[pie]; ok {
+	if id, ok := backRepo.BackRepoPie.Map_PiePtr_PieDBID[pie]; ok {
 		backRepo.BackRepoPie.CommitPhaseTwoInstance(backRepo, id, pie)
 	}
 	backRepo.CommitFromBackNb = backRepo.CommitFromBackNb + 1
@@ -460,9 +436,9 @@ func (backRepo *BackRepoStruct) CommitPie(pie *models.Pie) {
 // CommitPie allows checkout of a single pie (if already staged and with a BackRepo id)
 func (backRepo *BackRepoStruct) CheckoutPie(pie *models.Pie) {
 	// check if the pie is staged
-	if _, ok := (*backRepo.BackRepoPie.Map_PiePtr_PieDBID)[pie]; ok {
+	if _, ok := backRepo.BackRepoPie.Map_PiePtr_PieDBID[pie]; ok {
 
-		if id, ok := (*backRepo.BackRepoPie.Map_PiePtr_PieDBID)[pie]; ok {
+		if id, ok := backRepo.BackRepoPie.Map_PiePtr_PieDBID[pie]; ok {
 			var pieDB PieDB
 			pieDB.ID = id
 
@@ -536,7 +512,7 @@ func (backRepoPie *BackRepoPieStruct) Backup(dirPath string) {
 	// organize the map into an array with increasing IDs, in order to have repoductible
 	// backup file
 	forBackup := make([]*PieDB, 0)
-	for _, pieDB := range *backRepoPie.Map_PieDBID_PieDB {
+	for _, pieDB := range backRepoPie.Map_PieDBID_PieDB {
 		forBackup = append(forBackup, pieDB)
 	}
 
@@ -562,7 +538,7 @@ func (backRepoPie *BackRepoPieStruct) BackupXL(file *xlsx.File) {
 	// organize the map into an array with increasing IDs, in order to have repoductible
 	// backup file
 	forBackup := make([]*PieDB, 0)
-	for _, pieDB := range *backRepoPie.Map_PieDBID_PieDB {
+	for _, pieDB := range backRepoPie.Map_PieDBID_PieDB {
 		forBackup = append(forBackup, pieDB)
 	}
 
@@ -627,7 +603,7 @@ func (backRepoPie *BackRepoPieStruct) rowVisitorPie(row *xlsx.Row) error {
 		if query.Error != nil {
 			log.Panic(query.Error)
 		}
-		(*backRepoPie.Map_PieDBID_PieDB)[pieDB.ID] = pieDB
+		backRepoPie.Map_PieDBID_PieDB[pieDB.ID] = pieDB
 		BackRepoPieid_atBckpTime_newID[pieDB_ID_atBackupTime] = pieDB.ID
 	}
 	return nil
@@ -664,7 +640,7 @@ func (backRepoPie *BackRepoPieStruct) RestorePhaseOne(dirPath string) {
 		if query.Error != nil {
 			log.Panic(query.Error)
 		}
-		(*backRepoPie.Map_PieDBID_PieDB)[pieDB.ID] = pieDB
+		backRepoPie.Map_PieDBID_PieDB[pieDB.ID] = pieDB
 		BackRepoPieid_atBckpTime_newID[pieDB_ID_atBackupTime] = pieDB.ID
 	}
 
@@ -677,7 +653,7 @@ func (backRepoPie *BackRepoPieStruct) RestorePhaseOne(dirPath string) {
 // to compute new index
 func (backRepoPie *BackRepoPieStruct) RestorePhaseTwo() {
 
-	for _, pieDB := range *backRepoPie.Map_PieDBID_PieDB {
+	for _, pieDB := range backRepoPie.Map_PieDBID_PieDB {
 
 		// next line of code is to avert unused variable compilation error
 		_ = pieDB
@@ -702,6 +678,30 @@ func (backRepoPie *BackRepoPieStruct) RestorePhaseTwo() {
 		}
 	}
 
+}
+
+// BackRepoPie.ResetReversePointers commits all staged instances of Pie to the BackRepo
+// Phase Two is the update of instance with the field in the database
+func (backRepoPie *BackRepoPieStruct) ResetReversePointers(backRepo *BackRepoStruct) (Error error) {
+
+	for idx, pie := range backRepoPie.Map_PieDBID_PiePtr {
+		backRepoPie.ResetReversePointersInstance(backRepo, idx, pie)
+	}
+
+	return
+}
+
+func (backRepoPie *BackRepoPieStruct) ResetReversePointersInstance(backRepo *BackRepoStruct, idx uint, astruct *models.Pie) (Error error) {
+
+	// fetch matching pieDB
+	if pieDB, ok := backRepoPie.Map_PieDBID_PieDB[idx]; ok {
+		_ = pieDB // to avoid unused variable error if there are no reverse to reset
+
+		// insertion point for reverse pointers reset
+		// end of insertion point for reverse pointers reset
+	}
+
+	return
 }
 
 // this field is used during the restauration process.

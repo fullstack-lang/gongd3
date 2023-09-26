@@ -13,6 +13,7 @@ import * as gongd3 from 'gongd3'
 export class PieComponent implements OnInit {
 
   @Input() name: string = ""
+  @Input() StackName: string = ""
 
   checkGongd3CommitNbFromBackTimer: Observable<number> = timer(500, 500);
   checkGongd3CommitNbFromBackTimerSubscription: Subscription = new Subscription
@@ -52,7 +53,7 @@ export class PieComponent implements OnInit {
       currTime => {
         this.currTime = currTime
 
-        this.gongd3CommitNbFromBackService.getCommitNbFromBack().subscribe(
+        this.gongd3CommitNbFromBackService.getCommitNbFromBack(500, this.StackName).subscribe(
           commitNbFromBack => {
             // condition for refresh
             if (this.lastCommitNbFromBack < commitNbFromBack) {
@@ -69,7 +70,7 @@ export class PieComponent implements OnInit {
   }
 
   private redraw(): void {
-    this.gongd3FrontRepoService.pull().subscribe(
+    this.gongd3FrontRepoService.pull(this.StackName).subscribe(
       frontRepo => {
         for (let pie of frontRepo.Pies_array) {
           console.log("Pie name " + pie.Name)

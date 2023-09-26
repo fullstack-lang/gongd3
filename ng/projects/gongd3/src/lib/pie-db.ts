@@ -6,6 +6,9 @@ import { SerieDB } from './serie-db'
 import { NullInt64 } from './null-int64'
 
 export class PieDB {
+
+	static GONGSTRUCT_NAME = "Pie"
+
 	CreatedAt?: string
 	DeletedAt?: string
 	ID: number = 0

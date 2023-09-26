@@ -19,6 +19,7 @@ interface LooseObject {
 export class BarComponent implements OnInit {
 
   @Input() name: string = ""
+  @Input() StackName: string = ""
 
   checkGongd3CommitNbFromBackTimer: Observable<number> = timer(500, 500);
   checkGongd3CommitNbFromBackTimerSubscription: Subscription = new Subscription
@@ -51,7 +52,7 @@ export class BarComponent implements OnInit {
       currTime => {
         this.currTime = currTime
 
-        this.gongd3CommitNbFromBackService.getCommitNbFromBack().subscribe(
+        this.gongd3CommitNbFromBackService.getCommitNbFromBack(500, this.StackName).subscribe(
           commitNbFromBack => {
             // condition for refresh
             if (this.lastCommitNbFromBack < commitNbFromBack) {
@@ -69,7 +70,7 @@ export class BarComponent implements OnInit {
 
 
   private redraw(): void {
-    this.gongd3FrontRepoService.pull().subscribe(
+    this.gongd3FrontRepoService.pull(this.StackName).subscribe(
       frontRepo => {
         for (let bar of frontRepo.Bars_array) {
           console.log("Bar name " + bar.Name)
