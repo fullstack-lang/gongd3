@@ -1,9 +1,9 @@
-import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Injectable } from '@angular/core'
+import { HttpClient, HttpHeaders } from '@angular/common/http'
 
-import { Observable, combineLatest, BehaviorSubject, of } from 'rxjs';
+import { Observable, combineLatest, BehaviorSubject, of } from 'rxjs'
 
-// insertion point sub template for services imports 
+// insertion point sub template for services imports
 import { BarDB } from './bar-db'
 import { BarService } from './bar.service'
 
@@ -24,25 +24,75 @@ import { ValueService } from './value.service'
 
 
 // FrontRepo stores all instances in a front repository (design pattern repository)
-export class FrontRepo { // insertion point sub template 
-  Bars_array = new Array<BarDB>(); // array of repo instances
-  Bars = new Map<number, BarDB>(); // map of repo instances
-  Bars_batch = new Map<number, BarDB>(); // same but only in last GET (for finding repo instances to delete)
-  Keys_array = new Array<KeyDB>(); // array of repo instances
-  Keys = new Map<number, KeyDB>(); // map of repo instances
-  Keys_batch = new Map<number, KeyDB>(); // same but only in last GET (for finding repo instances to delete)
-  Pies_array = new Array<PieDB>(); // array of repo instances
-  Pies = new Map<number, PieDB>(); // map of repo instances
-  Pies_batch = new Map<number, PieDB>(); // same but only in last GET (for finding repo instances to delete)
-  Scatters_array = new Array<ScatterDB>(); // array of repo instances
-  Scatters = new Map<number, ScatterDB>(); // map of repo instances
-  Scatters_batch = new Map<number, ScatterDB>(); // same but only in last GET (for finding repo instances to delete)
-  Series_array = new Array<SerieDB>(); // array of repo instances
-  Series = new Map<number, SerieDB>(); // map of repo instances
-  Series_batch = new Map<number, SerieDB>(); // same but only in last GET (for finding repo instances to delete)
-  Values_array = new Array<ValueDB>(); // array of repo instances
-  Values = new Map<number, ValueDB>(); // map of repo instances
-  Values_batch = new Map<number, ValueDB>(); // same but only in last GET (for finding repo instances to delete)
+export class FrontRepo { // insertion point sub template
+  Bars_array = new Array<BarDB>() // array of repo instances
+  Bars = new Map<number, BarDB>() // map of repo instances
+  Bars_batch = new Map<number, BarDB>() // same but only in last GET (for finding repo instances to delete)
+
+  Keys_array = new Array<KeyDB>() // array of repo instances
+  Keys = new Map<number, KeyDB>() // map of repo instances
+  Keys_batch = new Map<number, KeyDB>() // same but only in last GET (for finding repo instances to delete)
+
+  Pies_array = new Array<PieDB>() // array of repo instances
+  Pies = new Map<number, PieDB>() // map of repo instances
+  Pies_batch = new Map<number, PieDB>() // same but only in last GET (for finding repo instances to delete)
+
+  Scatters_array = new Array<ScatterDB>() // array of repo instances
+  Scatters = new Map<number, ScatterDB>() // map of repo instances
+  Scatters_batch = new Map<number, ScatterDB>() // same but only in last GET (for finding repo instances to delete)
+
+  Series_array = new Array<SerieDB>() // array of repo instances
+  Series = new Map<number, SerieDB>() // map of repo instances
+  Series_batch = new Map<number, SerieDB>() // same but only in last GET (for finding repo instances to delete)
+
+  Values_array = new Array<ValueDB>() // array of repo instances
+  Values = new Map<number, ValueDB>() // map of repo instances
+  Values_batch = new Map<number, ValueDB>() // same but only in last GET (for finding repo instances to delete)
+
+
+  // getArray allows for a get function that is robust to refactoring of the named struct name
+  // for instance frontRepo.getArray<Astruct>( Astruct.GONGSTRUCT_NAME), is robust to a refactoring of Astruct identifier
+  // contrary to frontRepo.Astructs_array which is not refactored when Astruct identifier is modified
+  getArray<Type>(gongStructName: string): Array<Type> {
+    switch (gongStructName) {
+      // insertion point
+      case 'Bar':
+        return this.Bars_array as unknown as Array<Type>
+      case 'Key':
+        return this.Keys_array as unknown as Array<Type>
+      case 'Pie':
+        return this.Pies_array as unknown as Array<Type>
+      case 'Scatter':
+        return this.Scatters_array as unknown as Array<Type>
+      case 'Serie':
+        return this.Series_array as unknown as Array<Type>
+      case 'Value':
+        return this.Values_array as unknown as Array<Type>
+      default:
+        throw new Error("Type not recognized");
+    }
+  }
+
+  // getMap allows for a get function that is robust to refactoring of the named struct name
+  getMap<Type>(gongStructName: string): Map<number, Type> {
+    switch (gongStructName) {
+      // insertion point
+      case 'Bar':
+        return this.Bars_array as unknown as Map<number, Type>
+      case 'Key':
+        return this.Keys_array as unknown as Map<number, Type>
+      case 'Pie':
+        return this.Pies_array as unknown as Map<number, Type>
+      case 'Scatter':
+        return this.Scatters_array as unknown as Map<number, Type>
+      case 'Serie':
+        return this.Series_array as unknown as Map<number, Type>
+      case 'Value':
+        return this.Values_array as unknown as Map<number, Type>
+      default:
+        throw new Error("Type not recognized");
+    }
+  }
 }
 
 // the table component is called in different ways
@@ -140,7 +190,7 @@ export class FrontRepoService {
   }
 
   // typing of observable can be messy in typescript. Therefore, one force the type
-  observableFrontRepo: [ 
+  observableFrontRepo: [
     Observable<null>, // see below for the of(null) observable
     // insertion point sub template 
     Observable<BarDB[]>,
@@ -149,16 +199,16 @@ export class FrontRepoService {
     Observable<ScatterDB[]>,
     Observable<SerieDB[]>,
     Observable<ValueDB[]>,
-  ] = [ 
-    // Using "combineLatest" with a placeholder observable.
-    //
-    // This allows the typescript compiler to pass when no GongStruct is present in the front API
-    //
-    // The "of(null)" is a "meaningless" observable that emits a single value (null) and completes.
-    // This is used as a workaround to satisfy TypeScript requirements and the "combineLatest" 
-    // expectation for a non-empty array of observables.
-    of(null), // 
-    // insertion point sub template
+  ] = [
+      // Using "combineLatest" with a placeholder observable.
+      //
+      // This allows the typescript compiler to pass when no GongStruct is present in the front API
+      //
+      // The "of(null)" is a "meaningless" observable that emits a single value (null) and completes.
+      // This is used as a workaround to satisfy TypeScript requirements and the "combineLatest" 
+      // expectation for a non-empty array of observables.
+      of(null), // 
+      // insertion point sub template
       this.barService.getBars(this.GONG__StackPath),
       this.keyService.getKeys(this.GONG__StackPath),
       this.pieService.getPies(this.GONG__StackPath),
@@ -177,7 +227,7 @@ export class FrontRepoService {
 
     this.GONG__StackPath = GONG__StackPath
 
-    this.observableFrontRepo = [ 
+    this.observableFrontRepo = [
       of(null), // see above for justification
       // insertion point sub template
       this.barService.getBars(this.GONG__StackPath),
@@ -193,7 +243,7 @@ export class FrontRepoService {
         combineLatest(
           this.observableFrontRepo
         ).subscribe(
-          ([ 
+          ([
             ___of_null, // see above for the explanation about of
             // insertion point sub template for declarations 
             bars_,
