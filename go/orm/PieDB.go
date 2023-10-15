@@ -35,15 +35,15 @@ var dummy_Pie_sort sort.Float64Slice
 type PieAPI struct {
 	gorm.Model
 
-	models.Pie
+	models.Pie_WOP
 
 	// encoding of pointers
-	PiePointersEnconding
+	PiePointersEncoding
 }
 
-// PiePointersEnconding encodes pointers to Struct and
+// PiePointersEncoding encodes pointers to Struct and
 // reverse pointers of slice of poitners to Struct
-type PiePointersEnconding struct {
+type PiePointersEncoding struct {
 	// insertion for pointer fields encoding declaration
 
 	// field X is a pointer to another Struct (optional or 0..1)
@@ -53,6 +53,9 @@ type PiePointersEnconding struct {
 	// field Y is a pointer to another Struct (optional or 0..1)
 	// This field is generated into another field to enable AS ONE association
 	YID sql.NullInt64
+
+	// field Set is a slice of pointers to another Struct (optional or 0..1)
+	Set IntSlice`gorm:"type:TEXT"`
 }
 
 // PieDB describes a pie in the database
@@ -78,7 +81,7 @@ type PieDB struct {
 	// Declation for basic field pieDB.Margin
 	Margin_Data sql.NullFloat64
 	// encoding of pointers
-	PiePointersEnconding
+	PiePointersEncoding
 }
 
 // PieDBs arrays pieDBs
@@ -176,7 +179,7 @@ func (backRepoPie *BackRepoPieStruct) CommitDeleteInstance(id uint) (Error error
 	pieDB := backRepoPie.Map_PieDBID_PieDB[id]
 	query := backRepoPie.db.Unscoped().Delete(&pieDB)
 	if query.Error != nil {
-		return query.Error
+		log.Fatal(query.Error)
 	}
 
 	// update stores
@@ -202,7 +205,7 @@ func (backRepoPie *BackRepoPieStruct) CommitPhaseOneInstance(pie *models.Pie) (E
 
 	query := backRepoPie.db.Create(&pieDB)
 	if query.Error != nil {
-		return query.Error
+		log.Fatal(query.Error)
 	}
 
 	// update stores
@@ -277,9 +280,19 @@ func (backRepoPie *BackRepoPieStruct) CommitPhaseTwoInstance(backRepo *BackRepoS
 			}
 		}
 
+		// 1. reset
+		pieDB.PiePointersEncoding.Set = make([]int, 0)
+		// 2. encode
+		for _, serieAssocEnd := range pie.Set {
+			serieAssocEnd_DB :=
+				backRepo.BackRepoSerie.GetSerieDBFromSeriePtr(serieAssocEnd)
+			pieDB.PiePointersEncoding.Set =
+				append(pieDB.PiePointersEncoding.Set, int(serieAssocEnd_DB.ID))
+		}
+
 		query := backRepoPie.db.Save(&pieDB)
 		if query.Error != nil {
-			return query.Error
+			log.Fatalln(query.Error)
 		}
 
 	} else {
@@ -443,7 +456,7 @@ func (backRepo *BackRepoStruct) CheckoutPie(pie *models.Pie) {
 			pieDB.ID = id
 
 			if err := backRepo.BackRepoPie.db.First(&pieDB, id).Error; err != nil {
-				log.Panicln("CheckoutPie : Problem with getting object with id:", id)
+				log.Fatalln("CheckoutPie : Problem with getting object with id:", id)
 			}
 			backRepo.BackRepoPie.CheckoutPhaseOneInstance(&pieDB)
 			backRepo.BackRepoPie.CheckoutPhaseTwoInstance(backRepo, &pieDB)
@@ -453,6 +466,23 @@ func (backRepo *BackRepoStruct) CheckoutPie(pie *models.Pie) {
 
 // CopyBasicFieldsFromPie
 func (pieDB *PieDB) CopyBasicFieldsFromPie(pie *models.Pie) {
+	// insertion point for fields commit
+
+	pieDB.Name_Data.String = pie.Name
+	pieDB.Name_Data.Valid = true
+
+	pieDB.Width_Data.Float64 = pie.Width
+	pieDB.Width_Data.Valid = true
+
+	pieDB.Heigth_Data.Float64 = pie.Heigth
+	pieDB.Heigth_Data.Valid = true
+
+	pieDB.Margin_Data.Float64 = pie.Margin
+	pieDB.Margin_Data.Valid = true
+}
+
+// CopyBasicFieldsFromPie_WOP
+func (pieDB *PieDB) CopyBasicFieldsFromPie_WOP(pie *models.Pie_WOP) {
 	// insertion point for fields commit
 
 	pieDB.Name_Data.String = pie.Name
@@ -494,6 +524,15 @@ func (pieDB *PieDB) CopyBasicFieldsToPie(pie *models.Pie) {
 	pie.Margin = pieDB.Margin_Data.Float64
 }
 
+// CopyBasicFieldsToPie_WOP
+func (pieDB *PieDB) CopyBasicFieldsToPie_WOP(pie *models.Pie_WOP) {
+	// insertion point for checkout of basic fields (back repo to stage)
+	pie.Name = pieDB.Name_Data.String
+	pie.Width = pieDB.Width_Data.Float64
+	pie.Heigth = pieDB.Heigth_Data.Float64
+	pie.Margin = pieDB.Margin_Data.Float64
+}
+
 // CopyBasicFieldsToPieWOP
 func (pieDB *PieDB) CopyBasicFieldsToPieWOP(pie *PieWOP) {
 	pie.ID = int(pieDB.ID)
@@ -523,12 +562,12 @@ func (backRepoPie *BackRepoPieStruct) Backup(dirPath string) {
 	file, err := json.MarshalIndent(forBackup, "", " ")
 
 	if err != nil {
-		log.Panic("Cannot json Pie ", filename, " ", err.Error())
+		log.Fatal("Cannot json Pie ", filename, " ", err.Error())
 	}
 
 	err = ioutil.WriteFile(filename, file, 0644)
 	if err != nil {
-		log.Panic("Cannot write the json Pie file", err.Error())
+		log.Fatal("Cannot write the json Pie file", err.Error())
 	}
 }
 
@@ -548,7 +587,7 @@ func (backRepoPie *BackRepoPieStruct) BackupXL(file *xlsx.File) {
 
 	sh, err := file.AddSheet("Pie")
 	if err != nil {
-		log.Panic("Cannot add XL file", err.Error())
+		log.Fatal("Cannot add XL file", err.Error())
 	}
 	_ = sh
 
@@ -573,13 +612,13 @@ func (backRepoPie *BackRepoPieStruct) RestoreXLPhaseOne(file *xlsx.File) {
 	sh, ok := file.Sheet["Pie"]
 	_ = sh
 	if !ok {
-		log.Panic(errors.New("sheet not found"))
+		log.Fatal(errors.New("sheet not found"))
 	}
 
 	// log.Println("Max row is", sh.MaxRow)
 	err := sh.ForEachRow(backRepoPie.rowVisitorPie)
 	if err != nil {
-		log.Panic("Err=", err)
+		log.Fatal("Err=", err)
 	}
 }
 
@@ -601,7 +640,7 @@ func (backRepoPie *BackRepoPieStruct) rowVisitorPie(row *xlsx.Row) error {
 		pieDB.ID = 0
 		query := backRepoPie.db.Create(pieDB)
 		if query.Error != nil {
-			log.Panic(query.Error)
+			log.Fatal(query.Error)
 		}
 		backRepoPie.Map_PieDBID_PieDB[pieDB.ID] = pieDB
 		BackRepoPieid_atBckpTime_newID[pieDB_ID_atBackupTime] = pieDB.ID
@@ -621,7 +660,7 @@ func (backRepoPie *BackRepoPieStruct) RestorePhaseOne(dirPath string) {
 	jsonFile, err := os.Open(filename)
 	// if we os.Open returns an error then handle it
 	if err != nil {
-		log.Panic("Cannot restore/open the json Pie file", filename, " ", err.Error())
+		log.Fatal("Cannot restore/open the json Pie file", filename, " ", err.Error())
 	}
 
 	// read our opened jsonFile as a byte array.
@@ -638,14 +677,14 @@ func (backRepoPie *BackRepoPieStruct) RestorePhaseOne(dirPath string) {
 		pieDB.ID = 0
 		query := backRepoPie.db.Create(pieDB)
 		if query.Error != nil {
-			log.Panic(query.Error)
+			log.Fatal(query.Error)
 		}
 		backRepoPie.Map_PieDBID_PieDB[pieDB.ID] = pieDB
 		BackRepoPieid_atBckpTime_newID[pieDB_ID_atBackupTime] = pieDB.ID
 	}
 
 	if err != nil {
-		log.Panic("Cannot restore/unmarshall json Pie file", err.Error())
+		log.Fatal("Cannot restore/unmarshall json Pie file", err.Error())
 	}
 }
 
@@ -674,7 +713,7 @@ func (backRepoPie *BackRepoPieStruct) RestorePhaseTwo() {
 		// update databse with new index encoding
 		query := backRepoPie.db.Model(pieDB).Updates(*pieDB)
 		if query.Error != nil {
-			log.Panic(query.Error)
+			log.Fatal(query.Error)
 		}
 	}
 

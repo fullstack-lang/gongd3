@@ -91,8 +91,8 @@ func (controller *Controller) GetValues(c *gin.Context) {
 
 		// insertion point for updating fields
 		valueAPI.ID = valueDB.ID
-		valueDB.CopyBasicFieldsToValue(&valueAPI.Value)
-		valueAPI.ValuePointersEnconding = valueDB.ValuePointersEnconding
+		valueDB.CopyBasicFieldsToValue_WOP(&valueAPI.Value_WOP)
+		valueAPI.ValuePointersEncoding = valueDB.ValuePointersEncoding
 		valueAPIs = append(valueAPIs, valueAPI)
 	}
 
@@ -147,8 +147,8 @@ func (controller *Controller) PostValue(c *gin.Context) {
 
 	// Create value
 	valueDB := orm.ValueDB{}
-	valueDB.ValuePointersEnconding = input.ValuePointersEnconding
-	valueDB.CopyBasicFieldsFromValue(&input.Value)
+	valueDB.ValuePointersEncoding = input.ValuePointersEncoding
+	valueDB.CopyBasicFieldsFromValue_WOP(&input.Value_WOP)
 
 	query := db.Create(&valueDB)
 	if query.Error != nil {
@@ -217,8 +217,8 @@ func (controller *Controller) GetValue(c *gin.Context) {
 
 	var valueAPI orm.ValueAPI
 	valueAPI.ID = valueDB.ID
-	valueAPI.ValuePointersEnconding = valueDB.ValuePointersEnconding
-	valueDB.CopyBasicFieldsToValue(&valueAPI.Value)
+	valueAPI.ValuePointersEncoding = valueDB.ValuePointersEncoding
+	valueDB.CopyBasicFieldsToValue_WOP(&valueAPI.Value_WOP)
 
 	c.JSON(http.StatusOK, valueAPI)
 }
@@ -276,8 +276,8 @@ func (controller *Controller) UpdateValue(c *gin.Context) {
 	}
 
 	// update
-	valueDB.CopyBasicFieldsFromValue(&input.Value)
-	valueDB.ValuePointersEnconding = input.ValuePointersEnconding
+	valueDB.CopyBasicFieldsFromValue_WOP(&input.Value_WOP)
+	valueDB.ValuePointersEncoding = input.ValuePointersEncoding
 
 	query = db.Model(&valueDB).Updates(valueDB)
 	if query.Error != nil {

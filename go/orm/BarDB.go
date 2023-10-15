@@ -35,15 +35,15 @@ var dummy_Bar_sort sort.Float64Slice
 type BarAPI struct {
 	gorm.Model
 
-	models.Bar
+	models.Bar_WOP
 
 	// encoding of pointers
-	BarPointersEnconding
+	BarPointersEncoding
 }
 
-// BarPointersEnconding encodes pointers to Struct and
+// BarPointersEncoding encodes pointers to Struct and
 // reverse pointers of slice of poitners to Struct
-type BarPointersEnconding struct {
+type BarPointersEncoding struct {
 	// insertion for pointer fields encoding declaration
 
 	// field X is a pointer to another Struct (optional or 0..1)
@@ -53,6 +53,9 @@ type BarPointersEnconding struct {
 	// field Y is a pointer to another Struct (optional or 0..1)
 	// This field is generated into another field to enable AS ONE association
 	YID sql.NullInt64
+
+	// field Set is a slice of pointers to another Struct (optional or 0..1)
+	Set IntSlice`gorm:"type:TEXT"`
 }
 
 // BarDB describes a bar in the database
@@ -112,7 +115,7 @@ type BarDB struct {
 	// Declation for basic field barDB.Margin
 	Margin_Data sql.NullFloat64
 	// encoding of pointers
-	BarPointersEnconding
+	BarPointersEncoding
 }
 
 // BarDBs arrays barDBs
@@ -240,7 +243,7 @@ func (backRepoBar *BackRepoBarStruct) CommitDeleteInstance(id uint) (Error error
 	barDB := backRepoBar.Map_BarDBID_BarDB[id]
 	query := backRepoBar.db.Unscoped().Delete(&barDB)
 	if query.Error != nil {
-		return query.Error
+		log.Fatal(query.Error)
 	}
 
 	// update stores
@@ -266,7 +269,7 @@ func (backRepoBar *BackRepoBarStruct) CommitPhaseOneInstance(bar *models.Bar) (E
 
 	query := backRepoBar.db.Create(&barDB)
 	if query.Error != nil {
-		return query.Error
+		log.Fatal(query.Error)
 	}
 
 	// update stores
@@ -341,9 +344,19 @@ func (backRepoBar *BackRepoBarStruct) CommitPhaseTwoInstance(backRepo *BackRepoS
 			}
 		}
 
+		// 1. reset
+		barDB.BarPointersEncoding.Set = make([]int, 0)
+		// 2. encode
+		for _, serieAssocEnd := range bar.Set {
+			serieAssocEnd_DB :=
+				backRepo.BackRepoSerie.GetSerieDBFromSeriePtr(serieAssocEnd)
+			barDB.BarPointersEncoding.Set =
+				append(barDB.BarPointersEncoding.Set, int(serieAssocEnd_DB.ID))
+		}
+
 		query := backRepoBar.db.Save(&barDB)
 		if query.Error != nil {
-			return query.Error
+			log.Fatalln(query.Error)
 		}
 
 	} else {
@@ -507,7 +520,7 @@ func (backRepo *BackRepoStruct) CheckoutBar(bar *models.Bar) {
 			barDB.ID = id
 
 			if err := backRepo.BackRepoBar.db.First(&barDB, id).Error; err != nil {
-				log.Panicln("CheckoutBar : Problem with getting object with id:", id)
+				log.Fatalln("CheckoutBar : Problem with getting object with id:", id)
 			}
 			backRepo.BackRepoBar.CheckoutPhaseOneInstance(&barDB)
 			backRepo.BackRepoBar.CheckoutPhaseTwoInstance(backRepo, &barDB)
@@ -517,6 +530,53 @@ func (backRepo *BackRepoStruct) CheckoutBar(bar *models.Bar) {
 
 // CopyBasicFieldsFromBar
 func (barDB *BarDB) CopyBasicFieldsFromBar(bar *models.Bar) {
+	// insertion point for fields commit
+
+	barDB.Name_Data.String = bar.Name
+	barDB.Name_Data.Valid = true
+
+	barDB.AutoDomainX_Data.Bool = bar.AutoDomainX
+	barDB.AutoDomainX_Data.Valid = true
+
+	barDB.XMin_Data.Float64 = bar.XMin
+	barDB.XMin_Data.Valid = true
+
+	barDB.XMax_Data.Float64 = bar.XMax
+	barDB.XMax_Data.Valid = true
+
+	barDB.AutoDomainY_Data.Bool = bar.AutoDomainY
+	barDB.AutoDomainY_Data.Valid = true
+
+	barDB.YMin_Data.Float64 = bar.YMin
+	barDB.YMin_Data.Valid = true
+
+	barDB.YMax_Data.Float64 = bar.YMax
+	barDB.YMax_Data.Valid = true
+
+	barDB.YLabelPresent_Data.Bool = bar.YLabelPresent
+	barDB.YLabelPresent_Data.Valid = true
+
+	barDB.YLabelOffset_Data.Float64 = bar.YLabelOffset
+	barDB.YLabelOffset_Data.Valid = true
+
+	barDB.XLabelPresent_Data.Bool = bar.XLabelPresent
+	barDB.XLabelPresent_Data.Valid = true
+
+	barDB.XLabelOffset_Data.Float64 = bar.XLabelOffset
+	barDB.XLabelOffset_Data.Valid = true
+
+	barDB.Width_Data.Float64 = bar.Width
+	barDB.Width_Data.Valid = true
+
+	barDB.Heigth_Data.Float64 = bar.Heigth
+	barDB.Heigth_Data.Valid = true
+
+	barDB.Margin_Data.Float64 = bar.Margin
+	barDB.Margin_Data.Valid = true
+}
+
+// CopyBasicFieldsFromBar_WOP
+func (barDB *BarDB) CopyBasicFieldsFromBar_WOP(bar *models.Bar_WOP) {
 	// insertion point for fields commit
 
 	barDB.Name_Data.String = bar.Name
@@ -628,6 +688,25 @@ func (barDB *BarDB) CopyBasicFieldsToBar(bar *models.Bar) {
 	bar.Margin = barDB.Margin_Data.Float64
 }
 
+// CopyBasicFieldsToBar_WOP
+func (barDB *BarDB) CopyBasicFieldsToBar_WOP(bar *models.Bar_WOP) {
+	// insertion point for checkout of basic fields (back repo to stage)
+	bar.Name = barDB.Name_Data.String
+	bar.AutoDomainX = barDB.AutoDomainX_Data.Bool
+	bar.XMin = barDB.XMin_Data.Float64
+	bar.XMax = barDB.XMax_Data.Float64
+	bar.AutoDomainY = barDB.AutoDomainY_Data.Bool
+	bar.YMin = barDB.YMin_Data.Float64
+	bar.YMax = barDB.YMax_Data.Float64
+	bar.YLabelPresent = barDB.YLabelPresent_Data.Bool
+	bar.YLabelOffset = barDB.YLabelOffset_Data.Float64
+	bar.XLabelPresent = barDB.XLabelPresent_Data.Bool
+	bar.XLabelOffset = barDB.XLabelOffset_Data.Float64
+	bar.Width = barDB.Width_Data.Float64
+	bar.Heigth = barDB.Heigth_Data.Float64
+	bar.Margin = barDB.Margin_Data.Float64
+}
+
 // CopyBasicFieldsToBarWOP
 func (barDB *BarDB) CopyBasicFieldsToBarWOP(bar *BarWOP) {
 	bar.ID = int(barDB.ID)
@@ -667,12 +746,12 @@ func (backRepoBar *BackRepoBarStruct) Backup(dirPath string) {
 	file, err := json.MarshalIndent(forBackup, "", " ")
 
 	if err != nil {
-		log.Panic("Cannot json Bar ", filename, " ", err.Error())
+		log.Fatal("Cannot json Bar ", filename, " ", err.Error())
 	}
 
 	err = ioutil.WriteFile(filename, file, 0644)
 	if err != nil {
-		log.Panic("Cannot write the json Bar file", err.Error())
+		log.Fatal("Cannot write the json Bar file", err.Error())
 	}
 }
 
@@ -692,7 +771,7 @@ func (backRepoBar *BackRepoBarStruct) BackupXL(file *xlsx.File) {
 
 	sh, err := file.AddSheet("Bar")
 	if err != nil {
-		log.Panic("Cannot add XL file", err.Error())
+		log.Fatal("Cannot add XL file", err.Error())
 	}
 	_ = sh
 
@@ -717,13 +796,13 @@ func (backRepoBar *BackRepoBarStruct) RestoreXLPhaseOne(file *xlsx.File) {
 	sh, ok := file.Sheet["Bar"]
 	_ = sh
 	if !ok {
-		log.Panic(errors.New("sheet not found"))
+		log.Fatal(errors.New("sheet not found"))
 	}
 
 	// log.Println("Max row is", sh.MaxRow)
 	err := sh.ForEachRow(backRepoBar.rowVisitorBar)
 	if err != nil {
-		log.Panic("Err=", err)
+		log.Fatal("Err=", err)
 	}
 }
 
@@ -745,7 +824,7 @@ func (backRepoBar *BackRepoBarStruct) rowVisitorBar(row *xlsx.Row) error {
 		barDB.ID = 0
 		query := backRepoBar.db.Create(barDB)
 		if query.Error != nil {
-			log.Panic(query.Error)
+			log.Fatal(query.Error)
 		}
 		backRepoBar.Map_BarDBID_BarDB[barDB.ID] = barDB
 		BackRepoBarid_atBckpTime_newID[barDB_ID_atBackupTime] = barDB.ID
@@ -765,7 +844,7 @@ func (backRepoBar *BackRepoBarStruct) RestorePhaseOne(dirPath string) {
 	jsonFile, err := os.Open(filename)
 	// if we os.Open returns an error then handle it
 	if err != nil {
-		log.Panic("Cannot restore/open the json Bar file", filename, " ", err.Error())
+		log.Fatal("Cannot restore/open the json Bar file", filename, " ", err.Error())
 	}
 
 	// read our opened jsonFile as a byte array.
@@ -782,14 +861,14 @@ func (backRepoBar *BackRepoBarStruct) RestorePhaseOne(dirPath string) {
 		barDB.ID = 0
 		query := backRepoBar.db.Create(barDB)
 		if query.Error != nil {
-			log.Panic(query.Error)
+			log.Fatal(query.Error)
 		}
 		backRepoBar.Map_BarDBID_BarDB[barDB.ID] = barDB
 		BackRepoBarid_atBckpTime_newID[barDB_ID_atBackupTime] = barDB.ID
 	}
 
 	if err != nil {
-		log.Panic("Cannot restore/unmarshall json Bar file", err.Error())
+		log.Fatal("Cannot restore/unmarshall json Bar file", err.Error())
 	}
 }
 
@@ -818,7 +897,7 @@ func (backRepoBar *BackRepoBarStruct) RestorePhaseTwo() {
 		// update databse with new index encoding
 		query := backRepoBar.db.Model(barDB).Updates(*barDB)
 		if query.Error != nil {
-			log.Panic(query.Error)
+			log.Fatal(query.Error)
 		}
 	}
 

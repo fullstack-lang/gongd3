@@ -91,8 +91,8 @@ func (controller *Controller) GetSeries(c *gin.Context) {
 
 		// insertion point for updating fields
 		serieAPI.ID = serieDB.ID
-		serieDB.CopyBasicFieldsToSerie(&serieAPI.Serie)
-		serieAPI.SeriePointersEnconding = serieDB.SeriePointersEnconding
+		serieDB.CopyBasicFieldsToSerie_WOP(&serieAPI.Serie_WOP)
+		serieAPI.SeriePointersEncoding = serieDB.SeriePointersEncoding
 		serieAPIs = append(serieAPIs, serieAPI)
 	}
 
@@ -147,8 +147,8 @@ func (controller *Controller) PostSerie(c *gin.Context) {
 
 	// Create serie
 	serieDB := orm.SerieDB{}
-	serieDB.SeriePointersEnconding = input.SeriePointersEnconding
-	serieDB.CopyBasicFieldsFromSerie(&input.Serie)
+	serieDB.SeriePointersEncoding = input.SeriePointersEncoding
+	serieDB.CopyBasicFieldsFromSerie_WOP(&input.Serie_WOP)
 
 	query := db.Create(&serieDB)
 	if query.Error != nil {
@@ -217,8 +217,8 @@ func (controller *Controller) GetSerie(c *gin.Context) {
 
 	var serieAPI orm.SerieAPI
 	serieAPI.ID = serieDB.ID
-	serieAPI.SeriePointersEnconding = serieDB.SeriePointersEnconding
-	serieDB.CopyBasicFieldsToSerie(&serieAPI.Serie)
+	serieAPI.SeriePointersEncoding = serieDB.SeriePointersEncoding
+	serieDB.CopyBasicFieldsToSerie_WOP(&serieAPI.Serie_WOP)
 
 	c.JSON(http.StatusOK, serieAPI)
 }
@@ -276,8 +276,8 @@ func (controller *Controller) UpdateSerie(c *gin.Context) {
 	}
 
 	// update
-	serieDB.CopyBasicFieldsFromSerie(&input.Serie)
-	serieDB.SeriePointersEnconding = input.SeriePointersEnconding
+	serieDB.CopyBasicFieldsFromSerie_WOP(&input.Serie_WOP)
+	serieDB.SeriePointersEncoding = input.SeriePointersEncoding
 
 	query = db.Model(&serieDB).Updates(serieDB)
 	if query.Error != nil {

@@ -35,15 +35,15 @@ var dummy_Value_sort sort.Float64Slice
 type ValueAPI struct {
 	gorm.Model
 
-	models.Value
+	models.Value_WOP
 
 	// encoding of pointers
-	ValuePointersEnconding
+	ValuePointersEncoding
 }
 
-// ValuePointersEnconding encodes pointers to Struct and
+// ValuePointersEncoding encodes pointers to Struct and
 // reverse pointers of slice of poitners to Struct
-type ValuePointersEnconding struct {
+type ValuePointersEncoding struct {
 	// insertion for pointer fields encoding declaration
 
 	// Implementation of a reverse ID for field Serie{}.Values []*Value
@@ -67,7 +67,7 @@ type ValueDB struct {
 	// Declation for basic field valueDB.Name
 	Name_Data sql.NullString
 	// encoding of pointers
-	ValuePointersEnconding
+	ValuePointersEncoding
 }
 
 // ValueDBs arrays valueDBs
@@ -156,7 +156,7 @@ func (backRepoValue *BackRepoValueStruct) CommitDeleteInstance(id uint) (Error e
 	valueDB := backRepoValue.Map_ValueDBID_ValueDB[id]
 	query := backRepoValue.db.Unscoped().Delete(&valueDB)
 	if query.Error != nil {
-		return query.Error
+		log.Fatal(query.Error)
 	}
 
 	// update stores
@@ -182,7 +182,7 @@ func (backRepoValue *BackRepoValueStruct) CommitPhaseOneInstance(value *models.V
 
 	query := backRepoValue.db.Create(&valueDB)
 	if query.Error != nil {
-		return query.Error
+		log.Fatal(query.Error)
 	}
 
 	// update stores
@@ -216,7 +216,7 @@ func (backRepoValue *BackRepoValueStruct) CommitPhaseTwoInstance(backRepo *BackR
 		// insertion point for translating pointers encodings into actual pointers
 		query := backRepoValue.db.Save(&valueDB)
 		if query.Error != nil {
-			return query.Error
+			log.Fatalln(query.Error)
 		}
 
 	} else {
@@ -343,7 +343,7 @@ func (backRepo *BackRepoStruct) CheckoutValue(value *models.Value) {
 			valueDB.ID = id
 
 			if err := backRepo.BackRepoValue.db.First(&valueDB, id).Error; err != nil {
-				log.Panicln("CheckoutValue : Problem with getting object with id:", id)
+				log.Fatalln("CheckoutValue : Problem with getting object with id:", id)
 			}
 			backRepo.BackRepoValue.CheckoutPhaseOneInstance(&valueDB)
 			backRepo.BackRepoValue.CheckoutPhaseTwoInstance(backRepo, &valueDB)
@@ -353,6 +353,14 @@ func (backRepo *BackRepoStruct) CheckoutValue(value *models.Value) {
 
 // CopyBasicFieldsFromValue
 func (valueDB *ValueDB) CopyBasicFieldsFromValue(value *models.Value) {
+	// insertion point for fields commit
+
+	valueDB.Name_Data.String = value.Name
+	valueDB.Name_Data.Valid = true
+}
+
+// CopyBasicFieldsFromValue_WOP
+func (valueDB *ValueDB) CopyBasicFieldsFromValue_WOP(value *models.Value_WOP) {
 	// insertion point for fields commit
 
 	valueDB.Name_Data.String = value.Name
@@ -369,6 +377,12 @@ func (valueDB *ValueDB) CopyBasicFieldsFromValueWOP(value *ValueWOP) {
 
 // CopyBasicFieldsToValue
 func (valueDB *ValueDB) CopyBasicFieldsToValue(value *models.Value) {
+	// insertion point for checkout of basic fields (back repo to stage)
+	value.Name = valueDB.Name_Data.String
+}
+
+// CopyBasicFieldsToValue_WOP
+func (valueDB *ValueDB) CopyBasicFieldsToValue_WOP(value *models.Value_WOP) {
 	// insertion point for checkout of basic fields (back repo to stage)
 	value.Name = valueDB.Name_Data.String
 }
@@ -399,12 +413,12 @@ func (backRepoValue *BackRepoValueStruct) Backup(dirPath string) {
 	file, err := json.MarshalIndent(forBackup, "", " ")
 
 	if err != nil {
-		log.Panic("Cannot json Value ", filename, " ", err.Error())
+		log.Fatal("Cannot json Value ", filename, " ", err.Error())
 	}
 
 	err = ioutil.WriteFile(filename, file, 0644)
 	if err != nil {
-		log.Panic("Cannot write the json Value file", err.Error())
+		log.Fatal("Cannot write the json Value file", err.Error())
 	}
 }
 
@@ -424,7 +438,7 @@ func (backRepoValue *BackRepoValueStruct) BackupXL(file *xlsx.File) {
 
 	sh, err := file.AddSheet("Value")
 	if err != nil {
-		log.Panic("Cannot add XL file", err.Error())
+		log.Fatal("Cannot add XL file", err.Error())
 	}
 	_ = sh
 
@@ -449,13 +463,13 @@ func (backRepoValue *BackRepoValueStruct) RestoreXLPhaseOne(file *xlsx.File) {
 	sh, ok := file.Sheet["Value"]
 	_ = sh
 	if !ok {
-		log.Panic(errors.New("sheet not found"))
+		log.Fatal(errors.New("sheet not found"))
 	}
 
 	// log.Println("Max row is", sh.MaxRow)
 	err := sh.ForEachRow(backRepoValue.rowVisitorValue)
 	if err != nil {
-		log.Panic("Err=", err)
+		log.Fatal("Err=", err)
 	}
 }
 
@@ -477,7 +491,7 @@ func (backRepoValue *BackRepoValueStruct) rowVisitorValue(row *xlsx.Row) error {
 		valueDB.ID = 0
 		query := backRepoValue.db.Create(valueDB)
 		if query.Error != nil {
-			log.Panic(query.Error)
+			log.Fatal(query.Error)
 		}
 		backRepoValue.Map_ValueDBID_ValueDB[valueDB.ID] = valueDB
 		BackRepoValueid_atBckpTime_newID[valueDB_ID_atBackupTime] = valueDB.ID
@@ -497,7 +511,7 @@ func (backRepoValue *BackRepoValueStruct) RestorePhaseOne(dirPath string) {
 	jsonFile, err := os.Open(filename)
 	// if we os.Open returns an error then handle it
 	if err != nil {
-		log.Panic("Cannot restore/open the json Value file", filename, " ", err.Error())
+		log.Fatal("Cannot restore/open the json Value file", filename, " ", err.Error())
 	}
 
 	// read our opened jsonFile as a byte array.
@@ -514,14 +528,14 @@ func (backRepoValue *BackRepoValueStruct) RestorePhaseOne(dirPath string) {
 		valueDB.ID = 0
 		query := backRepoValue.db.Create(valueDB)
 		if query.Error != nil {
-			log.Panic(query.Error)
+			log.Fatal(query.Error)
 		}
 		backRepoValue.Map_ValueDBID_ValueDB[valueDB.ID] = valueDB
 		BackRepoValueid_atBckpTime_newID[valueDB_ID_atBackupTime] = valueDB.ID
 	}
 
 	if err != nil {
-		log.Panic("Cannot restore/unmarshall json Value file", err.Error())
+		log.Fatal("Cannot restore/unmarshall json Value file", err.Error())
 	}
 }
 
@@ -544,7 +558,7 @@ func (backRepoValue *BackRepoValueStruct) RestorePhaseTwo() {
 		// update databse with new index encoding
 		query := backRepoValue.db.Model(valueDB).Updates(*valueDB)
 		if query.Error != nil {
-			log.Panic(query.Error)
+			log.Fatal(query.Error)
 		}
 	}
 

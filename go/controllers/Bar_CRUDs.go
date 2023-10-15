@@ -91,8 +91,8 @@ func (controller *Controller) GetBars(c *gin.Context) {
 
 		// insertion point for updating fields
 		barAPI.ID = barDB.ID
-		barDB.CopyBasicFieldsToBar(&barAPI.Bar)
-		barAPI.BarPointersEnconding = barDB.BarPointersEnconding
+		barDB.CopyBasicFieldsToBar_WOP(&barAPI.Bar_WOP)
+		barAPI.BarPointersEncoding = barDB.BarPointersEncoding
 		barAPIs = append(barAPIs, barAPI)
 	}
 
@@ -147,8 +147,8 @@ func (controller *Controller) PostBar(c *gin.Context) {
 
 	// Create bar
 	barDB := orm.BarDB{}
-	barDB.BarPointersEnconding = input.BarPointersEnconding
-	barDB.CopyBasicFieldsFromBar(&input.Bar)
+	barDB.BarPointersEncoding = input.BarPointersEncoding
+	barDB.CopyBasicFieldsFromBar_WOP(&input.Bar_WOP)
 
 	query := db.Create(&barDB)
 	if query.Error != nil {
@@ -217,8 +217,8 @@ func (controller *Controller) GetBar(c *gin.Context) {
 
 	var barAPI orm.BarAPI
 	barAPI.ID = barDB.ID
-	barAPI.BarPointersEnconding = barDB.BarPointersEnconding
-	barDB.CopyBasicFieldsToBar(&barAPI.Bar)
+	barAPI.BarPointersEncoding = barDB.BarPointersEncoding
+	barDB.CopyBasicFieldsToBar_WOP(&barAPI.Bar_WOP)
 
 	c.JSON(http.StatusOK, barAPI)
 }
@@ -276,8 +276,8 @@ func (controller *Controller) UpdateBar(c *gin.Context) {
 	}
 
 	// update
-	barDB.CopyBasicFieldsFromBar(&input.Bar)
-	barDB.BarPointersEnconding = input.BarPointersEnconding
+	barDB.CopyBasicFieldsFromBar_WOP(&input.Bar_WOP)
+	barDB.BarPointersEncoding = input.BarPointersEncoding
 
 	query = db.Model(&barDB).Updates(barDB)
 	if query.Error != nil {

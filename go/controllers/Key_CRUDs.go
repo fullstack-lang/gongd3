@@ -91,8 +91,8 @@ func (controller *Controller) GetKeys(c *gin.Context) {
 
 		// insertion point for updating fields
 		keyAPI.ID = keyDB.ID
-		keyDB.CopyBasicFieldsToKey(&keyAPI.Key)
-		keyAPI.KeyPointersEnconding = keyDB.KeyPointersEnconding
+		keyDB.CopyBasicFieldsToKey_WOP(&keyAPI.Key_WOP)
+		keyAPI.KeyPointersEncoding = keyDB.KeyPointersEncoding
 		keyAPIs = append(keyAPIs, keyAPI)
 	}
 
@@ -147,8 +147,8 @@ func (controller *Controller) PostKey(c *gin.Context) {
 
 	// Create key
 	keyDB := orm.KeyDB{}
-	keyDB.KeyPointersEnconding = input.KeyPointersEnconding
-	keyDB.CopyBasicFieldsFromKey(&input.Key)
+	keyDB.KeyPointersEncoding = input.KeyPointersEncoding
+	keyDB.CopyBasicFieldsFromKey_WOP(&input.Key_WOP)
 
 	query := db.Create(&keyDB)
 	if query.Error != nil {
@@ -217,8 +217,8 @@ func (controller *Controller) GetKey(c *gin.Context) {
 
 	var keyAPI orm.KeyAPI
 	keyAPI.ID = keyDB.ID
-	keyAPI.KeyPointersEnconding = keyDB.KeyPointersEnconding
-	keyDB.CopyBasicFieldsToKey(&keyAPI.Key)
+	keyAPI.KeyPointersEncoding = keyDB.KeyPointersEncoding
+	keyDB.CopyBasicFieldsToKey_WOP(&keyAPI.Key_WOP)
 
 	c.JSON(http.StatusOK, keyAPI)
 }
@@ -276,8 +276,8 @@ func (controller *Controller) UpdateKey(c *gin.Context) {
 	}
 
 	// update
-	keyDB.CopyBasicFieldsFromKey(&input.Key)
-	keyDB.KeyPointersEnconding = input.KeyPointersEnconding
+	keyDB.CopyBasicFieldsFromKey_WOP(&input.Key_WOP)
+	keyDB.KeyPointersEncoding = input.KeyPointersEncoding
 
 	query = db.Model(&keyDB).Updates(keyDB)
 	if query.Error != nil {

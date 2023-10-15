@@ -35,20 +35,23 @@ var dummy_Serie_sort sort.Float64Slice
 type SerieAPI struct {
 	gorm.Model
 
-	models.Serie
+	models.Serie_WOP
 
 	// encoding of pointers
-	SeriePointersEnconding
+	SeriePointersEncoding
 }
 
-// SeriePointersEnconding encodes pointers to Struct and
+// SeriePointersEncoding encodes pointers to Struct and
 // reverse pointers of slice of poitners to Struct
-type SeriePointersEnconding struct {
+type SeriePointersEncoding struct {
 	// insertion for pointer fields encoding declaration
 
 	// field Key is a pointer to another Struct (optional or 0..1)
 	// This field is generated into another field to enable AS ONE association
 	KeyID sql.NullInt64
+
+	// field Values is a slice of pointers to another Struct (optional or 0..1)
+	Values IntSlice`gorm:"type:TEXT"`
 
 	// Implementation of a reverse ID for field Bar{}.Set []*Serie
 	Bar_SetDBID sql.NullInt64
@@ -83,7 +86,7 @@ type SerieDB struct {
 	// Declation for basic field serieDB.Name
 	Name_Data sql.NullString
 	// encoding of pointers
-	SeriePointersEnconding
+	SeriePointersEncoding
 }
 
 // SerieDBs arrays serieDBs
@@ -172,7 +175,7 @@ func (backRepoSerie *BackRepoSerieStruct) CommitDeleteInstance(id uint) (Error e
 	serieDB := backRepoSerie.Map_SerieDBID_SerieDB[id]
 	query := backRepoSerie.db.Unscoped().Delete(&serieDB)
 	if query.Error != nil {
-		return query.Error
+		log.Fatal(query.Error)
 	}
 
 	// update stores
@@ -198,7 +201,7 @@ func (backRepoSerie *BackRepoSerieStruct) CommitPhaseOneInstance(serie *models.S
 
 	query := backRepoSerie.db.Create(&serieDB)
 	if query.Error != nil {
-		return query.Error
+		log.Fatal(query.Error)
 	}
 
 	// update stores
@@ -261,9 +264,19 @@ func (backRepoSerie *BackRepoSerieStruct) CommitPhaseTwoInstance(backRepo *BackR
 			}
 		}
 
+		// 1. reset
+		serieDB.SeriePointersEncoding.Values = make([]int, 0)
+		// 2. encode
+		for _, valueAssocEnd := range serie.Values {
+			valueAssocEnd_DB :=
+				backRepo.BackRepoValue.GetValueDBFromValuePtr(valueAssocEnd)
+			serieDB.SeriePointersEncoding.Values =
+				append(serieDB.SeriePointersEncoding.Values, int(valueAssocEnd_DB.ID))
+		}
+
 		query := backRepoSerie.db.Save(&serieDB)
 		if query.Error != nil {
-			return query.Error
+			log.Fatalln(query.Error)
 		}
 
 	} else {
@@ -422,7 +435,7 @@ func (backRepo *BackRepoStruct) CheckoutSerie(serie *models.Serie) {
 			serieDB.ID = id
 
 			if err := backRepo.BackRepoSerie.db.First(&serieDB, id).Error; err != nil {
-				log.Panicln("CheckoutSerie : Problem with getting object with id:", id)
+				log.Fatalln("CheckoutSerie : Problem with getting object with id:", id)
 			}
 			backRepo.BackRepoSerie.CheckoutPhaseOneInstance(&serieDB)
 			backRepo.BackRepoSerie.CheckoutPhaseTwoInstance(backRepo, &serieDB)
@@ -432,6 +445,14 @@ func (backRepo *BackRepoStruct) CheckoutSerie(serie *models.Serie) {
 
 // CopyBasicFieldsFromSerie
 func (serieDB *SerieDB) CopyBasicFieldsFromSerie(serie *models.Serie) {
+	// insertion point for fields commit
+
+	serieDB.Name_Data.String = serie.Name
+	serieDB.Name_Data.Valid = true
+}
+
+// CopyBasicFieldsFromSerie_WOP
+func (serieDB *SerieDB) CopyBasicFieldsFromSerie_WOP(serie *models.Serie_WOP) {
 	// insertion point for fields commit
 
 	serieDB.Name_Data.String = serie.Name
@@ -448,6 +469,12 @@ func (serieDB *SerieDB) CopyBasicFieldsFromSerieWOP(serie *SerieWOP) {
 
 // CopyBasicFieldsToSerie
 func (serieDB *SerieDB) CopyBasicFieldsToSerie(serie *models.Serie) {
+	// insertion point for checkout of basic fields (back repo to stage)
+	serie.Name = serieDB.Name_Data.String
+}
+
+// CopyBasicFieldsToSerie_WOP
+func (serieDB *SerieDB) CopyBasicFieldsToSerie_WOP(serie *models.Serie_WOP) {
 	// insertion point for checkout of basic fields (back repo to stage)
 	serie.Name = serieDB.Name_Data.String
 }
@@ -478,12 +505,12 @@ func (backRepoSerie *BackRepoSerieStruct) Backup(dirPath string) {
 	file, err := json.MarshalIndent(forBackup, "", " ")
 
 	if err != nil {
-		log.Panic("Cannot json Serie ", filename, " ", err.Error())
+		log.Fatal("Cannot json Serie ", filename, " ", err.Error())
 	}
 
 	err = ioutil.WriteFile(filename, file, 0644)
 	if err != nil {
-		log.Panic("Cannot write the json Serie file", err.Error())
+		log.Fatal("Cannot write the json Serie file", err.Error())
 	}
 }
 
@@ -503,7 +530,7 @@ func (backRepoSerie *BackRepoSerieStruct) BackupXL(file *xlsx.File) {
 
 	sh, err := file.AddSheet("Serie")
 	if err != nil {
-		log.Panic("Cannot add XL file", err.Error())
+		log.Fatal("Cannot add XL file", err.Error())
 	}
 	_ = sh
 
@@ -528,13 +555,13 @@ func (backRepoSerie *BackRepoSerieStruct) RestoreXLPhaseOne(file *xlsx.File) {
 	sh, ok := file.Sheet["Serie"]
 	_ = sh
 	if !ok {
-		log.Panic(errors.New("sheet not found"))
+		log.Fatal(errors.New("sheet not found"))
 	}
 
 	// log.Println("Max row is", sh.MaxRow)
 	err := sh.ForEachRow(backRepoSerie.rowVisitorSerie)
 	if err != nil {
-		log.Panic("Err=", err)
+		log.Fatal("Err=", err)
 	}
 }
 
@@ -556,7 +583,7 @@ func (backRepoSerie *BackRepoSerieStruct) rowVisitorSerie(row *xlsx.Row) error {
 		serieDB.ID = 0
 		query := backRepoSerie.db.Create(serieDB)
 		if query.Error != nil {
-			log.Panic(query.Error)
+			log.Fatal(query.Error)
 		}
 		backRepoSerie.Map_SerieDBID_SerieDB[serieDB.ID] = serieDB
 		BackRepoSerieid_atBckpTime_newID[serieDB_ID_atBackupTime] = serieDB.ID
@@ -576,7 +603,7 @@ func (backRepoSerie *BackRepoSerieStruct) RestorePhaseOne(dirPath string) {
 	jsonFile, err := os.Open(filename)
 	// if we os.Open returns an error then handle it
 	if err != nil {
-		log.Panic("Cannot restore/open the json Serie file", filename, " ", err.Error())
+		log.Fatal("Cannot restore/open the json Serie file", filename, " ", err.Error())
 	}
 
 	// read our opened jsonFile as a byte array.
@@ -593,14 +620,14 @@ func (backRepoSerie *BackRepoSerieStruct) RestorePhaseOne(dirPath string) {
 		serieDB.ID = 0
 		query := backRepoSerie.db.Create(serieDB)
 		if query.Error != nil {
-			log.Panic(query.Error)
+			log.Fatal(query.Error)
 		}
 		backRepoSerie.Map_SerieDBID_SerieDB[serieDB.ID] = serieDB
 		BackRepoSerieid_atBckpTime_newID[serieDB_ID_atBackupTime] = serieDB.ID
 	}
 
 	if err != nil {
-		log.Panic("Cannot restore/unmarshall json Serie file", err.Error())
+		log.Fatal("Cannot restore/unmarshall json Serie file", err.Error())
 	}
 }
 
@@ -641,7 +668,7 @@ func (backRepoSerie *BackRepoSerieStruct) RestorePhaseTwo() {
 		// update databse with new index encoding
 		query := backRepoSerie.db.Model(serieDB).Updates(*serieDB)
 		if query.Error != nil {
-			log.Panic(query.Error)
+			log.Fatal(query.Error)
 		}
 	}
 

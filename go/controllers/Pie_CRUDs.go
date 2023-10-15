@@ -91,8 +91,8 @@ func (controller *Controller) GetPies(c *gin.Context) {
 
 		// insertion point for updating fields
 		pieAPI.ID = pieDB.ID
-		pieDB.CopyBasicFieldsToPie(&pieAPI.Pie)
-		pieAPI.PiePointersEnconding = pieDB.PiePointersEnconding
+		pieDB.CopyBasicFieldsToPie_WOP(&pieAPI.Pie_WOP)
+		pieAPI.PiePointersEncoding = pieDB.PiePointersEncoding
 		pieAPIs = append(pieAPIs, pieAPI)
 	}
 
@@ -147,8 +147,8 @@ func (controller *Controller) PostPie(c *gin.Context) {
 
 	// Create pie
 	pieDB := orm.PieDB{}
-	pieDB.PiePointersEnconding = input.PiePointersEnconding
-	pieDB.CopyBasicFieldsFromPie(&input.Pie)
+	pieDB.PiePointersEncoding = input.PiePointersEncoding
+	pieDB.CopyBasicFieldsFromPie_WOP(&input.Pie_WOP)
 
 	query := db.Create(&pieDB)
 	if query.Error != nil {
@@ -217,8 +217,8 @@ func (controller *Controller) GetPie(c *gin.Context) {
 
 	var pieAPI orm.PieAPI
 	pieAPI.ID = pieDB.ID
-	pieAPI.PiePointersEnconding = pieDB.PiePointersEnconding
-	pieDB.CopyBasicFieldsToPie(&pieAPI.Pie)
+	pieAPI.PiePointersEncoding = pieDB.PiePointersEncoding
+	pieDB.CopyBasicFieldsToPie_WOP(&pieAPI.Pie_WOP)
 
 	c.JSON(http.StatusOK, pieAPI)
 }
@@ -276,8 +276,8 @@ func (controller *Controller) UpdatePie(c *gin.Context) {
 	}
 
 	// update
-	pieDB.CopyBasicFieldsFromPie(&input.Pie)
-	pieDB.PiePointersEnconding = input.PiePointersEnconding
+	pieDB.CopyBasicFieldsFromPie_WOP(&input.Pie_WOP)
+	pieDB.PiePointersEncoding = input.PiePointersEncoding
 
 	query = db.Model(&pieDB).Updates(pieDB)
 	if query.Error != nil {

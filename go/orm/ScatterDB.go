@@ -35,15 +35,15 @@ var dummy_Scatter_sort sort.Float64Slice
 type ScatterAPI struct {
 	gorm.Model
 
-	models.Scatter
+	models.Scatter_WOP
 
 	// encoding of pointers
-	ScatterPointersEnconding
+	ScatterPointersEncoding
 }
 
-// ScatterPointersEnconding encodes pointers to Struct and
+// ScatterPointersEncoding encodes pointers to Struct and
 // reverse pointers of slice of poitners to Struct
-type ScatterPointersEnconding struct {
+type ScatterPointersEncoding struct {
 	// insertion for pointer fields encoding declaration
 
 	// field X is a pointer to another Struct (optional or 0..1)
@@ -57,6 +57,9 @@ type ScatterPointersEnconding struct {
 	// field Text is a pointer to another Struct (optional or 0..1)
 	// This field is generated into another field to enable AS ONE association
 	TextID sql.NullInt64
+
+	// field Set is a slice of pointers to another Struct (optional or 0..1)
+	Set IntSlice`gorm:"type:TEXT"`
 }
 
 // ScatterDB describes a scatter in the database
@@ -82,7 +85,7 @@ type ScatterDB struct {
 	// Declation for basic field scatterDB.Margin
 	Margin_Data sql.NullFloat64
 	// encoding of pointers
-	ScatterPointersEnconding
+	ScatterPointersEncoding
 }
 
 // ScatterDBs arrays scatterDBs
@@ -180,7 +183,7 @@ func (backRepoScatter *BackRepoScatterStruct) CommitDeleteInstance(id uint) (Err
 	scatterDB := backRepoScatter.Map_ScatterDBID_ScatterDB[id]
 	query := backRepoScatter.db.Unscoped().Delete(&scatterDB)
 	if query.Error != nil {
-		return query.Error
+		log.Fatal(query.Error)
 	}
 
 	// update stores
@@ -206,7 +209,7 @@ func (backRepoScatter *BackRepoScatterStruct) CommitPhaseOneInstance(scatter *mo
 
 	query := backRepoScatter.db.Create(&scatterDB)
 	if query.Error != nil {
-		return query.Error
+		log.Fatal(query.Error)
 	}
 
 	// update stores
@@ -293,9 +296,19 @@ func (backRepoScatter *BackRepoScatterStruct) CommitPhaseTwoInstance(backRepo *B
 			}
 		}
 
+		// 1. reset
+		scatterDB.ScatterPointersEncoding.Set = make([]int, 0)
+		// 2. encode
+		for _, serieAssocEnd := range scatter.Set {
+			serieAssocEnd_DB :=
+				backRepo.BackRepoSerie.GetSerieDBFromSeriePtr(serieAssocEnd)
+			scatterDB.ScatterPointersEncoding.Set =
+				append(scatterDB.ScatterPointersEncoding.Set, int(serieAssocEnd_DB.ID))
+		}
+
 		query := backRepoScatter.db.Save(&scatterDB)
 		if query.Error != nil {
-			return query.Error
+			log.Fatalln(query.Error)
 		}
 
 	} else {
@@ -464,7 +477,7 @@ func (backRepo *BackRepoStruct) CheckoutScatter(scatter *models.Scatter) {
 			scatterDB.ID = id
 
 			if err := backRepo.BackRepoScatter.db.First(&scatterDB, id).Error; err != nil {
-				log.Panicln("CheckoutScatter : Problem with getting object with id:", id)
+				log.Fatalln("CheckoutScatter : Problem with getting object with id:", id)
 			}
 			backRepo.BackRepoScatter.CheckoutPhaseOneInstance(&scatterDB)
 			backRepo.BackRepoScatter.CheckoutPhaseTwoInstance(backRepo, &scatterDB)
@@ -474,6 +487,23 @@ func (backRepo *BackRepoStruct) CheckoutScatter(scatter *models.Scatter) {
 
 // CopyBasicFieldsFromScatter
 func (scatterDB *ScatterDB) CopyBasicFieldsFromScatter(scatter *models.Scatter) {
+	// insertion point for fields commit
+
+	scatterDB.Name_Data.String = scatter.Name
+	scatterDB.Name_Data.Valid = true
+
+	scatterDB.Width_Data.Float64 = scatter.Width
+	scatterDB.Width_Data.Valid = true
+
+	scatterDB.Heigth_Data.Float64 = scatter.Heigth
+	scatterDB.Heigth_Data.Valid = true
+
+	scatterDB.Margin_Data.Float64 = scatter.Margin
+	scatterDB.Margin_Data.Valid = true
+}
+
+// CopyBasicFieldsFromScatter_WOP
+func (scatterDB *ScatterDB) CopyBasicFieldsFromScatter_WOP(scatter *models.Scatter_WOP) {
 	// insertion point for fields commit
 
 	scatterDB.Name_Data.String = scatter.Name
@@ -515,6 +545,15 @@ func (scatterDB *ScatterDB) CopyBasicFieldsToScatter(scatter *models.Scatter) {
 	scatter.Margin = scatterDB.Margin_Data.Float64
 }
 
+// CopyBasicFieldsToScatter_WOP
+func (scatterDB *ScatterDB) CopyBasicFieldsToScatter_WOP(scatter *models.Scatter_WOP) {
+	// insertion point for checkout of basic fields (back repo to stage)
+	scatter.Name = scatterDB.Name_Data.String
+	scatter.Width = scatterDB.Width_Data.Float64
+	scatter.Heigth = scatterDB.Heigth_Data.Float64
+	scatter.Margin = scatterDB.Margin_Data.Float64
+}
+
 // CopyBasicFieldsToScatterWOP
 func (scatterDB *ScatterDB) CopyBasicFieldsToScatterWOP(scatter *ScatterWOP) {
 	scatter.ID = int(scatterDB.ID)
@@ -544,12 +583,12 @@ func (backRepoScatter *BackRepoScatterStruct) Backup(dirPath string) {
 	file, err := json.MarshalIndent(forBackup, "", " ")
 
 	if err != nil {
-		log.Panic("Cannot json Scatter ", filename, " ", err.Error())
+		log.Fatal("Cannot json Scatter ", filename, " ", err.Error())
 	}
 
 	err = ioutil.WriteFile(filename, file, 0644)
 	if err != nil {
-		log.Panic("Cannot write the json Scatter file", err.Error())
+		log.Fatal("Cannot write the json Scatter file", err.Error())
 	}
 }
 
@@ -569,7 +608,7 @@ func (backRepoScatter *BackRepoScatterStruct) BackupXL(file *xlsx.File) {
 
 	sh, err := file.AddSheet("Scatter")
 	if err != nil {
-		log.Panic("Cannot add XL file", err.Error())
+		log.Fatal("Cannot add XL file", err.Error())
 	}
 	_ = sh
 
@@ -594,13 +633,13 @@ func (backRepoScatter *BackRepoScatterStruct) RestoreXLPhaseOne(file *xlsx.File)
 	sh, ok := file.Sheet["Scatter"]
 	_ = sh
 	if !ok {
-		log.Panic(errors.New("sheet not found"))
+		log.Fatal(errors.New("sheet not found"))
 	}
 
 	// log.Println("Max row is", sh.MaxRow)
 	err := sh.ForEachRow(backRepoScatter.rowVisitorScatter)
 	if err != nil {
-		log.Panic("Err=", err)
+		log.Fatal("Err=", err)
 	}
 }
 
@@ -622,7 +661,7 @@ func (backRepoScatter *BackRepoScatterStruct) rowVisitorScatter(row *xlsx.Row) e
 		scatterDB.ID = 0
 		query := backRepoScatter.db.Create(scatterDB)
 		if query.Error != nil {
-			log.Panic(query.Error)
+			log.Fatal(query.Error)
 		}
 		backRepoScatter.Map_ScatterDBID_ScatterDB[scatterDB.ID] = scatterDB
 		BackRepoScatterid_atBckpTime_newID[scatterDB_ID_atBackupTime] = scatterDB.ID
@@ -642,7 +681,7 @@ func (backRepoScatter *BackRepoScatterStruct) RestorePhaseOne(dirPath string) {
 	jsonFile, err := os.Open(filename)
 	// if we os.Open returns an error then handle it
 	if err != nil {
-		log.Panic("Cannot restore/open the json Scatter file", filename, " ", err.Error())
+		log.Fatal("Cannot restore/open the json Scatter file", filename, " ", err.Error())
 	}
 
 	// read our opened jsonFile as a byte array.
@@ -659,14 +698,14 @@ func (backRepoScatter *BackRepoScatterStruct) RestorePhaseOne(dirPath string) {
 		scatterDB.ID = 0
 		query := backRepoScatter.db.Create(scatterDB)
 		if query.Error != nil {
-			log.Panic(query.Error)
+			log.Fatal(query.Error)
 		}
 		backRepoScatter.Map_ScatterDBID_ScatterDB[scatterDB.ID] = scatterDB
 		BackRepoScatterid_atBckpTime_newID[scatterDB_ID_atBackupTime] = scatterDB.ID
 	}
 
 	if err != nil {
-		log.Panic("Cannot restore/unmarshall json Scatter file", err.Error())
+		log.Fatal("Cannot restore/unmarshall json Scatter file", err.Error())
 	}
 }
 
@@ -701,7 +740,7 @@ func (backRepoScatter *BackRepoScatterStruct) RestorePhaseTwo() {
 		// update databse with new index encoding
 		query := backRepoScatter.db.Model(scatterDB).Updates(*scatterDB)
 		if query.Error != nil {
-			log.Panic(query.Error)
+			log.Fatal(query.Error)
 		}
 	}
 

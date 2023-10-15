@@ -91,8 +91,8 @@ func (controller *Controller) GetScatters(c *gin.Context) {
 
 		// insertion point for updating fields
 		scatterAPI.ID = scatterDB.ID
-		scatterDB.CopyBasicFieldsToScatter(&scatterAPI.Scatter)
-		scatterAPI.ScatterPointersEnconding = scatterDB.ScatterPointersEnconding
+		scatterDB.CopyBasicFieldsToScatter_WOP(&scatterAPI.Scatter_WOP)
+		scatterAPI.ScatterPointersEncoding = scatterDB.ScatterPointersEncoding
 		scatterAPIs = append(scatterAPIs, scatterAPI)
 	}
 
@@ -147,8 +147,8 @@ func (controller *Controller) PostScatter(c *gin.Context) {
 
 	// Create scatter
 	scatterDB := orm.ScatterDB{}
-	scatterDB.ScatterPointersEnconding = input.ScatterPointersEnconding
-	scatterDB.CopyBasicFieldsFromScatter(&input.Scatter)
+	scatterDB.ScatterPointersEncoding = input.ScatterPointersEncoding
+	scatterDB.CopyBasicFieldsFromScatter_WOP(&input.Scatter_WOP)
 
 	query := db.Create(&scatterDB)
 	if query.Error != nil {
@@ -217,8 +217,8 @@ func (controller *Controller) GetScatter(c *gin.Context) {
 
 	var scatterAPI orm.ScatterAPI
 	scatterAPI.ID = scatterDB.ID
-	scatterAPI.ScatterPointersEnconding = scatterDB.ScatterPointersEnconding
-	scatterDB.CopyBasicFieldsToScatter(&scatterAPI.Scatter)
+	scatterAPI.ScatterPointersEncoding = scatterDB.ScatterPointersEncoding
+	scatterDB.CopyBasicFieldsToScatter_WOP(&scatterAPI.Scatter_WOP)
 
 	c.JSON(http.StatusOK, scatterAPI)
 }
@@ -276,8 +276,8 @@ func (controller *Controller) UpdateScatter(c *gin.Context) {
 	}
 
 	// update
-	scatterDB.CopyBasicFieldsFromScatter(&input.Scatter)
-	scatterDB.ScatterPointersEnconding = input.ScatterPointersEnconding
+	scatterDB.CopyBasicFieldsFromScatter_WOP(&input.Scatter_WOP)
+	scatterDB.ScatterPointersEncoding = input.ScatterPointersEncoding
 
 	query = db.Model(&scatterDB).Updates(scatterDB)
 	if query.Error != nil {

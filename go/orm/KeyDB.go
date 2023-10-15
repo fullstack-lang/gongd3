@@ -35,15 +35,15 @@ var dummy_Key_sort sort.Float64Slice
 type KeyAPI struct {
 	gorm.Model
 
-	models.Key
+	models.Key_WOP
 
 	// encoding of pointers
-	KeyPointersEnconding
+	KeyPointersEncoding
 }
 
-// KeyPointersEnconding encodes pointers to Struct and
+// KeyPointersEncoding encodes pointers to Struct and
 // reverse pointers of slice of poitners to Struct
-type KeyPointersEnconding struct {
+type KeyPointersEncoding struct {
 	// insertion for pointer fields encoding declaration
 }
 
@@ -61,7 +61,7 @@ type KeyDB struct {
 	// Declation for basic field keyDB.Name
 	Name_Data sql.NullString
 	// encoding of pointers
-	KeyPointersEnconding
+	KeyPointersEncoding
 }
 
 // KeyDBs arrays keyDBs
@@ -150,7 +150,7 @@ func (backRepoKey *BackRepoKeyStruct) CommitDeleteInstance(id uint) (Error error
 	keyDB := backRepoKey.Map_KeyDBID_KeyDB[id]
 	query := backRepoKey.db.Unscoped().Delete(&keyDB)
 	if query.Error != nil {
-		return query.Error
+		log.Fatal(query.Error)
 	}
 
 	// update stores
@@ -176,7 +176,7 @@ func (backRepoKey *BackRepoKeyStruct) CommitPhaseOneInstance(key *models.Key) (E
 
 	query := backRepoKey.db.Create(&keyDB)
 	if query.Error != nil {
-		return query.Error
+		log.Fatal(query.Error)
 	}
 
 	// update stores
@@ -210,7 +210,7 @@ func (backRepoKey *BackRepoKeyStruct) CommitPhaseTwoInstance(backRepo *BackRepoS
 		// insertion point for translating pointers encodings into actual pointers
 		query := backRepoKey.db.Save(&keyDB)
 		if query.Error != nil {
-			return query.Error
+			log.Fatalln(query.Error)
 		}
 
 	} else {
@@ -337,7 +337,7 @@ func (backRepo *BackRepoStruct) CheckoutKey(key *models.Key) {
 			keyDB.ID = id
 
 			if err := backRepo.BackRepoKey.db.First(&keyDB, id).Error; err != nil {
-				log.Panicln("CheckoutKey : Problem with getting object with id:", id)
+				log.Fatalln("CheckoutKey : Problem with getting object with id:", id)
 			}
 			backRepo.BackRepoKey.CheckoutPhaseOneInstance(&keyDB)
 			backRepo.BackRepoKey.CheckoutPhaseTwoInstance(backRepo, &keyDB)
@@ -347,6 +347,14 @@ func (backRepo *BackRepoStruct) CheckoutKey(key *models.Key) {
 
 // CopyBasicFieldsFromKey
 func (keyDB *KeyDB) CopyBasicFieldsFromKey(key *models.Key) {
+	// insertion point for fields commit
+
+	keyDB.Name_Data.String = key.Name
+	keyDB.Name_Data.Valid = true
+}
+
+// CopyBasicFieldsFromKey_WOP
+func (keyDB *KeyDB) CopyBasicFieldsFromKey_WOP(key *models.Key_WOP) {
 	// insertion point for fields commit
 
 	keyDB.Name_Data.String = key.Name
@@ -363,6 +371,12 @@ func (keyDB *KeyDB) CopyBasicFieldsFromKeyWOP(key *KeyWOP) {
 
 // CopyBasicFieldsToKey
 func (keyDB *KeyDB) CopyBasicFieldsToKey(key *models.Key) {
+	// insertion point for checkout of basic fields (back repo to stage)
+	key.Name = keyDB.Name_Data.String
+}
+
+// CopyBasicFieldsToKey_WOP
+func (keyDB *KeyDB) CopyBasicFieldsToKey_WOP(key *models.Key_WOP) {
 	// insertion point for checkout of basic fields (back repo to stage)
 	key.Name = keyDB.Name_Data.String
 }
@@ -393,12 +407,12 @@ func (backRepoKey *BackRepoKeyStruct) Backup(dirPath string) {
 	file, err := json.MarshalIndent(forBackup, "", " ")
 
 	if err != nil {
-		log.Panic("Cannot json Key ", filename, " ", err.Error())
+		log.Fatal("Cannot json Key ", filename, " ", err.Error())
 	}
 
 	err = ioutil.WriteFile(filename, file, 0644)
 	if err != nil {
-		log.Panic("Cannot write the json Key file", err.Error())
+		log.Fatal("Cannot write the json Key file", err.Error())
 	}
 }
 
@@ -418,7 +432,7 @@ func (backRepoKey *BackRepoKeyStruct) BackupXL(file *xlsx.File) {
 
 	sh, err := file.AddSheet("Key")
 	if err != nil {
-		log.Panic("Cannot add XL file", err.Error())
+		log.Fatal("Cannot add XL file", err.Error())
 	}
 	_ = sh
 
@@ -443,13 +457,13 @@ func (backRepoKey *BackRepoKeyStruct) RestoreXLPhaseOne(file *xlsx.File) {
 	sh, ok := file.Sheet["Key"]
 	_ = sh
 	if !ok {
-		log.Panic(errors.New("sheet not found"))
+		log.Fatal(errors.New("sheet not found"))
 	}
 
 	// log.Println("Max row is", sh.MaxRow)
 	err := sh.ForEachRow(backRepoKey.rowVisitorKey)
 	if err != nil {
-		log.Panic("Err=", err)
+		log.Fatal("Err=", err)
 	}
 }
 
@@ -471,7 +485,7 @@ func (backRepoKey *BackRepoKeyStruct) rowVisitorKey(row *xlsx.Row) error {
 		keyDB.ID = 0
 		query := backRepoKey.db.Create(keyDB)
 		if query.Error != nil {
-			log.Panic(query.Error)
+			log.Fatal(query.Error)
 		}
 		backRepoKey.Map_KeyDBID_KeyDB[keyDB.ID] = keyDB
 		BackRepoKeyid_atBckpTime_newID[keyDB_ID_atBackupTime] = keyDB.ID
@@ -491,7 +505,7 @@ func (backRepoKey *BackRepoKeyStruct) RestorePhaseOne(dirPath string) {
 	jsonFile, err := os.Open(filename)
 	// if we os.Open returns an error then handle it
 	if err != nil {
-		log.Panic("Cannot restore/open the json Key file", filename, " ", err.Error())
+		log.Fatal("Cannot restore/open the json Key file", filename, " ", err.Error())
 	}
 
 	// read our opened jsonFile as a byte array.
@@ -508,14 +522,14 @@ func (backRepoKey *BackRepoKeyStruct) RestorePhaseOne(dirPath string) {
 		keyDB.ID = 0
 		query := backRepoKey.db.Create(keyDB)
 		if query.Error != nil {
-			log.Panic(query.Error)
+			log.Fatal(query.Error)
 		}
 		backRepoKey.Map_KeyDBID_KeyDB[keyDB.ID] = keyDB
 		BackRepoKeyid_atBckpTime_newID[keyDB_ID_atBackupTime] = keyDB.ID
 	}
 
 	if err != nil {
-		log.Panic("Cannot restore/unmarshall json Key file", err.Error())
+		log.Fatal("Cannot restore/unmarshall json Key file", err.Error())
 	}
 }
 
@@ -532,7 +546,7 @@ func (backRepoKey *BackRepoKeyStruct) RestorePhaseTwo() {
 		// update databse with new index encoding
 		query := backRepoKey.db.Model(keyDB).Updates(*keyDB)
 		if query.Error != nil {
-			log.Panic(query.Error)
+			log.Fatal(query.Error)
 		}
 	}
 
