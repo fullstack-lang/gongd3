@@ -19,12 +19,21 @@ export class PieDB {
 	Heigth: number = 0
 	Margin: number = 0
 
-	// insertion point for other declarations
+	// insertion point for pointers and slices of pointers declarations
 	X?: KeyDB
-	XID: NullInt64 = new NullInt64 // if pointer is null, X.ID = 0
 
 	Y?: KeyDB
+
+	Set: Array<SerieDB> = []
+
+	PiePointersEncoding: PiePointersEncoding = new PiePointersEncoding
+}
+
+export class PiePointersEncoding {
+	// insertion point for pointers and slices of pointers encoding fields
+	XID: NullInt64 = new NullInt64 // if pointer is null, X.ID = 0
+
 	YID: NullInt64 = new NullInt64 // if pointer is null, Y.ID = 0
 
-	Set?: Array<SerieDB>
+	Set: number[] = []
 }

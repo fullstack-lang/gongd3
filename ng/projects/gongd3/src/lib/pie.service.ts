@@ -12,9 +12,11 @@ import { Observable, of } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
 
 import { PieDB } from './pie-db';
+import { FrontRepo, FrontRepoService } from './front-repo.service';
 
 // insertion point for imports
 import { KeyDB } from './key-db'
+import { SerieDB } from './serie-db'
 
 @Injectable({
   providedIn: 'root'
@@ -44,10 +46,10 @@ export class PieService {
 
   /** GET pies from the server */
   // gets is more robust to refactoring
-  gets(GONG__StackPath: string): Observable<PieDB[]> {
-    return this.getPies(GONG__StackPath)
+  gets(GONG__StackPath: string, frontRepo: FrontRepo): Observable<PieDB[]> {
+    return this.getPies(GONG__StackPath, frontRepo)
   }
-  getPies(GONG__StackPath: string): Observable<PieDB[]> {
+  getPies(GONG__StackPath: string, frontRepo: FrontRepo): Observable<PieDB[]> {
 
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
 
@@ -61,10 +63,10 @@ export class PieService {
 
   /** GET pie by id. Will 404 if id not found */
   // more robust API to refactoring
-  get(id: number, GONG__StackPath: string): Observable<PieDB> {
-	return this.getPie(id, GONG__StackPath)
+  get(id: number, GONG__StackPath: string, frontRepo: FrontRepo): Observable<PieDB> {
+    return this.getPie(id, GONG__StackPath, frontRepo)
   }
-  getPie(id: number, GONG__StackPath: string): Observable<PieDB> {
+  getPie(id: number, GONG__StackPath: string, frontRepo: FrontRepo): Observable<PieDB> {
 
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
 
@@ -76,17 +78,25 @@ export class PieService {
   }
 
   /** POST: add a new pie to the server */
-  post(piedb: PieDB, GONG__StackPath: string): Observable<PieDB> {
-    return this.postPie(piedb, GONG__StackPath)	
+  post(piedb: PieDB, GONG__StackPath: string, frontRepo: FrontRepo): Observable<PieDB> {
+    return this.postPie(piedb, GONG__StackPath, frontRepo)
   }
-  postPie(piedb: PieDB, GONG__StackPath: string): Observable<PieDB> {
+  postPie(piedb: PieDB, GONG__StackPath: string, frontRepo: FrontRepo): Observable<PieDB> {
 
     // insertion point for reset of pointers and reverse pointers (to avoid circular JSON)
-    let X = piedb.X
-    piedb.X = new KeyDB
-    let Y = piedb.Y
-    piedb.Y = new KeyDB
-    let Set = piedb.Set
+    if (piedb.X != undefined) {
+      piedb.PiePointersEncoding.XID.Int64 = piedb.X.ID
+      piedb.PiePointersEncoding.XID.Valid = true
+    }
+    piedb.X = undefined
+    if (piedb.Y != undefined) {
+      piedb.PiePointersEncoding.YID.Int64 = piedb.Y.ID
+      piedb.PiePointersEncoding.YID.Valid = true
+    }
+    piedb.Y = undefined
+    for (let _serie of piedb.Set) {
+      piedb.PiePointersEncoding.Set.push(_serie.ID)
+    }
     piedb.Set = []
 
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
@@ -98,7 +108,15 @@ export class PieService {
     return this.http.post<PieDB>(this.piesUrl, piedb, httpOptions).pipe(
       tap(_ => {
         // insertion point for restoration of reverse pointers
-	      piedb.Set = Set
+        piedb.X = frontRepo.Keys.get(piedb.PiePointersEncoding.XID.Int64)
+        piedb.Y = frontRepo.Keys.get(piedb.PiePointersEncoding.YID.Int64)
+        piedb.Set = new Array<SerieDB>()
+        for (let _id of piedb.PiePointersEncoding.Set) {
+          let _serie = frontRepo.Series.get(_id)
+          if (_serie != undefined) {
+            piedb.Set.push(_serie!)
+          }
+        }
         // this.log(`posted piedb id=${piedb.ID}`)
       }),
       catchError(this.handleError<PieDB>('postPie'))
@@ -126,19 +144,28 @@ export class PieService {
   }
 
   /** PUT: update the piedb on the server */
-  update(piedb: PieDB, GONG__StackPath: string): Observable<PieDB> {
-    return this.updatePie(piedb, GONG__StackPath)
+  update(piedb: PieDB, GONG__StackPath: string, frontRepo: FrontRepo): Observable<PieDB> {
+    return this.updatePie(piedb, GONG__StackPath, frontRepo)
   }
-  updatePie(piedb: PieDB, GONG__StackPath: string): Observable<PieDB> {
+  updatePie(piedb: PieDB, GONG__StackPath: string, frontRepo: FrontRepo): Observable<PieDB> {
     const id = typeof piedb === 'number' ? piedb : piedb.ID;
     const url = `${this.piesUrl}/${id}`;
 
-    // insertion point for reset of pointers and reverse pointers (to avoid circular JSON)
-    let X = piedb.X
-    piedb.X = new KeyDB
-    let Y = piedb.Y
-    piedb.Y = new KeyDB
-    let Set = piedb.Set
+    // insertion point for reset of pointers (to avoid circular JSON)
+	// and encoding of pointers
+    if (piedb.X != undefined) {
+      piedb.PiePointersEncoding.XID.Int64 = piedb.X.ID
+      piedb.PiePointersEncoding.XID.Valid = true
+    }
+    piedb.X = undefined
+    if (piedb.Y != undefined) {
+      piedb.PiePointersEncoding.YID.Int64 = piedb.Y.ID
+      piedb.PiePointersEncoding.YID.Valid = true
+    }
+    piedb.Y = undefined
+    for (let _serie of piedb.Set) {
+      piedb.PiePointersEncoding.Set.push(_serie.ID)
+    }
     piedb.Set = []
 
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
@@ -150,7 +177,15 @@ export class PieService {
     return this.http.put<PieDB>(url, piedb, httpOptions).pipe(
       tap(_ => {
         // insertion point for restoration of reverse pointers
-	      piedb.Set = Set
+        piedb.X = frontRepo.Keys.get(piedb.PiePointersEncoding.XID.Int64)
+        piedb.Y = frontRepo.Keys.get(piedb.PiePointersEncoding.YID.Int64)
+        piedb.Set = new Array<SerieDB>()
+        for (let _id of piedb.PiePointersEncoding.Set) {
+          let _serie = frontRepo.Series.get(_id)
+          if (_serie != undefined) {
+            piedb.Set.push(_serie!)
+          }
+        }
         // this.log(`updated piedb id=${piedb.ID}`)
       }),
       catchError(this.handleError<PieDB>('updatePie'))
@@ -178,6 +213,6 @@ export class PieService {
   }
 
   private log(message: string) {
-      console.log(message)
+    console.log(message)
   }
 }

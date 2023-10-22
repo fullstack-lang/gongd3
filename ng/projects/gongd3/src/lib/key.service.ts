@@ -12,6 +12,7 @@ import { Observable, of } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
 
 import { KeyDB } from './key-db';
+import { FrontRepo, FrontRepoService } from './front-repo.service';
 
 // insertion point for imports
 
@@ -43,10 +44,10 @@ export class KeyService {
 
   /** GET keys from the server */
   // gets is more robust to refactoring
-  gets(GONG__StackPath: string): Observable<KeyDB[]> {
-    return this.getKeys(GONG__StackPath)
+  gets(GONG__StackPath: string, frontRepo: FrontRepo): Observable<KeyDB[]> {
+    return this.getKeys(GONG__StackPath, frontRepo)
   }
-  getKeys(GONG__StackPath: string): Observable<KeyDB[]> {
+  getKeys(GONG__StackPath: string, frontRepo: FrontRepo): Observable<KeyDB[]> {
 
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
 
@@ -60,10 +61,10 @@ export class KeyService {
 
   /** GET key by id. Will 404 if id not found */
   // more robust API to refactoring
-  get(id: number, GONG__StackPath: string): Observable<KeyDB> {
-	return this.getKey(id, GONG__StackPath)
+  get(id: number, GONG__StackPath: string, frontRepo: FrontRepo): Observable<KeyDB> {
+    return this.getKey(id, GONG__StackPath, frontRepo)
   }
-  getKey(id: number, GONG__StackPath: string): Observable<KeyDB> {
+  getKey(id: number, GONG__StackPath: string, frontRepo: FrontRepo): Observable<KeyDB> {
 
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
 
@@ -75,10 +76,10 @@ export class KeyService {
   }
 
   /** POST: add a new key to the server */
-  post(keydb: KeyDB, GONG__StackPath: string): Observable<KeyDB> {
-    return this.postKey(keydb, GONG__StackPath)	
+  post(keydb: KeyDB, GONG__StackPath: string, frontRepo: FrontRepo): Observable<KeyDB> {
+    return this.postKey(keydb, GONG__StackPath, frontRepo)
   }
-  postKey(keydb: KeyDB, GONG__StackPath: string): Observable<KeyDB> {
+  postKey(keydb: KeyDB, GONG__StackPath: string, frontRepo: FrontRepo): Observable<KeyDB> {
 
     // insertion point for reset of pointers and reverse pointers (to avoid circular JSON)
 
@@ -118,14 +119,15 @@ export class KeyService {
   }
 
   /** PUT: update the keydb on the server */
-  update(keydb: KeyDB, GONG__StackPath: string): Observable<KeyDB> {
-    return this.updateKey(keydb, GONG__StackPath)
+  update(keydb: KeyDB, GONG__StackPath: string, frontRepo: FrontRepo): Observable<KeyDB> {
+    return this.updateKey(keydb, GONG__StackPath, frontRepo)
   }
-  updateKey(keydb: KeyDB, GONG__StackPath: string): Observable<KeyDB> {
+  updateKey(keydb: KeyDB, GONG__StackPath: string, frontRepo: FrontRepo): Observable<KeyDB> {
     const id = typeof keydb === 'number' ? keydb : keydb.ID;
     const url = `${this.keysUrl}/${id}`;
 
-    // insertion point for reset of pointers and reverse pointers (to avoid circular JSON)
+    // insertion point for reset of pointers (to avoid circular JSON)
+	// and encoding of pointers
 
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
     let httpOptions = {
@@ -163,6 +165,6 @@ export class KeyService {
   }
 
   private log(message: string) {
-      console.log(message)
+    console.log(message)
   }
 }

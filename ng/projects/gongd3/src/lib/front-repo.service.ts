@@ -209,12 +209,12 @@ export class FrontRepoService {
       // expectation for a non-empty array of observables.
       of(null), // 
       // insertion point sub template
-      this.barService.getBars(this.GONG__StackPath),
-      this.keyService.getKeys(this.GONG__StackPath),
-      this.pieService.getPies(this.GONG__StackPath),
-      this.scatterService.getScatters(this.GONG__StackPath),
-      this.serieService.getSeries(this.GONG__StackPath),
-      this.valueService.getValues(this.GONG__StackPath),
+      this.barService.getBars(this.GONG__StackPath, this.frontRepo),
+      this.keyService.getKeys(this.GONG__StackPath, this.frontRepo),
+      this.pieService.getPies(this.GONG__StackPath, this.frontRepo),
+      this.scatterService.getScatters(this.GONG__StackPath, this.frontRepo),
+      this.serieService.getSeries(this.GONG__StackPath, this.frontRepo),
+      this.valueService.getValues(this.GONG__StackPath, this.frontRepo),
     ];
 
   //
@@ -230,12 +230,12 @@ export class FrontRepoService {
     this.observableFrontRepo = [
       of(null), // see above for justification
       // insertion point sub template
-      this.barService.getBars(this.GONG__StackPath),
-      this.keyService.getKeys(this.GONG__StackPath),
-      this.pieService.getPies(this.GONG__StackPath),
-      this.scatterService.getScatters(this.GONG__StackPath),
-      this.serieService.getSeries(this.GONG__StackPath),
-      this.valueService.getValues(this.GONG__StackPath),
+      this.barService.getBars(this.GONG__StackPath, this.frontRepo),
+      this.keyService.getKeys(this.GONG__StackPath, this.frontRepo),
+      this.pieService.getPies(this.GONG__StackPath, this.frontRepo),
+      this.scatterService.getScatters(this.GONG__StackPath, this.frontRepo),
+      this.serieService.getSeries(this.GONG__StackPath, this.frontRepo),
+      this.valueService.getValues(this.GONG__StackPath, this.frontRepo),
     ]
 
     return new Observable<FrontRepo>(
@@ -471,34 +471,39 @@ export class FrontRepoService {
 
 
             // 
-            // Second Step: redeem pointers between instances (thanks to maps in the First Step)
+            // Second Step: reddeem slice of pointers fields
             // insertion point sub template for redeem 
             bars.forEach(
               bar => {
                 // insertion point sub sub template for ONE-/ZERO-ONE associations pointers redeeming
                 // insertion point for pointer field X redeeming
                 {
-                  let _key = this.frontRepo.Keys.get(bar.XID.Int64)
+                  let _key = this.frontRepo.Keys.get(bar.BarPointersEncoding.XID.Int64)
                   if (_key) {
                     bar.X = _key
                   }
                 }
                 // insertion point for pointer field Y redeeming
                 {
-                  let _key = this.frontRepo.Keys.get(bar.YID.Int64)
+                  let _key = this.frontRepo.Keys.get(bar.BarPointersEncoding.YID.Int64)
                   if (_key) {
                     bar.Y = _key
                   }
                 }
-
-                // insertion point for redeeming ONE-MANY associations
+                // insertion point for pointers decoding
+                bar.Set = new Array<SerieDB>()
+                for (let _id of bar.BarPointersEncoding.Set) {
+                  let _serie = this.frontRepo.Series.get(_id)
+                  if (_serie != undefined) {
+                    bar.Set.push(_serie!)
+                  }
+                }
               }
             )
             keys.forEach(
               key => {
                 // insertion point sub sub template for ONE-/ZERO-ONE associations pointers redeeming
-
-                // insertion point for redeeming ONE-MANY associations
+                // insertion point for pointers decoding
               }
             )
             pies.forEach(
@@ -506,20 +511,26 @@ export class FrontRepoService {
                 // insertion point sub sub template for ONE-/ZERO-ONE associations pointers redeeming
                 // insertion point for pointer field X redeeming
                 {
-                  let _key = this.frontRepo.Keys.get(pie.XID.Int64)
+                  let _key = this.frontRepo.Keys.get(pie.PiePointersEncoding.XID.Int64)
                   if (_key) {
                     pie.X = _key
                   }
                 }
                 // insertion point for pointer field Y redeeming
                 {
-                  let _key = this.frontRepo.Keys.get(pie.YID.Int64)
+                  let _key = this.frontRepo.Keys.get(pie.PiePointersEncoding.YID.Int64)
                   if (_key) {
                     pie.Y = _key
                   }
                 }
-
-                // insertion point for redeeming ONE-MANY associations
+                // insertion point for pointers decoding
+                pie.Set = new Array<SerieDB>()
+                for (let _id of pie.PiePointersEncoding.Set) {
+                  let _serie = this.frontRepo.Series.get(_id)
+                  if (_serie != undefined) {
+                    pie.Set.push(_serie!)
+                  }
+                }
               }
             )
             scatters.forEach(
@@ -527,27 +538,33 @@ export class FrontRepoService {
                 // insertion point sub sub template for ONE-/ZERO-ONE associations pointers redeeming
                 // insertion point for pointer field X redeeming
                 {
-                  let _key = this.frontRepo.Keys.get(scatter.XID.Int64)
+                  let _key = this.frontRepo.Keys.get(scatter.ScatterPointersEncoding.XID.Int64)
                   if (_key) {
                     scatter.X = _key
                   }
                 }
                 // insertion point for pointer field Y redeeming
                 {
-                  let _key = this.frontRepo.Keys.get(scatter.YID.Int64)
+                  let _key = this.frontRepo.Keys.get(scatter.ScatterPointersEncoding.YID.Int64)
                   if (_key) {
                     scatter.Y = _key
                   }
                 }
                 // insertion point for pointer field Text redeeming
                 {
-                  let _key = this.frontRepo.Keys.get(scatter.TextID.Int64)
+                  let _key = this.frontRepo.Keys.get(scatter.ScatterPointersEncoding.TextID.Int64)
                   if (_key) {
                     scatter.Text = _key
                   }
                 }
-
-                // insertion point for redeeming ONE-MANY associations
+                // insertion point for pointers decoding
+                scatter.Set = new Array<SerieDB>()
+                for (let _id of scatter.ScatterPointersEncoding.Set) {
+                  let _serie = this.frontRepo.Series.get(_id)
+                  if (_serie != undefined) {
+                    scatter.Set.push(_serie!)
+                  }
+                }
               }
             )
             series.forEach(
@@ -555,50 +572,17 @@ export class FrontRepoService {
                 // insertion point sub sub template for ONE-/ZERO-ONE associations pointers redeeming
                 // insertion point for pointer field Key redeeming
                 {
-                  let _key = this.frontRepo.Keys.get(serie.KeyID.Int64)
+                  let _key = this.frontRepo.Keys.get(serie.SeriePointersEncoding.KeyID.Int64)
                   if (_key) {
                     serie.Key = _key
                   }
                 }
-
-                // insertion point for redeeming ONE-MANY associations
-                // insertion point for slice of pointer field Bar.Set redeeming
-                {
-                  let _bar = this.frontRepo.Bars.get(serie.Bar_SetDBID.Int64)
-                  if (_bar) {
-                    if (_bar.Set == undefined) {
-                      _bar.Set = new Array<SerieDB>()
-                    }
-                    _bar.Set.push(serie)
-                    if (serie.Bar_Set_reverse == undefined) {
-                      serie.Bar_Set_reverse = _bar
-                    }
-                  }
-                }
-                // insertion point for slice of pointer field Pie.Set redeeming
-                {
-                  let _pie = this.frontRepo.Pies.get(serie.Pie_SetDBID.Int64)
-                  if (_pie) {
-                    if (_pie.Set == undefined) {
-                      _pie.Set = new Array<SerieDB>()
-                    }
-                    _pie.Set.push(serie)
-                    if (serie.Pie_Set_reverse == undefined) {
-                      serie.Pie_Set_reverse = _pie
-                    }
-                  }
-                }
-                // insertion point for slice of pointer field Scatter.Set redeeming
-                {
-                  let _scatter = this.frontRepo.Scatters.get(serie.Scatter_SetDBID.Int64)
-                  if (_scatter) {
-                    if (_scatter.Set == undefined) {
-                      _scatter.Set = new Array<SerieDB>()
-                    }
-                    _scatter.Set.push(serie)
-                    if (serie.Scatter_Set_reverse == undefined) {
-                      serie.Scatter_Set_reverse = _scatter
-                    }
+                // insertion point for pointers decoding
+                serie.Values = new Array<ValueDB>()
+                for (let _id of serie.SeriePointersEncoding.Values) {
+                  let _value = this.frontRepo.Values.get(_id)
+                  if (_value != undefined) {
+                    serie.Values.push(_value!)
                   }
                 }
               }
@@ -606,95 +590,7 @@ export class FrontRepoService {
             values.forEach(
               value => {
                 // insertion point sub sub template for ONE-/ZERO-ONE associations pointers redeeming
-
-                // insertion point for redeeming ONE-MANY associations
-                // insertion point for slice of pointer field Serie.Values redeeming
-                {
-                  let _serie = this.frontRepo.Series.get(value.Serie_ValuesDBID.Int64)
-                  if (_serie) {
-                    if (_serie.Values == undefined) {
-                      _serie.Values = new Array<ValueDB>()
-                    }
-                    _serie.Values.push(value)
-                    if (value.Serie_Values_reverse == undefined) {
-                      value.Serie_Values_reverse = _serie
-                    }
-                  }
-                }
-              }
-            )
-
-            // 
-            // Third Step: sort arrays (slices in go) according to their index
-            // insertion point sub template for redeem 
-            bars.forEach(
-              bar => {
-                // insertion point for sorting
-                bar.Set?.sort((t1, t2) => {
-                  if (t1.Bar_SetDBID_Index.Int64 > t2.Bar_SetDBID_Index.Int64) {
-                    return 1;
-                  }
-                  if (t1.Bar_SetDBID_Index.Int64 < t2.Bar_SetDBID_Index.Int64) {
-                    return -1;
-                  }
-                  return 0;
-                })
-
-              }
-            )
-            keys.forEach(
-              key => {
-                // insertion point for sorting
-              }
-            )
-            pies.forEach(
-              pie => {
-                // insertion point for sorting
-                pie.Set?.sort((t1, t2) => {
-                  if (t1.Pie_SetDBID_Index.Int64 > t2.Pie_SetDBID_Index.Int64) {
-                    return 1;
-                  }
-                  if (t1.Pie_SetDBID_Index.Int64 < t2.Pie_SetDBID_Index.Int64) {
-                    return -1;
-                  }
-                  return 0;
-                })
-
-              }
-            )
-            scatters.forEach(
-              scatter => {
-                // insertion point for sorting
-                scatter.Set?.sort((t1, t2) => {
-                  if (t1.Scatter_SetDBID_Index.Int64 > t2.Scatter_SetDBID_Index.Int64) {
-                    return 1;
-                  }
-                  if (t1.Scatter_SetDBID_Index.Int64 < t2.Scatter_SetDBID_Index.Int64) {
-                    return -1;
-                  }
-                  return 0;
-                })
-
-              }
-            )
-            series.forEach(
-              serie => {
-                // insertion point for sorting
-                serie.Values?.sort((t1, t2) => {
-                  if (t1.Serie_ValuesDBID_Index.Int64 > t2.Serie_ValuesDBID_Index.Int64) {
-                    return 1;
-                  }
-                  if (t1.Serie_ValuesDBID_Index.Int64 < t2.Serie_ValuesDBID_Index.Int64) {
-                    return -1;
-                  }
-                  return 0;
-                })
-
-              }
-            )
-            values.forEach(
-              value => {
-                // insertion point for sorting
+                // insertion point for pointers decoding
               }
             )
 
@@ -713,7 +609,7 @@ export class FrontRepoService {
     return new Observable<FrontRepo>(
       (observer) => {
         combineLatest([
-          this.barService.getBars(this.GONG__StackPath)
+          this.barService.getBars(this.GONG__StackPath, this.frontRepo)
         ]).subscribe(
           ([ // insertion point sub template 
             bars,
@@ -735,20 +631,18 @@ export class FrontRepoService {
                 // insertion point for redeeming ONE/ZERO-ONE associations
                 // insertion point for pointer field X redeeming
                 {
-                  let _key = this.frontRepo.Keys.get(bar.XID.Int64)
+                  let _key = this.frontRepo.Keys.get(bar.BarPointersEncoding.XID.Int64)
                   if (_key) {
                     bar.X = _key
                   }
                 }
                 // insertion point for pointer field Y redeeming
                 {
-                  let _key = this.frontRepo.Keys.get(bar.YID.Int64)
+                  let _key = this.frontRepo.Keys.get(bar.BarPointersEncoding.YID.Int64)
                   if (_key) {
                     bar.Y = _key
                   }
                 }
-
-                // insertion point for redeeming ONE-MANY associations
               }
             )
 
@@ -778,7 +672,7 @@ export class FrontRepoService {
     return new Observable<FrontRepo>(
       (observer) => {
         combineLatest([
-          this.keyService.getKeys(this.GONG__StackPath)
+          this.keyService.getKeys(this.GONG__StackPath, this.frontRepo)
         ]).subscribe(
           ([ // insertion point sub template 
             keys,
@@ -798,8 +692,6 @@ export class FrontRepoService {
                 this.frontRepo.Keys_batch.set(key.ID, key)
 
                 // insertion point for redeeming ONE/ZERO-ONE associations
-
-                // insertion point for redeeming ONE-MANY associations
               }
             )
 
@@ -829,7 +721,7 @@ export class FrontRepoService {
     return new Observable<FrontRepo>(
       (observer) => {
         combineLatest([
-          this.pieService.getPies(this.GONG__StackPath)
+          this.pieService.getPies(this.GONG__StackPath, this.frontRepo)
         ]).subscribe(
           ([ // insertion point sub template 
             pies,
@@ -851,20 +743,18 @@ export class FrontRepoService {
                 // insertion point for redeeming ONE/ZERO-ONE associations
                 // insertion point for pointer field X redeeming
                 {
-                  let _key = this.frontRepo.Keys.get(pie.XID.Int64)
+                  let _key = this.frontRepo.Keys.get(pie.PiePointersEncoding.XID.Int64)
                   if (_key) {
                     pie.X = _key
                   }
                 }
                 // insertion point for pointer field Y redeeming
                 {
-                  let _key = this.frontRepo.Keys.get(pie.YID.Int64)
+                  let _key = this.frontRepo.Keys.get(pie.PiePointersEncoding.YID.Int64)
                   if (_key) {
                     pie.Y = _key
                   }
                 }
-
-                // insertion point for redeeming ONE-MANY associations
               }
             )
 
@@ -894,7 +784,7 @@ export class FrontRepoService {
     return new Observable<FrontRepo>(
       (observer) => {
         combineLatest([
-          this.scatterService.getScatters(this.GONG__StackPath)
+          this.scatterService.getScatters(this.GONG__StackPath, this.frontRepo)
         ]).subscribe(
           ([ // insertion point sub template 
             scatters,
@@ -916,27 +806,25 @@ export class FrontRepoService {
                 // insertion point for redeeming ONE/ZERO-ONE associations
                 // insertion point for pointer field X redeeming
                 {
-                  let _key = this.frontRepo.Keys.get(scatter.XID.Int64)
+                  let _key = this.frontRepo.Keys.get(scatter.ScatterPointersEncoding.XID.Int64)
                   if (_key) {
                     scatter.X = _key
                   }
                 }
                 // insertion point for pointer field Y redeeming
                 {
-                  let _key = this.frontRepo.Keys.get(scatter.YID.Int64)
+                  let _key = this.frontRepo.Keys.get(scatter.ScatterPointersEncoding.YID.Int64)
                   if (_key) {
                     scatter.Y = _key
                   }
                 }
                 // insertion point for pointer field Text redeeming
                 {
-                  let _key = this.frontRepo.Keys.get(scatter.TextID.Int64)
+                  let _key = this.frontRepo.Keys.get(scatter.ScatterPointersEncoding.TextID.Int64)
                   if (_key) {
                     scatter.Text = _key
                   }
                 }
-
-                // insertion point for redeeming ONE-MANY associations
               }
             )
 
@@ -966,7 +854,7 @@ export class FrontRepoService {
     return new Observable<FrontRepo>(
       (observer) => {
         combineLatest([
-          this.serieService.getSeries(this.GONG__StackPath)
+          this.serieService.getSeries(this.GONG__StackPath, this.frontRepo)
         ]).subscribe(
           ([ // insertion point sub template 
             series,
@@ -988,50 +876,9 @@ export class FrontRepoService {
                 // insertion point for redeeming ONE/ZERO-ONE associations
                 // insertion point for pointer field Key redeeming
                 {
-                  let _key = this.frontRepo.Keys.get(serie.KeyID.Int64)
+                  let _key = this.frontRepo.Keys.get(serie.SeriePointersEncoding.KeyID.Int64)
                   if (_key) {
                     serie.Key = _key
-                  }
-                }
-
-                // insertion point for redeeming ONE-MANY associations
-                // insertion point for slice of pointer field Bar.Set redeeming
-                {
-                  let _bar = this.frontRepo.Bars.get(serie.Bar_SetDBID.Int64)
-                  if (_bar) {
-                    if (_bar.Set == undefined) {
-                      _bar.Set = new Array<SerieDB>()
-                    }
-                    _bar.Set.push(serie)
-                    if (serie.Bar_Set_reverse == undefined) {
-                      serie.Bar_Set_reverse = _bar
-                    }
-                  }
-                }
-                // insertion point for slice of pointer field Pie.Set redeeming
-                {
-                  let _pie = this.frontRepo.Pies.get(serie.Pie_SetDBID.Int64)
-                  if (_pie) {
-                    if (_pie.Set == undefined) {
-                      _pie.Set = new Array<SerieDB>()
-                    }
-                    _pie.Set.push(serie)
-                    if (serie.Pie_Set_reverse == undefined) {
-                      serie.Pie_Set_reverse = _pie
-                    }
-                  }
-                }
-                // insertion point for slice of pointer field Scatter.Set redeeming
-                {
-                  let _scatter = this.frontRepo.Scatters.get(serie.Scatter_SetDBID.Int64)
-                  if (_scatter) {
-                    if (_scatter.Set == undefined) {
-                      _scatter.Set = new Array<SerieDB>()
-                    }
-                    _scatter.Set.push(serie)
-                    if (serie.Scatter_Set_reverse == undefined) {
-                      serie.Scatter_Set_reverse = _scatter
-                    }
                   }
                 }
               }
@@ -1063,7 +910,7 @@ export class FrontRepoService {
     return new Observable<FrontRepo>(
       (observer) => {
         combineLatest([
-          this.valueService.getValues(this.GONG__StackPath)
+          this.valueService.getValues(this.GONG__StackPath, this.frontRepo)
         ]).subscribe(
           ([ // insertion point sub template 
             values,
@@ -1083,21 +930,6 @@ export class FrontRepoService {
                 this.frontRepo.Values_batch.set(value.ID, value)
 
                 // insertion point for redeeming ONE/ZERO-ONE associations
-
-                // insertion point for redeeming ONE-MANY associations
-                // insertion point for slice of pointer field Serie.Values redeeming
-                {
-                  let _serie = this.frontRepo.Series.get(value.Serie_ValuesDBID.Int64)
-                  if (_serie) {
-                    if (_serie.Values == undefined) {
-                      _serie.Values = new Array<ValueDB>()
-                    }
-                    _serie.Values.push(value)
-                    if (value.Serie_Values_reverse == undefined) {
-                      value.Serie_Values_reverse = _serie
-                    }
-                  }
-                }
               }
             )
 

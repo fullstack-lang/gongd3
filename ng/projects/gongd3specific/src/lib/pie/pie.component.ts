@@ -90,17 +90,6 @@ export class PieComponent implements OnInit {
             for (let serie of pie.Set!) {
               let indexValue = 0
 
-              // sort serie.Values according to the index
-              serie.Values!.sort((t1, t2) => {
-                if (t1.Serie_ValuesDBID_Index.Int64 > t2.Serie_ValuesDBID_Index.Int64) {
-                  return 1;
-                }
-                if (t1.Serie_ValuesDBID_Index.Int64 < t2.Serie_ValuesDBID_Index.Int64) {
-                  return -1;
-                }
-                return 0;
-              });
-
               for (let value of serie.Values!) {
                 var obj: any
                 // when parsing the first serie, creates the object

@@ -38,7 +38,7 @@ type SerieAPI struct {
 	models.Serie_WOP
 
 	// encoding of pointers
-	SeriePointersEncoding
+	SeriePointersEncoding SeriePointersEncoding
 }
 
 // SeriePointersEncoding encodes pointers to Struct and
@@ -51,25 +51,7 @@ type SeriePointersEncoding struct {
 	KeyID sql.NullInt64
 
 	// field Values is a slice of pointers to another Struct (optional or 0..1)
-	Values IntSlice`gorm:"type:TEXT"`
-
-	// Implementation of a reverse ID for field Bar{}.Set []*Serie
-	Bar_SetDBID sql.NullInt64
-
-	// implementation of the index of the withing the slice
-	Bar_SetDBID_Index sql.NullInt64
-
-	// Implementation of a reverse ID for field Pie{}.Set []*Serie
-	Pie_SetDBID sql.NullInt64
-
-	// implementation of the index of the withing the slice
-	Pie_SetDBID_Index sql.NullInt64
-
-	// Implementation of a reverse ID for field Scatter{}.Set []*Serie
-	Scatter_SetDBID sql.NullInt64
-
-	// implementation of the index of the withing the slice
-	Scatter_SetDBID_Index sql.NullInt64
+	Values IntSlice `gorm:"type:TEXT"`
 }
 
 // SerieDB describes a serie in the database
@@ -245,25 +227,6 @@ func (backRepoSerie *BackRepoSerieStruct) CommitPhaseTwoInstance(backRepo *BackR
 			serieDB.KeyID.Valid = true
 		}
 
-		// This loop encodes the slice of pointers serie.Values into the back repo.
-		// Each back repo instance at the end of the association encode the ID of the association start
-		// into a dedicated field for coding the association. The back repo instance is then saved to the db
-		for idx, valueAssocEnd := range serie.Values {
-
-			// get the back repo instance at the association end
-			valueAssocEnd_DB :=
-				backRepo.BackRepoValue.GetValueDBFromValuePtr(valueAssocEnd)
-
-			// encode reverse pointer in the association end back repo instance
-			valueAssocEnd_DB.Serie_ValuesDBID.Int64 = int64(serieDB.ID)
-			valueAssocEnd_DB.Serie_ValuesDBID.Valid = true
-			valueAssocEnd_DB.Serie_ValuesDBID_Index.Int64 = int64(idx)
-			valueAssocEnd_DB.Serie_ValuesDBID_Index.Valid = true
-			if q := backRepoSerie.db.Save(valueAssocEnd_DB); q.Error != nil {
-				return q.Error
-			}
-		}
-
 		// 1. reset
 		serieDB.SeriePointersEncoding.Values = make([]int, 0)
 		// 2. encode
@@ -391,27 +354,9 @@ func (backRepoSerie *BackRepoSerieStruct) CheckoutPhaseTwoInstance(backRepo *Bac
 	// it appends the stage instance
 	// 1. reset the slice
 	serie.Values = serie.Values[:0]
-	// 2. loop all instances in the type in the association end
-	for _, valueDB_AssocEnd := range backRepo.BackRepoValue.Map_ValueDBID_ValueDB {
-		// 3. Does the ID encoding at the end and the ID at the start matches ?
-		if valueDB_AssocEnd.Serie_ValuesDBID.Int64 == int64(serieDB.ID) {
-			// 4. fetch the associated instance in the stage
-			value_AssocEnd := backRepo.BackRepoValue.Map_ValueDBID_ValuePtr[valueDB_AssocEnd.ID]
-			// 5. append it the association slice
-			serie.Values = append(serie.Values, value_AssocEnd)
-		}
+	for _, _Valueid := range serieDB.SeriePointersEncoding.Values {
+		serie.Values = append(serie.Values, backRepo.BackRepoValue.Map_ValueDBID_ValuePtr[uint(_Valueid)])
 	}
-
-	// sort the array according to the order
-	sort.Slice(serie.Values, func(i, j int) bool {
-		valueDB_i_ID := backRepo.BackRepoValue.Map_ValuePtr_ValueDBID[serie.Values[i]]
-		valueDB_j_ID := backRepo.BackRepoValue.Map_ValuePtr_ValueDBID[serie.Values[j]]
-
-		valueDB_i := backRepo.BackRepoValue.Map_ValueDBID_ValueDB[valueDB_i_ID]
-		valueDB_j := backRepo.BackRepoValue.Map_ValueDBID_ValueDB[valueDB_j_ID]
-
-		return valueDB_i.Serie_ValuesDBID_Index.Int64 < valueDB_j.Serie_ValuesDBID_Index.Int64
-	})
 
 	return
 }
@@ -647,24 +592,6 @@ func (backRepoSerie *BackRepoSerieStruct) RestorePhaseTwo() {
 			serieDB.KeyID.Valid = true
 		}
 
-		// This reindex serie.Set
-		if serieDB.Bar_SetDBID.Int64 != 0 {
-			serieDB.Bar_SetDBID.Int64 =
-				int64(BackRepoBarid_atBckpTime_newID[uint(serieDB.Bar_SetDBID.Int64)])
-		}
-
-		// This reindex serie.Set
-		if serieDB.Pie_SetDBID.Int64 != 0 {
-			serieDB.Pie_SetDBID.Int64 =
-				int64(BackRepoPieid_atBckpTime_newID[uint(serieDB.Pie_SetDBID.Int64)])
-		}
-
-		// This reindex serie.Set
-		if serieDB.Scatter_SetDBID.Int64 != 0 {
-			serieDB.Scatter_SetDBID.Int64 =
-				int64(BackRepoScatterid_atBckpTime_newID[uint(serieDB.Scatter_SetDBID.Int64)])
-		}
-
 		// update databse with new index encoding
 		query := backRepoSerie.db.Model(serieDB).Updates(*serieDB)
 		if query.Error != nil {
@@ -692,33 +619,6 @@ func (backRepoSerie *BackRepoSerieStruct) ResetReversePointersInstance(backRepo 
 		_ = serieDB // to avoid unused variable error if there are no reverse to reset
 
 		// insertion point for reverse pointers reset
-		if serieDB.Bar_SetDBID.Int64 != 0 {
-			serieDB.Bar_SetDBID.Int64 = 0
-			serieDB.Bar_SetDBID.Valid = true
-
-			// save the reset
-			if q := backRepoSerie.db.Save(serieDB); q.Error != nil {
-				return q.Error
-			}
-		}
-		if serieDB.Pie_SetDBID.Int64 != 0 {
-			serieDB.Pie_SetDBID.Int64 = 0
-			serieDB.Pie_SetDBID.Valid = true
-
-			// save the reset
-			if q := backRepoSerie.db.Save(serieDB); q.Error != nil {
-				return q.Error
-			}
-		}
-		if serieDB.Scatter_SetDBID.Int64 != 0 {
-			serieDB.Scatter_SetDBID.Int64 = 0
-			serieDB.Scatter_SetDBID.Valid = true
-
-			// save the reset
-			if q := backRepoSerie.db.Save(serieDB); q.Error != nil {
-				return q.Error
-			}
-		}
 		// end of insertion point for reverse pointers reset
 	}
 

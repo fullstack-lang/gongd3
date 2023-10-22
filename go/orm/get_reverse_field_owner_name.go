@@ -132,10 +132,8 @@ func GetReverseFieldOwnerName[T models.Gongstruct](
 		case "Bar":
 			switch reverseField.Fieldname {
 			case "Set":
-				if tmp != nil && tmp.Bar_SetDBID.Int64 != 0 {
-					id := uint(tmp.Bar_SetDBID.Int64)
-					reservePointerTarget := backRepo.BackRepoBar.Map_BarDBID_BarPtr[id]
-					res = reservePointerTarget.Name
+				if _bar, ok := stage.Bar_Set_reverseMap[inst]; ok {
+					res = _bar.Name
 				}
 			}
 		case "Key":
@@ -144,19 +142,15 @@ func GetReverseFieldOwnerName[T models.Gongstruct](
 		case "Pie":
 			switch reverseField.Fieldname {
 			case "Set":
-				if tmp != nil && tmp.Pie_SetDBID.Int64 != 0 {
-					id := uint(tmp.Pie_SetDBID.Int64)
-					reservePointerTarget := backRepo.BackRepoPie.Map_PieDBID_PiePtr[id]
-					res = reservePointerTarget.Name
+				if _pie, ok := stage.Pie_Set_reverseMap[inst]; ok {
+					res = _pie.Name
 				}
 			}
 		case "Scatter":
 			switch reverseField.Fieldname {
 			case "Set":
-				if tmp != nil && tmp.Scatter_SetDBID.Int64 != 0 {
-					id := uint(tmp.Scatter_SetDBID.Int64)
-					reservePointerTarget := backRepo.BackRepoScatter.Map_ScatterDBID_ScatterPtr[id]
-					res = reservePointerTarget.Name
+				if _scatter, ok := stage.Scatter_Set_reverseMap[inst]; ok {
+					res = _scatter.Name
 				}
 			}
 		case "Serie":
@@ -189,10 +183,8 @@ func GetReverseFieldOwnerName[T models.Gongstruct](
 		case "Serie":
 			switch reverseField.Fieldname {
 			case "Values":
-				if tmp != nil && tmp.Serie_ValuesDBID.Int64 != 0 {
-					id := uint(tmp.Serie_ValuesDBID.Int64)
-					reservePointerTarget := backRepo.BackRepoSerie.Map_SerieDBID_SeriePtr[id]
-					res = reservePointerTarget.Name
+				if _serie, ok := stage.Serie_Values_reverseMap[inst]; ok {
+					res = _serie.Name
 				}
 			}
 		case "Value":
@@ -241,7 +233,7 @@ func GetReverseFieldOwner[T models.Gongstruct](
 			switch reverseField.Fieldname {
 			}
 		}
-	
+
 	case *models.Key:
 		tmp := GetInstanceDBFromInstance[models.Key, KeyDB](
 			stage, backRepo, inst,
@@ -268,7 +260,7 @@ func GetReverseFieldOwner[T models.Gongstruct](
 			switch reverseField.Fieldname {
 			}
 		}
-	
+
 	case *models.Pie:
 		tmp := GetInstanceDBFromInstance[models.Pie, PieDB](
 			stage, backRepo, inst,
@@ -295,7 +287,7 @@ func GetReverseFieldOwner[T models.Gongstruct](
 			switch reverseField.Fieldname {
 			}
 		}
-	
+
 	case *models.Scatter:
 		tmp := GetInstanceDBFromInstance[models.Scatter, ScatterDB](
 			stage, backRepo, inst,
@@ -322,7 +314,7 @@ func GetReverseFieldOwner[T models.Gongstruct](
 			switch reverseField.Fieldname {
 			}
 		}
-	
+
 	case *models.Serie:
 		tmp := GetInstanceDBFromInstance[models.Serie, SerieDB](
 			stage, backRepo, inst,
@@ -333,11 +325,7 @@ func GetReverseFieldOwner[T models.Gongstruct](
 		case "Bar":
 			switch reverseField.Fieldname {
 			case "Set":
-				if tmp != nil && tmp.Bar_SetDBID.Int64 != 0 {
-					id := uint(tmp.Bar_SetDBID.Int64)
-					reservePointerTarget := backRepo.BackRepoBar.Map_BarDBID_BarPtr[id]
-					res = reservePointerTarget
-				}
+				res = stage.Bar_Set_reverseMap[inst]
 			}
 		case "Key":
 			switch reverseField.Fieldname {
@@ -345,20 +333,12 @@ func GetReverseFieldOwner[T models.Gongstruct](
 		case "Pie":
 			switch reverseField.Fieldname {
 			case "Set":
-				if tmp != nil && tmp.Pie_SetDBID.Int64 != 0 {
-					id := uint(tmp.Pie_SetDBID.Int64)
-					reservePointerTarget := backRepo.BackRepoPie.Map_PieDBID_PiePtr[id]
-					res = reservePointerTarget
-				}
+				res = stage.Pie_Set_reverseMap[inst]
 			}
 		case "Scatter":
 			switch reverseField.Fieldname {
 			case "Set":
-				if tmp != nil && tmp.Scatter_SetDBID.Int64 != 0 {
-					id := uint(tmp.Scatter_SetDBID.Int64)
-					reservePointerTarget := backRepo.BackRepoScatter.Map_ScatterDBID_ScatterPtr[id]
-					res = reservePointerTarget
-				}
+				res = stage.Scatter_Set_reverseMap[inst]
 			}
 		case "Serie":
 			switch reverseField.Fieldname {
@@ -367,7 +347,7 @@ func GetReverseFieldOwner[T models.Gongstruct](
 			switch reverseField.Fieldname {
 			}
 		}
-	
+
 	case *models.Value:
 		tmp := GetInstanceDBFromInstance[models.Value, ValueDB](
 			stage, backRepo, inst,
@@ -390,17 +370,13 @@ func GetReverseFieldOwner[T models.Gongstruct](
 		case "Serie":
 			switch reverseField.Fieldname {
 			case "Values":
-				if tmp != nil && tmp.Serie_ValuesDBID.Int64 != 0 {
-					id := uint(tmp.Serie_ValuesDBID.Int64)
-					reservePointerTarget := backRepo.BackRepoSerie.Map_SerieDBID_SeriePtr[id]
-					res = reservePointerTarget
-				}
+				res = stage.Serie_Values_reverseMap[inst]
 			}
 		case "Value":
 			switch reverseField.Fieldname {
 			}
 		}
-	
+
 	default:
 		_ = inst
 	}

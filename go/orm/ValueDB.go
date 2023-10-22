@@ -38,19 +38,13 @@ type ValueAPI struct {
 	models.Value_WOP
 
 	// encoding of pointers
-	ValuePointersEncoding
+	ValuePointersEncoding ValuePointersEncoding
 }
 
 // ValuePointersEncoding encodes pointers to Struct and
 // reverse pointers of slice of poitners to Struct
 type ValuePointersEncoding struct {
 	// insertion for pointer fields encoding declaration
-
-	// Implementation of a reverse ID for field Serie{}.Values []*Value
-	Serie_ValuesDBID sql.NullInt64
-
-	// implementation of the index of the withing the slice
-	Serie_ValuesDBID_Index sql.NullInt64
 }
 
 // ValueDB describes a value in the database
@@ -549,12 +543,6 @@ func (backRepoValue *BackRepoValueStruct) RestorePhaseTwo() {
 		_ = valueDB
 
 		// insertion point for reindexing pointers encoding
-		// This reindex value.Values
-		if valueDB.Serie_ValuesDBID.Int64 != 0 {
-			valueDB.Serie_ValuesDBID.Int64 =
-				int64(BackRepoSerieid_atBckpTime_newID[uint(valueDB.Serie_ValuesDBID.Int64)])
-		}
-
 		// update databse with new index encoding
 		query := backRepoValue.db.Model(valueDB).Updates(*valueDB)
 		if query.Error != nil {
@@ -582,15 +570,6 @@ func (backRepoValue *BackRepoValueStruct) ResetReversePointersInstance(backRepo 
 		_ = valueDB // to avoid unused variable error if there are no reverse to reset
 
 		// insertion point for reverse pointers reset
-		if valueDB.Serie_ValuesDBID.Int64 != 0 {
-			valueDB.Serie_ValuesDBID.Int64 = 0
-			valueDB.Serie_ValuesDBID.Valid = true
-
-			// save the reset
-			if q := backRepoValue.db.Save(valueDB); q.Error != nil {
-				return q.Error
-			}
-		}
 		// end of insertion point for reverse pointers reset
 	}
 

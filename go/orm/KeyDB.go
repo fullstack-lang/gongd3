@@ -38,7 +38,7 @@ type KeyAPI struct {
 	models.Key_WOP
 
 	// encoding of pointers
-	KeyPointersEncoding
+	KeyPointersEncoding KeyPointersEncoding
 }
 
 // KeyPointersEncoding encodes pointers to Struct and

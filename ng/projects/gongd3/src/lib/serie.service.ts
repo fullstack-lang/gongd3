@@ -12,12 +12,11 @@ import { Observable, of } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
 
 import { SerieDB } from './serie-db';
+import { FrontRepo, FrontRepoService } from './front-repo.service';
 
 // insertion point for imports
 import { KeyDB } from './key-db'
-import { BarDB } from './bar-db'
-import { PieDB } from './pie-db'
-import { ScatterDB } from './scatter-db'
+import { ValueDB } from './value-db'
 
 @Injectable({
   providedIn: 'root'
@@ -47,10 +46,10 @@ export class SerieService {
 
   /** GET series from the server */
   // gets is more robust to refactoring
-  gets(GONG__StackPath: string): Observable<SerieDB[]> {
-    return this.getSeries(GONG__StackPath)
+  gets(GONG__StackPath: string, frontRepo: FrontRepo): Observable<SerieDB[]> {
+    return this.getSeries(GONG__StackPath, frontRepo)
   }
-  getSeries(GONG__StackPath: string): Observable<SerieDB[]> {
+  getSeries(GONG__StackPath: string, frontRepo: FrontRepo): Observable<SerieDB[]> {
 
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
 
@@ -64,10 +63,10 @@ export class SerieService {
 
   /** GET serie by id. Will 404 if id not found */
   // more robust API to refactoring
-  get(id: number, GONG__StackPath: string): Observable<SerieDB> {
-	return this.getSerie(id, GONG__StackPath)
+  get(id: number, GONG__StackPath: string, frontRepo: FrontRepo): Observable<SerieDB> {
+    return this.getSerie(id, GONG__StackPath, frontRepo)
   }
-  getSerie(id: number, GONG__StackPath: string): Observable<SerieDB> {
+  getSerie(id: number, GONG__StackPath: string, frontRepo: FrontRepo): Observable<SerieDB> {
 
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
 
@@ -79,22 +78,21 @@ export class SerieService {
   }
 
   /** POST: add a new serie to the server */
-  post(seriedb: SerieDB, GONG__StackPath: string): Observable<SerieDB> {
-    return this.postSerie(seriedb, GONG__StackPath)	
+  post(seriedb: SerieDB, GONG__StackPath: string, frontRepo: FrontRepo): Observable<SerieDB> {
+    return this.postSerie(seriedb, GONG__StackPath, frontRepo)
   }
-  postSerie(seriedb: SerieDB, GONG__StackPath: string): Observable<SerieDB> {
+  postSerie(seriedb: SerieDB, GONG__StackPath: string, frontRepo: FrontRepo): Observable<SerieDB> {
 
     // insertion point for reset of pointers and reverse pointers (to avoid circular JSON)
-    let Key = seriedb.Key
-    seriedb.Key = new KeyDB
-    let Values = seriedb.Values
+    if (seriedb.Key != undefined) {
+      seriedb.SeriePointersEncoding.KeyID.Int64 = seriedb.Key.ID
+      seriedb.SeriePointersEncoding.KeyID.Valid = true
+    }
+    seriedb.Key = undefined
+    for (let _value of seriedb.Values) {
+      seriedb.SeriePointersEncoding.Values.push(_value.ID)
+    }
     seriedb.Values = []
-    let _Bar_Set_reverse = seriedb.Bar_Set_reverse
-    seriedb.Bar_Set_reverse = new BarDB
-    let _Pie_Set_reverse = seriedb.Pie_Set_reverse
-    seriedb.Pie_Set_reverse = new PieDB
-    let _Scatter_Set_reverse = seriedb.Scatter_Set_reverse
-    seriedb.Scatter_Set_reverse = new ScatterDB
 
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
     let httpOptions = {
@@ -105,10 +103,14 @@ export class SerieService {
     return this.http.post<SerieDB>(this.seriesUrl, seriedb, httpOptions).pipe(
       tap(_ => {
         // insertion point for restoration of reverse pointers
-	      seriedb.Values = Values
-        seriedb.Bar_Set_reverse = _Bar_Set_reverse
-        seriedb.Pie_Set_reverse = _Pie_Set_reverse
-        seriedb.Scatter_Set_reverse = _Scatter_Set_reverse
+        seriedb.Key = frontRepo.Keys.get(seriedb.SeriePointersEncoding.KeyID.Int64)
+        seriedb.Values = new Array<ValueDB>()
+        for (let _id of seriedb.SeriePointersEncoding.Values) {
+          let _value = frontRepo.Values.get(_id)
+          if (_value != undefined) {
+            seriedb.Values.push(_value!)
+          }
+        }
         // this.log(`posted seriedb id=${seriedb.ID}`)
       }),
       catchError(this.handleError<SerieDB>('postSerie'))
@@ -136,24 +138,24 @@ export class SerieService {
   }
 
   /** PUT: update the seriedb on the server */
-  update(seriedb: SerieDB, GONG__StackPath: string): Observable<SerieDB> {
-    return this.updateSerie(seriedb, GONG__StackPath)
+  update(seriedb: SerieDB, GONG__StackPath: string, frontRepo: FrontRepo): Observable<SerieDB> {
+    return this.updateSerie(seriedb, GONG__StackPath, frontRepo)
   }
-  updateSerie(seriedb: SerieDB, GONG__StackPath: string): Observable<SerieDB> {
+  updateSerie(seriedb: SerieDB, GONG__StackPath: string, frontRepo: FrontRepo): Observable<SerieDB> {
     const id = typeof seriedb === 'number' ? seriedb : seriedb.ID;
     const url = `${this.seriesUrl}/${id}`;
 
-    // insertion point for reset of pointers and reverse pointers (to avoid circular JSON)
-    let Key = seriedb.Key
-    seriedb.Key = new KeyDB
-    let Values = seriedb.Values
+    // insertion point for reset of pointers (to avoid circular JSON)
+	// and encoding of pointers
+    if (seriedb.Key != undefined) {
+      seriedb.SeriePointersEncoding.KeyID.Int64 = seriedb.Key.ID
+      seriedb.SeriePointersEncoding.KeyID.Valid = true
+    }
+    seriedb.Key = undefined
+    for (let _value of seriedb.Values) {
+      seriedb.SeriePointersEncoding.Values.push(_value.ID)
+    }
     seriedb.Values = []
-    let _Bar_Set_reverse = seriedb.Bar_Set_reverse
-    seriedb.Bar_Set_reverse = new BarDB
-    let _Pie_Set_reverse = seriedb.Pie_Set_reverse
-    seriedb.Pie_Set_reverse = new PieDB
-    let _Scatter_Set_reverse = seriedb.Scatter_Set_reverse
-    seriedb.Scatter_Set_reverse = new ScatterDB
 
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
     let httpOptions = {
@@ -164,10 +166,14 @@ export class SerieService {
     return this.http.put<SerieDB>(url, seriedb, httpOptions).pipe(
       tap(_ => {
         // insertion point for restoration of reverse pointers
-	      seriedb.Values = Values
-        seriedb.Bar_Set_reverse = _Bar_Set_reverse
-        seriedb.Pie_Set_reverse = _Pie_Set_reverse
-        seriedb.Scatter_Set_reverse = _Scatter_Set_reverse
+        seriedb.Key = frontRepo.Keys.get(seriedb.SeriePointersEncoding.KeyID.Int64)
+        seriedb.Values = new Array<ValueDB>()
+        for (let _id of seriedb.SeriePointersEncoding.Values) {
+          let _value = frontRepo.Values.get(_id)
+          if (_value != undefined) {
+            seriedb.Values.push(_value!)
+          }
+        }
         // this.log(`updated seriedb id=${seriedb.ID}`)
       }),
       catchError(this.handleError<SerieDB>('updateSerie'))
@@ -195,6 +201,6 @@ export class SerieService {
   }
 
   private log(message: string) {
-      console.log(message)
+    console.log(message)
   }
 }

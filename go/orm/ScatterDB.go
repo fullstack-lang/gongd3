@@ -38,7 +38,7 @@ type ScatterAPI struct {
 	models.Scatter_WOP
 
 	// encoding of pointers
-	ScatterPointersEncoding
+	ScatterPointersEncoding ScatterPointersEncoding
 }
 
 // ScatterPointersEncoding encodes pointers to Struct and
@@ -59,7 +59,7 @@ type ScatterPointersEncoding struct {
 	TextID sql.NullInt64
 
 	// field Set is a slice of pointers to another Struct (optional or 0..1)
-	Set IntSlice`gorm:"type:TEXT"`
+	Set IntSlice `gorm:"type:TEXT"`
 }
 
 // ScatterDB describes a scatter in the database
@@ -277,25 +277,6 @@ func (backRepoScatter *BackRepoScatterStruct) CommitPhaseTwoInstance(backRepo *B
 			scatterDB.TextID.Valid = true
 		}
 
-		// This loop encodes the slice of pointers scatter.Set into the back repo.
-		// Each back repo instance at the end of the association encode the ID of the association start
-		// into a dedicated field for coding the association. The back repo instance is then saved to the db
-		for idx, serieAssocEnd := range scatter.Set {
-
-			// get the back repo instance at the association end
-			serieAssocEnd_DB :=
-				backRepo.BackRepoSerie.GetSerieDBFromSeriePtr(serieAssocEnd)
-
-			// encode reverse pointer in the association end back repo instance
-			serieAssocEnd_DB.Scatter_SetDBID.Int64 = int64(scatterDB.ID)
-			serieAssocEnd_DB.Scatter_SetDBID.Valid = true
-			serieAssocEnd_DB.Scatter_SetDBID_Index.Int64 = int64(idx)
-			serieAssocEnd_DB.Scatter_SetDBID_Index.Valid = true
-			if q := backRepoScatter.db.Save(serieAssocEnd_DB); q.Error != nil {
-				return q.Error
-			}
-		}
-
 		// 1. reset
 		scatterDB.ScatterPointersEncoding.Set = make([]int, 0)
 		// 2. encode
@@ -433,27 +414,9 @@ func (backRepoScatter *BackRepoScatterStruct) CheckoutPhaseTwoInstance(backRepo 
 	// it appends the stage instance
 	// 1. reset the slice
 	scatter.Set = scatter.Set[:0]
-	// 2. loop all instances in the type in the association end
-	for _, serieDB_AssocEnd := range backRepo.BackRepoSerie.Map_SerieDBID_SerieDB {
-		// 3. Does the ID encoding at the end and the ID at the start matches ?
-		if serieDB_AssocEnd.Scatter_SetDBID.Int64 == int64(scatterDB.ID) {
-			// 4. fetch the associated instance in the stage
-			serie_AssocEnd := backRepo.BackRepoSerie.Map_SerieDBID_SeriePtr[serieDB_AssocEnd.ID]
-			// 5. append it the association slice
-			scatter.Set = append(scatter.Set, serie_AssocEnd)
-		}
+	for _, _Serieid := range scatterDB.ScatterPointersEncoding.Set {
+		scatter.Set = append(scatter.Set, backRepo.BackRepoSerie.Map_SerieDBID_SeriePtr[uint(_Serieid)])
 	}
-
-	// sort the array according to the order
-	sort.Slice(scatter.Set, func(i, j int) bool {
-		serieDB_i_ID := backRepo.BackRepoSerie.Map_SeriePtr_SerieDBID[scatter.Set[i]]
-		serieDB_j_ID := backRepo.BackRepoSerie.Map_SeriePtr_SerieDBID[scatter.Set[j]]
-
-		serieDB_i := backRepo.BackRepoSerie.Map_SerieDBID_SerieDB[serieDB_i_ID]
-		serieDB_j := backRepo.BackRepoSerie.Map_SerieDBID_SerieDB[serieDB_j_ID]
-
-		return serieDB_i.Scatter_SetDBID_Index.Int64 < serieDB_j.Scatter_SetDBID_Index.Int64
-	})
 
 	return
 }

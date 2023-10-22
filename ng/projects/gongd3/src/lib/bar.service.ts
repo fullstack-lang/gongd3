@@ -12,9 +12,11 @@ import { Observable, of } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
 
 import { BarDB } from './bar-db';
+import { FrontRepo, FrontRepoService } from './front-repo.service';
 
 // insertion point for imports
 import { KeyDB } from './key-db'
+import { SerieDB } from './serie-db'
 
 @Injectable({
   providedIn: 'root'
@@ -44,10 +46,10 @@ export class BarService {
 
   /** GET bars from the server */
   // gets is more robust to refactoring
-  gets(GONG__StackPath: string): Observable<BarDB[]> {
-    return this.getBars(GONG__StackPath)
+  gets(GONG__StackPath: string, frontRepo: FrontRepo): Observable<BarDB[]> {
+    return this.getBars(GONG__StackPath, frontRepo)
   }
-  getBars(GONG__StackPath: string): Observable<BarDB[]> {
+  getBars(GONG__StackPath: string, frontRepo: FrontRepo): Observable<BarDB[]> {
 
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
 
@@ -61,10 +63,10 @@ export class BarService {
 
   /** GET bar by id. Will 404 if id not found */
   // more robust API to refactoring
-  get(id: number, GONG__StackPath: string): Observable<BarDB> {
-	return this.getBar(id, GONG__StackPath)
+  get(id: number, GONG__StackPath: string, frontRepo: FrontRepo): Observable<BarDB> {
+    return this.getBar(id, GONG__StackPath, frontRepo)
   }
-  getBar(id: number, GONG__StackPath: string): Observable<BarDB> {
+  getBar(id: number, GONG__StackPath: string, frontRepo: FrontRepo): Observable<BarDB> {
 
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
 
@@ -76,17 +78,25 @@ export class BarService {
   }
 
   /** POST: add a new bar to the server */
-  post(bardb: BarDB, GONG__StackPath: string): Observable<BarDB> {
-    return this.postBar(bardb, GONG__StackPath)	
+  post(bardb: BarDB, GONG__StackPath: string, frontRepo: FrontRepo): Observable<BarDB> {
+    return this.postBar(bardb, GONG__StackPath, frontRepo)
   }
-  postBar(bardb: BarDB, GONG__StackPath: string): Observable<BarDB> {
+  postBar(bardb: BarDB, GONG__StackPath: string, frontRepo: FrontRepo): Observable<BarDB> {
 
     // insertion point for reset of pointers and reverse pointers (to avoid circular JSON)
-    let X = bardb.X
-    bardb.X = new KeyDB
-    let Y = bardb.Y
-    bardb.Y = new KeyDB
-    let Set = bardb.Set
+    if (bardb.X != undefined) {
+      bardb.BarPointersEncoding.XID.Int64 = bardb.X.ID
+      bardb.BarPointersEncoding.XID.Valid = true
+    }
+    bardb.X = undefined
+    if (bardb.Y != undefined) {
+      bardb.BarPointersEncoding.YID.Int64 = bardb.Y.ID
+      bardb.BarPointersEncoding.YID.Valid = true
+    }
+    bardb.Y = undefined
+    for (let _serie of bardb.Set) {
+      bardb.BarPointersEncoding.Set.push(_serie.ID)
+    }
     bardb.Set = []
 
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
@@ -98,7 +108,15 @@ export class BarService {
     return this.http.post<BarDB>(this.barsUrl, bardb, httpOptions).pipe(
       tap(_ => {
         // insertion point for restoration of reverse pointers
-	      bardb.Set = Set
+        bardb.X = frontRepo.Keys.get(bardb.BarPointersEncoding.XID.Int64)
+        bardb.Y = frontRepo.Keys.get(bardb.BarPointersEncoding.YID.Int64)
+        bardb.Set = new Array<SerieDB>()
+        for (let _id of bardb.BarPointersEncoding.Set) {
+          let _serie = frontRepo.Series.get(_id)
+          if (_serie != undefined) {
+            bardb.Set.push(_serie!)
+          }
+        }
         // this.log(`posted bardb id=${bardb.ID}`)
       }),
       catchError(this.handleError<BarDB>('postBar'))
@@ -126,19 +144,28 @@ export class BarService {
   }
 
   /** PUT: update the bardb on the server */
-  update(bardb: BarDB, GONG__StackPath: string): Observable<BarDB> {
-    return this.updateBar(bardb, GONG__StackPath)
+  update(bardb: BarDB, GONG__StackPath: string, frontRepo: FrontRepo): Observable<BarDB> {
+    return this.updateBar(bardb, GONG__StackPath, frontRepo)
   }
-  updateBar(bardb: BarDB, GONG__StackPath: string): Observable<BarDB> {
+  updateBar(bardb: BarDB, GONG__StackPath: string, frontRepo: FrontRepo): Observable<BarDB> {
     const id = typeof bardb === 'number' ? bardb : bardb.ID;
     const url = `${this.barsUrl}/${id}`;
 
-    // insertion point for reset of pointers and reverse pointers (to avoid circular JSON)
-    let X = bardb.X
-    bardb.X = new KeyDB
-    let Y = bardb.Y
-    bardb.Y = new KeyDB
-    let Set = bardb.Set
+    // insertion point for reset of pointers (to avoid circular JSON)
+	// and encoding of pointers
+    if (bardb.X != undefined) {
+      bardb.BarPointersEncoding.XID.Int64 = bardb.X.ID
+      bardb.BarPointersEncoding.XID.Valid = true
+    }
+    bardb.X = undefined
+    if (bardb.Y != undefined) {
+      bardb.BarPointersEncoding.YID.Int64 = bardb.Y.ID
+      bardb.BarPointersEncoding.YID.Valid = true
+    }
+    bardb.Y = undefined
+    for (let _serie of bardb.Set) {
+      bardb.BarPointersEncoding.Set.push(_serie.ID)
+    }
     bardb.Set = []
 
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
@@ -150,7 +177,15 @@ export class BarService {
     return this.http.put<BarDB>(url, bardb, httpOptions).pipe(
       tap(_ => {
         // insertion point for restoration of reverse pointers
-	      bardb.Set = Set
+        bardb.X = frontRepo.Keys.get(bardb.BarPointersEncoding.XID.Int64)
+        bardb.Y = frontRepo.Keys.get(bardb.BarPointersEncoding.YID.Int64)
+        bardb.Set = new Array<SerieDB>()
+        for (let _id of bardb.BarPointersEncoding.Set) {
+          let _serie = frontRepo.Series.get(_id)
+          if (_serie != undefined) {
+            bardb.Set.push(_serie!)
+          }
+        }
         // this.log(`updated bardb id=${bardb.ID}`)
       }),
       catchError(this.handleError<BarDB>('updateBar'))
@@ -178,6 +213,6 @@ export class BarService {
   }
 
   private log(message: string) {
-      console.log(message)
+    console.log(message)
   }
 }

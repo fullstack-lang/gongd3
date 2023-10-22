@@ -131,3 +131,59 @@ func EvictInOtherSlices[OwningType PointerToGongstruct, FieldType PointerToGongs
 		_ = owningInstanceInfered // to avoid "declared and not used" error if no named struct has slices
 	}
 }
+
+// ComputeReverseMaps computes the reverse map, for all intances, for all slice to pointers field
+// Its complexity is in O(n)O(p) where p is the number of pointers
+func (stage *StageStruct) ComputeReverseMaps() {
+	// insertion point per named struct
+	// Compute reverse map for named struct Bar
+	// insertion point per field
+	clear(stage.Bar_Set_reverseMap)
+	stage.Bar_Set_reverseMap = make(map[*Serie]*Bar)
+	for bar := range stage.Bars {
+		_ = bar
+		for _, _serie := range bar.Set {
+			stage.Bar_Set_reverseMap[_serie] = bar
+		}
+	}
+
+	// Compute reverse map for named struct Key
+	// insertion point per field
+
+	// Compute reverse map for named struct Pie
+	// insertion point per field
+	clear(stage.Pie_Set_reverseMap)
+	stage.Pie_Set_reverseMap = make(map[*Serie]*Pie)
+	for pie := range stage.Pies {
+		_ = pie
+		for _, _serie := range pie.Set {
+			stage.Pie_Set_reverseMap[_serie] = pie
+		}
+	}
+
+	// Compute reverse map for named struct Scatter
+	// insertion point per field
+	clear(stage.Scatter_Set_reverseMap)
+	stage.Scatter_Set_reverseMap = make(map[*Serie]*Scatter)
+	for scatter := range stage.Scatters {
+		_ = scatter
+		for _, _serie := range scatter.Set {
+			stage.Scatter_Set_reverseMap[_serie] = scatter
+		}
+	}
+
+	// Compute reverse map for named struct Serie
+	// insertion point per field
+	clear(stage.Serie_Values_reverseMap)
+	stage.Serie_Values_reverseMap = make(map[*Value]*Serie)
+	for serie := range stage.Series {
+		_ = serie
+		for _, _value := range serie.Values {
+			stage.Serie_Values_reverseMap[_value] = serie
+		}
+	}
+
+	// Compute reverse map for named struct Value
+	// insertion point per field
+
+}

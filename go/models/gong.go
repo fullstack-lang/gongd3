@@ -48,6 +48,9 @@ type StageStruct struct {
 	Bars           map[*Bar]any
 	Bars_mapString map[string]*Bar
 
+	// insertion point for slice of pointers maps
+	Bar_Set_reverseMap map[*Serie]*Bar
+
 	OnAfterBarCreateCallback OnAfterCreateInterface[Bar]
 	OnAfterBarUpdateCallback OnAfterUpdateInterface[Bar]
 	OnAfterBarDeleteCallback OnAfterDeleteInterface[Bar]
@@ -55,6 +58,8 @@ type StageStruct struct {
 
 	Keys           map[*Key]any
 	Keys_mapString map[string]*Key
+
+	// insertion point for slice of pointers maps
 
 	OnAfterKeyCreateCallback OnAfterCreateInterface[Key]
 	OnAfterKeyUpdateCallback OnAfterUpdateInterface[Key]
@@ -64,6 +69,9 @@ type StageStruct struct {
 	Pies           map[*Pie]any
 	Pies_mapString map[string]*Pie
 
+	// insertion point for slice of pointers maps
+	Pie_Set_reverseMap map[*Serie]*Pie
+
 	OnAfterPieCreateCallback OnAfterCreateInterface[Pie]
 	OnAfterPieUpdateCallback OnAfterUpdateInterface[Pie]
 	OnAfterPieDeleteCallback OnAfterDeleteInterface[Pie]
@@ -71,6 +79,9 @@ type StageStruct struct {
 
 	Scatters           map[*Scatter]any
 	Scatters_mapString map[string]*Scatter
+
+	// insertion point for slice of pointers maps
+	Scatter_Set_reverseMap map[*Serie]*Scatter
 
 	OnAfterScatterCreateCallback OnAfterCreateInterface[Scatter]
 	OnAfterScatterUpdateCallback OnAfterUpdateInterface[Scatter]
@@ -80,6 +91,9 @@ type StageStruct struct {
 	Series           map[*Serie]any
 	Series_mapString map[string]*Serie
 
+	// insertion point for slice of pointers maps
+	Serie_Values_reverseMap map[*Value]*Serie
+
 	OnAfterSerieCreateCallback OnAfterCreateInterface[Serie]
 	OnAfterSerieUpdateCallback OnAfterUpdateInterface[Serie]
 	OnAfterSerieDeleteCallback OnAfterDeleteInterface[Serie]
@@ -87,6 +101,8 @@ type StageStruct struct {
 
 	Values           map[*Value]any
 	Values_mapString map[string]*Value
+
+	// insertion point for slice of pointers maps
 
 	OnAfterValueCreateCallback OnAfterCreateInterface[Value]
 	OnAfterValueUpdateCallback OnAfterUpdateInterface[Value]
@@ -220,6 +236,8 @@ func (stage *StageStruct) CommitWithSuspendedCallbacks() {
 }
 
 func (stage *StageStruct) Commit() {
+	stage.ComputeReverseMaps()
+
 	if stage.BackRepo != nil {
 		stage.BackRepo.Commit(stage)
 	}
@@ -239,6 +257,7 @@ func (stage *StageStruct) Checkout() {
 		stage.BackRepo.Checkout(stage)
 	}
 
+	stage.ComputeReverseMaps()
 	// insertion point for computing the map of number of instances per gongstruct
 	stage.Map_GongStructName_InstancesNb["Bar"] = len(stage.Bars)
 	stage.Map_GongStructName_InstancesNb["Key"] = len(stage.Keys)

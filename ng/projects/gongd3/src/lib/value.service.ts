@@ -12,9 +12,9 @@ import { Observable, of } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
 
 import { ValueDB } from './value-db';
+import { FrontRepo, FrontRepoService } from './front-repo.service';
 
 // insertion point for imports
-import { SerieDB } from './serie-db'
 
 @Injectable({
   providedIn: 'root'
@@ -44,10 +44,10 @@ export class ValueService {
 
   /** GET values from the server */
   // gets is more robust to refactoring
-  gets(GONG__StackPath: string): Observable<ValueDB[]> {
-    return this.getValues(GONG__StackPath)
+  gets(GONG__StackPath: string, frontRepo: FrontRepo): Observable<ValueDB[]> {
+    return this.getValues(GONG__StackPath, frontRepo)
   }
-  getValues(GONG__StackPath: string): Observable<ValueDB[]> {
+  getValues(GONG__StackPath: string, frontRepo: FrontRepo): Observable<ValueDB[]> {
 
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
 
@@ -61,10 +61,10 @@ export class ValueService {
 
   /** GET value by id. Will 404 if id not found */
   // more robust API to refactoring
-  get(id: number, GONG__StackPath: string): Observable<ValueDB> {
-	return this.getValue(id, GONG__StackPath)
+  get(id: number, GONG__StackPath: string, frontRepo: FrontRepo): Observable<ValueDB> {
+    return this.getValue(id, GONG__StackPath, frontRepo)
   }
-  getValue(id: number, GONG__StackPath: string): Observable<ValueDB> {
+  getValue(id: number, GONG__StackPath: string, frontRepo: FrontRepo): Observable<ValueDB> {
 
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
 
@@ -76,14 +76,12 @@ export class ValueService {
   }
 
   /** POST: add a new value to the server */
-  post(valuedb: ValueDB, GONG__StackPath: string): Observable<ValueDB> {
-    return this.postValue(valuedb, GONG__StackPath)	
+  post(valuedb: ValueDB, GONG__StackPath: string, frontRepo: FrontRepo): Observable<ValueDB> {
+    return this.postValue(valuedb, GONG__StackPath, frontRepo)
   }
-  postValue(valuedb: ValueDB, GONG__StackPath: string): Observable<ValueDB> {
+  postValue(valuedb: ValueDB, GONG__StackPath: string, frontRepo: FrontRepo): Observable<ValueDB> {
 
     // insertion point for reset of pointers and reverse pointers (to avoid circular JSON)
-    let _Serie_Values_reverse = valuedb.Serie_Values_reverse
-    valuedb.Serie_Values_reverse = new SerieDB
 
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
     let httpOptions = {
@@ -94,7 +92,6 @@ export class ValueService {
     return this.http.post<ValueDB>(this.valuesUrl, valuedb, httpOptions).pipe(
       tap(_ => {
         // insertion point for restoration of reverse pointers
-        valuedb.Serie_Values_reverse = _Serie_Values_reverse
         // this.log(`posted valuedb id=${valuedb.ID}`)
       }),
       catchError(this.handleError<ValueDB>('postValue'))
@@ -122,16 +119,15 @@ export class ValueService {
   }
 
   /** PUT: update the valuedb on the server */
-  update(valuedb: ValueDB, GONG__StackPath: string): Observable<ValueDB> {
-    return this.updateValue(valuedb, GONG__StackPath)
+  update(valuedb: ValueDB, GONG__StackPath: string, frontRepo: FrontRepo): Observable<ValueDB> {
+    return this.updateValue(valuedb, GONG__StackPath, frontRepo)
   }
-  updateValue(valuedb: ValueDB, GONG__StackPath: string): Observable<ValueDB> {
+  updateValue(valuedb: ValueDB, GONG__StackPath: string, frontRepo: FrontRepo): Observable<ValueDB> {
     const id = typeof valuedb === 'number' ? valuedb : valuedb.ID;
     const url = `${this.valuesUrl}/${id}`;
 
-    // insertion point for reset of pointers and reverse pointers (to avoid circular JSON)
-    let _Serie_Values_reverse = valuedb.Serie_Values_reverse
-    valuedb.Serie_Values_reverse = new SerieDB
+    // insertion point for reset of pointers (to avoid circular JSON)
+	// and encoding of pointers
 
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
     let httpOptions = {
@@ -142,7 +138,6 @@ export class ValueService {
     return this.http.put<ValueDB>(url, valuedb, httpOptions).pipe(
       tap(_ => {
         // insertion point for restoration of reverse pointers
-        valuedb.Serie_Values_reverse = _Serie_Values_reverse
         // this.log(`updated valuedb id=${valuedb.ID}`)
       }),
       catchError(this.handleError<ValueDB>('updateValue'))
@@ -170,6 +165,6 @@ export class ValueService {
   }
 
   private log(message: string) {
-      console.log(message)
+    console.log(message)
   }
 }

@@ -12,9 +12,11 @@ import { Observable, of } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
 
 import { ScatterDB } from './scatter-db';
+import { FrontRepo, FrontRepoService } from './front-repo.service';
 
 // insertion point for imports
 import { KeyDB } from './key-db'
+import { SerieDB } from './serie-db'
 
 @Injectable({
   providedIn: 'root'
@@ -44,10 +46,10 @@ export class ScatterService {
 
   /** GET scatters from the server */
   // gets is more robust to refactoring
-  gets(GONG__StackPath: string): Observable<ScatterDB[]> {
-    return this.getScatters(GONG__StackPath)
+  gets(GONG__StackPath: string, frontRepo: FrontRepo): Observable<ScatterDB[]> {
+    return this.getScatters(GONG__StackPath, frontRepo)
   }
-  getScatters(GONG__StackPath: string): Observable<ScatterDB[]> {
+  getScatters(GONG__StackPath: string, frontRepo: FrontRepo): Observable<ScatterDB[]> {
 
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
 
@@ -61,10 +63,10 @@ export class ScatterService {
 
   /** GET scatter by id. Will 404 if id not found */
   // more robust API to refactoring
-  get(id: number, GONG__StackPath: string): Observable<ScatterDB> {
-	return this.getScatter(id, GONG__StackPath)
+  get(id: number, GONG__StackPath: string, frontRepo: FrontRepo): Observable<ScatterDB> {
+    return this.getScatter(id, GONG__StackPath, frontRepo)
   }
-  getScatter(id: number, GONG__StackPath: string): Observable<ScatterDB> {
+  getScatter(id: number, GONG__StackPath: string, frontRepo: FrontRepo): Observable<ScatterDB> {
 
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
 
@@ -76,19 +78,30 @@ export class ScatterService {
   }
 
   /** POST: add a new scatter to the server */
-  post(scatterdb: ScatterDB, GONG__StackPath: string): Observable<ScatterDB> {
-    return this.postScatter(scatterdb, GONG__StackPath)	
+  post(scatterdb: ScatterDB, GONG__StackPath: string, frontRepo: FrontRepo): Observable<ScatterDB> {
+    return this.postScatter(scatterdb, GONG__StackPath, frontRepo)
   }
-  postScatter(scatterdb: ScatterDB, GONG__StackPath: string): Observable<ScatterDB> {
+  postScatter(scatterdb: ScatterDB, GONG__StackPath: string, frontRepo: FrontRepo): Observable<ScatterDB> {
 
     // insertion point for reset of pointers and reverse pointers (to avoid circular JSON)
-    let X = scatterdb.X
-    scatterdb.X = new KeyDB
-    let Y = scatterdb.Y
-    scatterdb.Y = new KeyDB
-    let Text = scatterdb.Text
-    scatterdb.Text = new KeyDB
-    let Set = scatterdb.Set
+    if (scatterdb.X != undefined) {
+      scatterdb.ScatterPointersEncoding.XID.Int64 = scatterdb.X.ID
+      scatterdb.ScatterPointersEncoding.XID.Valid = true
+    }
+    scatterdb.X = undefined
+    if (scatterdb.Y != undefined) {
+      scatterdb.ScatterPointersEncoding.YID.Int64 = scatterdb.Y.ID
+      scatterdb.ScatterPointersEncoding.YID.Valid = true
+    }
+    scatterdb.Y = undefined
+    if (scatterdb.Text != undefined) {
+      scatterdb.ScatterPointersEncoding.TextID.Int64 = scatterdb.Text.ID
+      scatterdb.ScatterPointersEncoding.TextID.Valid = true
+    }
+    scatterdb.Text = undefined
+    for (let _serie of scatterdb.Set) {
+      scatterdb.ScatterPointersEncoding.Set.push(_serie.ID)
+    }
     scatterdb.Set = []
 
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
@@ -100,7 +113,16 @@ export class ScatterService {
     return this.http.post<ScatterDB>(this.scattersUrl, scatterdb, httpOptions).pipe(
       tap(_ => {
         // insertion point for restoration of reverse pointers
-	      scatterdb.Set = Set
+        scatterdb.X = frontRepo.Keys.get(scatterdb.ScatterPointersEncoding.XID.Int64)
+        scatterdb.Y = frontRepo.Keys.get(scatterdb.ScatterPointersEncoding.YID.Int64)
+        scatterdb.Text = frontRepo.Keys.get(scatterdb.ScatterPointersEncoding.TextID.Int64)
+        scatterdb.Set = new Array<SerieDB>()
+        for (let _id of scatterdb.ScatterPointersEncoding.Set) {
+          let _serie = frontRepo.Series.get(_id)
+          if (_serie != undefined) {
+            scatterdb.Set.push(_serie!)
+          }
+        }
         // this.log(`posted scatterdb id=${scatterdb.ID}`)
       }),
       catchError(this.handleError<ScatterDB>('postScatter'))
@@ -128,21 +150,33 @@ export class ScatterService {
   }
 
   /** PUT: update the scatterdb on the server */
-  update(scatterdb: ScatterDB, GONG__StackPath: string): Observable<ScatterDB> {
-    return this.updateScatter(scatterdb, GONG__StackPath)
+  update(scatterdb: ScatterDB, GONG__StackPath: string, frontRepo: FrontRepo): Observable<ScatterDB> {
+    return this.updateScatter(scatterdb, GONG__StackPath, frontRepo)
   }
-  updateScatter(scatterdb: ScatterDB, GONG__StackPath: string): Observable<ScatterDB> {
+  updateScatter(scatterdb: ScatterDB, GONG__StackPath: string, frontRepo: FrontRepo): Observable<ScatterDB> {
     const id = typeof scatterdb === 'number' ? scatterdb : scatterdb.ID;
     const url = `${this.scattersUrl}/${id}`;
 
-    // insertion point for reset of pointers and reverse pointers (to avoid circular JSON)
-    let X = scatterdb.X
-    scatterdb.X = new KeyDB
-    let Y = scatterdb.Y
-    scatterdb.Y = new KeyDB
-    let Text = scatterdb.Text
-    scatterdb.Text = new KeyDB
-    let Set = scatterdb.Set
+    // insertion point for reset of pointers (to avoid circular JSON)
+	// and encoding of pointers
+    if (scatterdb.X != undefined) {
+      scatterdb.ScatterPointersEncoding.XID.Int64 = scatterdb.X.ID
+      scatterdb.ScatterPointersEncoding.XID.Valid = true
+    }
+    scatterdb.X = undefined
+    if (scatterdb.Y != undefined) {
+      scatterdb.ScatterPointersEncoding.YID.Int64 = scatterdb.Y.ID
+      scatterdb.ScatterPointersEncoding.YID.Valid = true
+    }
+    scatterdb.Y = undefined
+    if (scatterdb.Text != undefined) {
+      scatterdb.ScatterPointersEncoding.TextID.Int64 = scatterdb.Text.ID
+      scatterdb.ScatterPointersEncoding.TextID.Valid = true
+    }
+    scatterdb.Text = undefined
+    for (let _serie of scatterdb.Set) {
+      scatterdb.ScatterPointersEncoding.Set.push(_serie.ID)
+    }
     scatterdb.Set = []
 
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
@@ -154,7 +188,16 @@ export class ScatterService {
     return this.http.put<ScatterDB>(url, scatterdb, httpOptions).pipe(
       tap(_ => {
         // insertion point for restoration of reverse pointers
-	      scatterdb.Set = Set
+        scatterdb.X = frontRepo.Keys.get(scatterdb.ScatterPointersEncoding.XID.Int64)
+        scatterdb.Y = frontRepo.Keys.get(scatterdb.ScatterPointersEncoding.YID.Int64)
+        scatterdb.Text = frontRepo.Keys.get(scatterdb.ScatterPointersEncoding.TextID.Int64)
+        scatterdb.Set = new Array<SerieDB>()
+        for (let _id of scatterdb.ScatterPointersEncoding.Set) {
+          let _serie = frontRepo.Series.get(_id)
+          if (_serie != undefined) {
+            scatterdb.Set.push(_serie!)
+          }
+        }
         // this.log(`updated scatterdb id=${scatterdb.ID}`)
       }),
       catchError(this.handleError<ScatterDB>('updateScatter'))
@@ -182,6 +225,6 @@ export class ScatterService {
   }
 
   private log(message: string) {
-      console.log(message)
+    console.log(message)
   }
 }

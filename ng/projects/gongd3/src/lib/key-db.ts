@@ -14,5 +14,11 @@ export class KeyDB {
 	// insertion point for basic fields declarations
 	Name: string = ""
 
-	// insertion point for other declarations
+	// insertion point for pointers and slices of pointers declarations
+
+	KeyPointersEncoding: KeyPointersEncoding = new KeyPointersEncoding
+}
+
+export class KeyPointersEncoding {
+	// insertion point for pointers and slices of pointers encoding fields
 }
