@@ -56,7 +56,6 @@ export class ScatterService {
     return this.http.get<ScatterDB[]>(this.scattersUrl, { params: params })
       .pipe(
         tap(),
-		// tap(_ => this.log('fetched scatters')),
         catchError(this.handleError<ScatterDB[]>('getScatters', []))
       );
   }
@@ -99,6 +98,7 @@ export class ScatterService {
       scatterdb.ScatterPointersEncoding.TextID.Valid = true
     }
     scatterdb.Text = undefined
+    scatterdb.ScatterPointersEncoding.Set = []
     for (let _serie of scatterdb.Set) {
       scatterdb.ScatterPointersEncoding.Set.push(_serie.ID)
     }
@@ -158,7 +158,7 @@ export class ScatterService {
     const url = `${this.scattersUrl}/${id}`;
 
     // insertion point for reset of pointers (to avoid circular JSON)
-	// and encoding of pointers
+    // and encoding of pointers
     if (scatterdb.X != undefined) {
       scatterdb.ScatterPointersEncoding.XID.Int64 = scatterdb.X.ID
       scatterdb.ScatterPointersEncoding.XID.Valid = true
@@ -174,6 +174,7 @@ export class ScatterService {
       scatterdb.ScatterPointersEncoding.TextID.Valid = true
     }
     scatterdb.Text = undefined
+    scatterdb.ScatterPointersEncoding.Set = []
     for (let _serie of scatterdb.Set) {
       scatterdb.ScatterPointersEncoding.Set.push(_serie.ID)
     }

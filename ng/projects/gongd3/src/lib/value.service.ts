@@ -54,7 +54,6 @@ export class ValueService {
     return this.http.get<ValueDB[]>(this.valuesUrl, { params: params })
       .pipe(
         tap(),
-		// tap(_ => this.log('fetched values')),
         catchError(this.handleError<ValueDB[]>('getValues', []))
       );
   }
@@ -127,7 +126,7 @@ export class ValueService {
     const url = `${this.valuesUrl}/${id}`;
 
     // insertion point for reset of pointers (to avoid circular JSON)
-	// and encoding of pointers
+    // and encoding of pointers
 
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
     let httpOptions = {

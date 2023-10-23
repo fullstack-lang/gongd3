@@ -56,7 +56,6 @@ export class BarService {
     return this.http.get<BarDB[]>(this.barsUrl, { params: params })
       .pipe(
         tap(),
-		// tap(_ => this.log('fetched bars')),
         catchError(this.handleError<BarDB[]>('getBars', []))
       );
   }
@@ -94,6 +93,7 @@ export class BarService {
       bardb.BarPointersEncoding.YID.Valid = true
     }
     bardb.Y = undefined
+    bardb.BarPointersEncoding.Set = []
     for (let _serie of bardb.Set) {
       bardb.BarPointersEncoding.Set.push(_serie.ID)
     }
@@ -152,7 +152,7 @@ export class BarService {
     const url = `${this.barsUrl}/${id}`;
 
     // insertion point for reset of pointers (to avoid circular JSON)
-	// and encoding of pointers
+    // and encoding of pointers
     if (bardb.X != undefined) {
       bardb.BarPointersEncoding.XID.Int64 = bardb.X.ID
       bardb.BarPointersEncoding.XID.Valid = true
@@ -163,6 +163,7 @@ export class BarService {
       bardb.BarPointersEncoding.YID.Valid = true
     }
     bardb.Y = undefined
+    bardb.BarPointersEncoding.Set = []
     for (let _serie of bardb.Set) {
       bardb.BarPointersEncoding.Set.push(_serie.ID)
     }

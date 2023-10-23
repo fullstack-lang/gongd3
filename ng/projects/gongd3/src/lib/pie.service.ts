@@ -56,7 +56,6 @@ export class PieService {
     return this.http.get<PieDB[]>(this.piesUrl, { params: params })
       .pipe(
         tap(),
-		// tap(_ => this.log('fetched pies')),
         catchError(this.handleError<PieDB[]>('getPies', []))
       );
   }
@@ -94,6 +93,7 @@ export class PieService {
       piedb.PiePointersEncoding.YID.Valid = true
     }
     piedb.Y = undefined
+    piedb.PiePointersEncoding.Set = []
     for (let _serie of piedb.Set) {
       piedb.PiePointersEncoding.Set.push(_serie.ID)
     }
@@ -152,7 +152,7 @@ export class PieService {
     const url = `${this.piesUrl}/${id}`;
 
     // insertion point for reset of pointers (to avoid circular JSON)
-	// and encoding of pointers
+    // and encoding of pointers
     if (piedb.X != undefined) {
       piedb.PiePointersEncoding.XID.Int64 = piedb.X.ID
       piedb.PiePointersEncoding.XID.Valid = true
@@ -163,6 +163,7 @@ export class PieService {
       piedb.PiePointersEncoding.YID.Valid = true
     }
     piedb.Y = undefined
+    piedb.PiePointersEncoding.Set = []
     for (let _serie of piedb.Set) {
       piedb.PiePointersEncoding.Set.push(_serie.ID)
     }

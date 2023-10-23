@@ -56,7 +56,6 @@ export class SerieService {
     return this.http.get<SerieDB[]>(this.seriesUrl, { params: params })
       .pipe(
         tap(),
-		// tap(_ => this.log('fetched series')),
         catchError(this.handleError<SerieDB[]>('getSeries', []))
       );
   }
@@ -89,6 +88,7 @@ export class SerieService {
       seriedb.SeriePointersEncoding.KeyID.Valid = true
     }
     seriedb.Key = undefined
+    seriedb.SeriePointersEncoding.Values = []
     for (let _value of seriedb.Values) {
       seriedb.SeriePointersEncoding.Values.push(_value.ID)
     }
@@ -146,12 +146,13 @@ export class SerieService {
     const url = `${this.seriesUrl}/${id}`;
 
     // insertion point for reset of pointers (to avoid circular JSON)
-	// and encoding of pointers
+    // and encoding of pointers
     if (seriedb.Key != undefined) {
       seriedb.SeriePointersEncoding.KeyID.Int64 = seriedb.Key.ID
       seriedb.SeriePointersEncoding.KeyID.Valid = true
     }
     seriedb.Key = undefined
+    seriedb.SeriePointersEncoding.Values = []
     for (let _value of seriedb.Values) {
       seriedb.SeriePointersEncoding.Values.push(_value.ID)
     }
