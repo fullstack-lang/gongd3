@@ -12,17 +12,17 @@ import (
 
 type TreeNodeImplGongstruct struct {
 	gongStruct *gong_models.GongStruct
-	playground *Playground
+	probe *Probe
 }
 
 func NewTreeNodeImplGongstruct(
 	gongStruct *gong_models.GongStruct,
-	playground *Playground,
+	probe *Probe,
 ) (nodeImplGongstruct *TreeNodeImplGongstruct) {
 
 	nodeImplGongstruct = new(TreeNodeImplGongstruct)
 	nodeImplGongstruct.gongStruct = gongStruct
-	nodeImplGongstruct.playground = playground
+	nodeImplGongstruct.probe = probe
 	return
 }
 
@@ -53,22 +53,22 @@ func (nodeImplGongstruct *TreeNodeImplGongstruct) OnAfterUpdate(
 
 	// insertion point
 	if nodeImplGongstruct.gongStruct.GetName() == "Bar" {
-		fillUpTable[models.Bar](nodeImplGongstruct.playground)
+		fillUpTable[models.Bar](nodeImplGongstruct.probe)
 	}
 	if nodeImplGongstruct.gongStruct.GetName() == "Key" {
-		fillUpTable[models.Key](nodeImplGongstruct.playground)
+		fillUpTable[models.Key](nodeImplGongstruct.probe)
 	}
 	if nodeImplGongstruct.gongStruct.GetName() == "Pie" {
-		fillUpTable[models.Pie](nodeImplGongstruct.playground)
+		fillUpTable[models.Pie](nodeImplGongstruct.probe)
 	}
 	if nodeImplGongstruct.gongStruct.GetName() == "Scatter" {
-		fillUpTable[models.Scatter](nodeImplGongstruct.playground)
+		fillUpTable[models.Scatter](nodeImplGongstruct.probe)
 	}
 	if nodeImplGongstruct.gongStruct.GetName() == "Serie" {
-		fillUpTable[models.Serie](nodeImplGongstruct.playground)
+		fillUpTable[models.Serie](nodeImplGongstruct.probe)
 	}
 	if nodeImplGongstruct.gongStruct.GetName() == "Value" {
-		fillUpTable[models.Value](nodeImplGongstruct.playground)
+		fillUpTable[models.Value](nodeImplGongstruct.probe)
 	}
 
 	// set color for node and reset all other nodes color
@@ -78,5 +78,5 @@ func (nodeImplGongstruct *TreeNodeImplGongstruct) OnAfterUpdate(
 	stagedNode.BackgroundColor = "lightgrey"
 	gongtreeStage.Commit()
 
-	nodeImplGongstruct.playground.tableStage.Commit()
+	nodeImplGongstruct.probe.tableStage.Commit()
 }

@@ -8,11 +8,11 @@ import (
 )
 
 func FillUpFormFromGongstructName(
-	playground *Playground,
+	probe *Probe,
 	gongstructName string,
 	isNewInstance bool,
 ) {
-	formStage := playground.formStage
+	formStage := probe.formStage
 	formStage.Reset()
 	formStage.Commit()
 
@@ -32,66 +32,66 @@ func FillUpFormFromGongstructName(
 			Label: prefix + " Bar Form",
 			OnSave: __gong__New__BarFormCallback(
 				nil,
-				playground,
+				probe,
 			),
 		}).Stage(formStage)
 		bar := new(models.Bar)
-		FillUpForm(bar, formGroup, playground)
+		FillUpForm(bar, formGroup, probe)
 	case "Key":
 		formGroup := (&form.FormGroup{
 			Name:  form.FormGroupDefaultName.ToString(),
 			Label: prefix + " Key Form",
 			OnSave: __gong__New__KeyFormCallback(
 				nil,
-				playground,
+				probe,
 			),
 		}).Stage(formStage)
 		key := new(models.Key)
-		FillUpForm(key, formGroup, playground)
+		FillUpForm(key, formGroup, probe)
 	case "Pie":
 		formGroup := (&form.FormGroup{
 			Name:  form.FormGroupDefaultName.ToString(),
 			Label: prefix + " Pie Form",
 			OnSave: __gong__New__PieFormCallback(
 				nil,
-				playground,
+				probe,
 			),
 		}).Stage(formStage)
 		pie := new(models.Pie)
-		FillUpForm(pie, formGroup, playground)
+		FillUpForm(pie, formGroup, probe)
 	case "Scatter":
 		formGroup := (&form.FormGroup{
 			Name:  form.FormGroupDefaultName.ToString(),
 			Label: prefix + " Scatter Form",
 			OnSave: __gong__New__ScatterFormCallback(
 				nil,
-				playground,
+				probe,
 			),
 		}).Stage(formStage)
 		scatter := new(models.Scatter)
-		FillUpForm(scatter, formGroup, playground)
+		FillUpForm(scatter, formGroup, probe)
 	case "Serie":
 		formGroup := (&form.FormGroup{
 			Name:  form.FormGroupDefaultName.ToString(),
 			Label: prefix + " Serie Form",
 			OnSave: __gong__New__SerieFormCallback(
 				nil,
-				playground,
+				probe,
 			),
 		}).Stage(formStage)
 		serie := new(models.Serie)
-		FillUpForm(serie, formGroup, playground)
+		FillUpForm(serie, formGroup, probe)
 	case "Value":
 		formGroup := (&form.FormGroup{
 			Name:  form.FormGroupDefaultName.ToString(),
 			Label: prefix + " Value Form",
 			OnSave: __gong__New__ValueFormCallback(
 				nil,
-				playground,
+				probe,
 			),
 		}).Stage(formStage)
 		value := new(models.Value)
-		FillUpForm(value, formGroup, playground)
+		FillUpForm(value, formGroup, probe)
 	}
 	formStage.Commit()
 }
