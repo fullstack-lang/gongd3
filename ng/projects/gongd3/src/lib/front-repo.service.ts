@@ -22,6 +22,7 @@ import { SerieService } from './serie.service'
 import { ValueDB } from './value-db'
 import { ValueService } from './value.service'
 
+export const StackType = "github.com/fullstack-lang/gongd3/go/models"
 
 // FrontRepo stores all instances in a front repository (design pattern repository)
 export class FrontRepo { // insertion point sub template

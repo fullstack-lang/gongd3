@@ -120,7 +120,7 @@ func NewStack(
 	}
 
 	if withProbe {
-		probe.NewProbe(r, gongd3_go.GoModelsDir, gongd3_go.GoDiagramsDir,
+		stack.Probe = probe.NewProbe(r, gongd3_go.GoModelsDir, gongd3_go.GoDiagramsDir,
 			embeddedDiagrams, stackPath, stage, backRepo)
 	}
 
