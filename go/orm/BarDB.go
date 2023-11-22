@@ -439,7 +439,13 @@ func (backRepoBar *BackRepoBarStruct) CheckoutPhaseTwo(backRepo *BackRepoStruct)
 func (backRepoBar *BackRepoBarStruct) CheckoutPhaseTwoInstance(backRepo *BackRepoStruct, barDB *BarDB) (Error error) {
 
 	bar := backRepoBar.Map_BarDBID_BarPtr[barDB.ID]
-	_ = bar // sometimes, there is no code generated. This lines voids the "unused variable" compilation error
+
+	barDB.DecodePointers(backRepo, bar)
+
+	return
+}
+
+func (barDB *BarDB) DecodePointers(backRepo *BackRepoStruct, bar *models.Bar) {
 
 	// insertion point for checkout of pointer encoding
 	// X field
@@ -877,7 +883,7 @@ func (backRepoBar *BackRepoBarStruct) ResetReversePointers(backRepo *BackRepoStr
 	return
 }
 
-func (backRepoBar *BackRepoBarStruct) ResetReversePointersInstance(backRepo *BackRepoStruct, idx uint, astruct *models.Bar) (Error error) {
+func (backRepoBar *BackRepoBarStruct) ResetReversePointersInstance(backRepo *BackRepoStruct, idx uint, bar *models.Bar) (Error error) {
 
 	// fetch matching barDB
 	if barDB, ok := backRepoBar.Map_BarDBID_BarDB[idx]; ok {

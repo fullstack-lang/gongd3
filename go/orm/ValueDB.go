@@ -312,7 +312,13 @@ func (backRepoValue *BackRepoValueStruct) CheckoutPhaseTwo(backRepo *BackRepoStr
 func (backRepoValue *BackRepoValueStruct) CheckoutPhaseTwoInstance(backRepo *BackRepoStruct, valueDB *ValueDB) (Error error) {
 
 	value := backRepoValue.Map_ValueDBID_ValuePtr[valueDB.ID]
-	_ = value // sometimes, there is no code generated. This lines voids the "unused variable" compilation error
+
+	valueDB.DecodePointers(backRepo, value)
+
+	return
+}
+
+func (valueDB *ValueDB) DecodePointers(backRepo *BackRepoStruct, value *models.Value) {
 
 	// insertion point for checkout of pointer encoding
 	return
@@ -563,7 +569,7 @@ func (backRepoValue *BackRepoValueStruct) ResetReversePointers(backRepo *BackRep
 	return
 }
 
-func (backRepoValue *BackRepoValueStruct) ResetReversePointersInstance(backRepo *BackRepoStruct, idx uint, astruct *models.Value) (Error error) {
+func (backRepoValue *BackRepoValueStruct) ResetReversePointersInstance(backRepo *BackRepoStruct, idx uint, value *models.Value) (Error error) {
 
 	// fetch matching valueDB
 	if valueDB, ok := backRepoValue.Map_ValueDBID_ValueDB[idx]; ok {

@@ -79,17 +79,17 @@ export class FrontRepo { // insertion point sub template
     switch (gongStructName) {
       // insertion point
       case 'Bar':
-        return this.Bars_array as unknown as Map<number, Type>
+        return this.Bars as unknown as Map<number, Type>
       case 'Key':
-        return this.Keys_array as unknown as Map<number, Type>
+        return this.Keys as unknown as Map<number, Type>
       case 'Pie':
-        return this.Pies_array as unknown as Map<number, Type>
+        return this.Pies as unknown as Map<number, Type>
       case 'Scatter':
-        return this.Scatters_array as unknown as Map<number, Type>
+        return this.Scatters as unknown as Map<number, Type>
       case 'Serie':
-        return this.Series_array as unknown as Map<number, Type>
+        return this.Series as unknown as Map<number, Type>
       case 'Value':
-        return this.Values_array as unknown as Map<number, Type>
+        return this.Values as unknown as Map<number, Type>
       default:
         throw new Error("Type not recognized");
     }

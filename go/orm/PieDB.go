@@ -375,7 +375,13 @@ func (backRepoPie *BackRepoPieStruct) CheckoutPhaseTwo(backRepo *BackRepoStruct)
 func (backRepoPie *BackRepoPieStruct) CheckoutPhaseTwoInstance(backRepo *BackRepoStruct, pieDB *PieDB) (Error error) {
 
 	pie := backRepoPie.Map_PieDBID_PiePtr[pieDB.ID]
-	_ = pie // sometimes, there is no code generated. This lines voids the "unused variable" compilation error
+
+	pieDB.DecodePointers(backRepo, pie)
+
+	return
+}
+
+func (pieDB *PieDB) DecodePointers(backRepo *BackRepoStruct, pie *models.Pie) {
 
 	// insertion point for checkout of pointer encoding
 	// X field
@@ -693,7 +699,7 @@ func (backRepoPie *BackRepoPieStruct) ResetReversePointers(backRepo *BackRepoStr
 	return
 }
 
-func (backRepoPie *BackRepoPieStruct) ResetReversePointersInstance(backRepo *BackRepoStruct, idx uint, astruct *models.Pie) (Error error) {
+func (backRepoPie *BackRepoPieStruct) ResetReversePointersInstance(backRepo *BackRepoStruct, idx uint, pie *models.Pie) (Error error) {
 
 	// fetch matching pieDB
 	if pieDB, ok := backRepoPie.Map_PieDBID_PieDB[idx]; ok {

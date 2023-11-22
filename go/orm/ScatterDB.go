@@ -391,7 +391,13 @@ func (backRepoScatter *BackRepoScatterStruct) CheckoutPhaseTwo(backRepo *BackRep
 func (backRepoScatter *BackRepoScatterStruct) CheckoutPhaseTwoInstance(backRepo *BackRepoStruct, scatterDB *ScatterDB) (Error error) {
 
 	scatter := backRepoScatter.Map_ScatterDBID_ScatterPtr[scatterDB.ID]
-	_ = scatter // sometimes, there is no code generated. This lines voids the "unused variable" compilation error
+
+	scatterDB.DecodePointers(backRepo, scatter)
+
+	return
+}
+
+func (scatterDB *ScatterDB) DecodePointers(backRepo *BackRepoStruct, scatter *models.Scatter) {
 
 	// insertion point for checkout of pointer encoding
 	// X field
@@ -720,7 +726,7 @@ func (backRepoScatter *BackRepoScatterStruct) ResetReversePointers(backRepo *Bac
 	return
 }
 
-func (backRepoScatter *BackRepoScatterStruct) ResetReversePointersInstance(backRepo *BackRepoStruct, idx uint, astruct *models.Scatter) (Error error) {
+func (backRepoScatter *BackRepoScatterStruct) ResetReversePointersInstance(backRepo *BackRepoStruct, idx uint, scatter *models.Scatter) (Error error) {
 
 	// fetch matching scatterDB
 	if scatterDB, ok := backRepoScatter.Map_ScatterDBID_ScatterDB[idx]; ok {

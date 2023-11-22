@@ -293,6 +293,9 @@ func (controller *Controller) UpdateSerie(c *gin.Context) {
 	serieNew := new(models.Serie)
 	serieDB.CopyBasicFieldsToSerie(serieNew)
 
+	// redeem pointers
+	serieDB.DecodePointers(backRepo, serieNew)
+
 	// get stage instance from DB instance, and call callback function
 	serieOld := backRepo.BackRepoSerie.Map_SerieDBID_SeriePtr[serieDB.ID]
 	if serieOld != nil {

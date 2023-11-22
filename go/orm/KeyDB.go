@@ -312,7 +312,13 @@ func (backRepoKey *BackRepoKeyStruct) CheckoutPhaseTwo(backRepo *BackRepoStruct)
 func (backRepoKey *BackRepoKeyStruct) CheckoutPhaseTwoInstance(backRepo *BackRepoStruct, keyDB *KeyDB) (Error error) {
 
 	key := backRepoKey.Map_KeyDBID_KeyPtr[keyDB.ID]
-	_ = key // sometimes, there is no code generated. This lines voids the "unused variable" compilation error
+
+	keyDB.DecodePointers(backRepo, key)
+
+	return
+}
+
+func (keyDB *KeyDB) DecodePointers(backRepo *BackRepoStruct, key *models.Key) {
 
 	// insertion point for checkout of pointer encoding
 	return
@@ -563,7 +569,7 @@ func (backRepoKey *BackRepoKeyStruct) ResetReversePointers(backRepo *BackRepoStr
 	return
 }
 
-func (backRepoKey *BackRepoKeyStruct) ResetReversePointersInstance(backRepo *BackRepoStruct, idx uint, astruct *models.Key) (Error error) {
+func (backRepoKey *BackRepoKeyStruct) ResetReversePointersInstance(backRepo *BackRepoStruct, idx uint, key *models.Key) (Error error) {
 
 	// fetch matching keyDB
 	if keyDB, ok := backRepoKey.Map_KeyDBID_KeyDB[idx]; ok {

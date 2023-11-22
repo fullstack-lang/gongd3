@@ -293,6 +293,9 @@ func (controller *Controller) UpdateBar(c *gin.Context) {
 	barNew := new(models.Bar)
 	barDB.CopyBasicFieldsToBar(barNew)
 
+	// redeem pointers
+	barDB.DecodePointers(backRepo, barNew)
+
 	// get stage instance from DB instance, and call callback function
 	barOld := backRepo.BackRepoBar.Map_BarDBID_BarPtr[barDB.ID]
 	if barOld != nil {

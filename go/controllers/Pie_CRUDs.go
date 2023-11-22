@@ -293,6 +293,9 @@ func (controller *Controller) UpdatePie(c *gin.Context) {
 	pieNew := new(models.Pie)
 	pieDB.CopyBasicFieldsToPie(pieNew)
 
+	// redeem pointers
+	pieDB.DecodePointers(backRepo, pieNew)
+
 	// get stage instance from DB instance, and call callback function
 	pieOld := backRepo.BackRepoPie.Map_PieDBID_PiePtr[pieDB.ID]
 	if pieOld != nil {

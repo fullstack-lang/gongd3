@@ -341,7 +341,13 @@ func (backRepoSerie *BackRepoSerieStruct) CheckoutPhaseTwo(backRepo *BackRepoStr
 func (backRepoSerie *BackRepoSerieStruct) CheckoutPhaseTwoInstance(backRepo *BackRepoStruct, serieDB *SerieDB) (Error error) {
 
 	serie := backRepoSerie.Map_SerieDBID_SeriePtr[serieDB.ID]
-	_ = serie // sometimes, there is no code generated. This lines voids the "unused variable" compilation error
+
+	serieDB.DecodePointers(backRepo, serie)
+
+	return
+}
+
+func (serieDB *SerieDB) DecodePointers(backRepo *BackRepoStruct, serie *models.Serie) {
 
 	// insertion point for checkout of pointer encoding
 	// Key field
@@ -612,7 +618,7 @@ func (backRepoSerie *BackRepoSerieStruct) ResetReversePointers(backRepo *BackRep
 	return
 }
 
-func (backRepoSerie *BackRepoSerieStruct) ResetReversePointersInstance(backRepo *BackRepoStruct, idx uint, astruct *models.Serie) (Error error) {
+func (backRepoSerie *BackRepoSerieStruct) ResetReversePointersInstance(backRepo *BackRepoStruct, idx uint, serie *models.Serie) (Error error) {
 
 	// fetch matching serieDB
 	if serieDB, ok := backRepoSerie.Map_SerieDBID_SerieDB[idx]; ok {

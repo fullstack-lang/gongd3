@@ -293,6 +293,9 @@ func (controller *Controller) UpdateKey(c *gin.Context) {
 	keyNew := new(models.Key)
 	keyDB.CopyBasicFieldsToKey(keyNew)
 
+	// redeem pointers
+	keyDB.DecodePointers(backRepo, keyNew)
+
 	// get stage instance from DB instance, and call callback function
 	keyOld := backRepo.BackRepoKey.Map_KeyDBID_KeyPtr[keyDB.ID]
 	if keyOld != nil {

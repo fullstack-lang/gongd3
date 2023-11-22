@@ -293,6 +293,9 @@ func (controller *Controller) UpdateValue(c *gin.Context) {
 	valueNew := new(models.Value)
 	valueDB.CopyBasicFieldsToValue(valueNew)
 
+	// redeem pointers
+	valueDB.DecodePointers(backRepo, valueNew)
+
 	// get stage instance from DB instance, and call callback function
 	valueOld := backRepo.BackRepoValue.Map_ValueDBID_ValuePtr[valueDB.ID]
 	if valueOld != nil {

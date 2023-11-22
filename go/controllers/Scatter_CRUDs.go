@@ -293,6 +293,9 @@ func (controller *Controller) UpdateScatter(c *gin.Context) {
 	scatterNew := new(models.Scatter)
 	scatterDB.CopyBasicFieldsToScatter(scatterNew)
 
+	// redeem pointers
+	scatterDB.DecodePointers(backRepo, scatterNew)
+
 	// get stage instance from DB instance, and call callback function
 	scatterOld := backRepo.BackRepoScatter.Map_ScatterDBID_ScatterPtr[scatterDB.ID]
 	if scatterOld != nil {
