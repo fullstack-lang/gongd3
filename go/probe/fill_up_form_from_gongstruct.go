@@ -12,67 +12,85 @@ func FillUpFormFromGongstruct[T models.Gongstruct](instance *T, probe *Probe) {
 	formStage.Reset()
 	formStage.Commit()
 
+	FillUpNamedFormFromGongstruct[T](instance, probe, formStage, gongtable.FormGroupDefaultName.ToString())
+
+}
+
+func FillUpNamedFormFromGongstruct[T models.Gongstruct](instance *T, probe *Probe, formStage *gongtable.StageStruct, formName string) {
+
 	switch instancesTyped := any(instance).(type) {
 	// insertion point
 	case *models.Bar:
 		formGroup := (&gongtable.FormGroup{
-			Name:  gongtable.FormGroupDefaultName.ToString(),
-			Label: "Update Bar Form",
-			OnSave: __gong__New__BarFormCallback(
-				instancesTyped,
-				probe,
-			),
+			Name:  formName,
+			Label: "Bar Form",
 		}).Stage(formStage)
+		formGroup.OnSave = __gong__New__BarFormCallback(
+			instancesTyped,
+			probe,
+			formGroup,
+		)
+		formGroup.HasSuppressButton = true
 		FillUpForm(instancesTyped, formGroup, probe)
 	case *models.Key:
 		formGroup := (&gongtable.FormGroup{
-			Name:  gongtable.FormGroupDefaultName.ToString(),
-			Label: "Update Key Form",
-			OnSave: __gong__New__KeyFormCallback(
-				instancesTyped,
-				probe,
-			),
+			Name:  formName,
+			Label: "Key Form",
 		}).Stage(formStage)
+		formGroup.OnSave = __gong__New__KeyFormCallback(
+			instancesTyped,
+			probe,
+			formGroup,
+		)
+		formGroup.HasSuppressButton = true
 		FillUpForm(instancesTyped, formGroup, probe)
 	case *models.Pie:
 		formGroup := (&gongtable.FormGroup{
-			Name:  gongtable.FormGroupDefaultName.ToString(),
-			Label: "Update Pie Form",
-			OnSave: __gong__New__PieFormCallback(
-				instancesTyped,
-				probe,
-			),
+			Name:  formName,
+			Label: "Pie Form",
 		}).Stage(formStage)
+		formGroup.OnSave = __gong__New__PieFormCallback(
+			instancesTyped,
+			probe,
+			formGroup,
+		)
+		formGroup.HasSuppressButton = true
 		FillUpForm(instancesTyped, formGroup, probe)
 	case *models.Scatter:
 		formGroup := (&gongtable.FormGroup{
-			Name:  gongtable.FormGroupDefaultName.ToString(),
-			Label: "Update Scatter Form",
-			OnSave: __gong__New__ScatterFormCallback(
-				instancesTyped,
-				probe,
-			),
+			Name:  formName,
+			Label: "Scatter Form",
 		}).Stage(formStage)
+		formGroup.OnSave = __gong__New__ScatterFormCallback(
+			instancesTyped,
+			probe,
+			formGroup,
+		)
+		formGroup.HasSuppressButton = true
 		FillUpForm(instancesTyped, formGroup, probe)
 	case *models.Serie:
 		formGroup := (&gongtable.FormGroup{
-			Name:  gongtable.FormGroupDefaultName.ToString(),
-			Label: "Update Serie Form",
-			OnSave: __gong__New__SerieFormCallback(
-				instancesTyped,
-				probe,
-			),
+			Name:  formName,
+			Label: "Serie Form",
 		}).Stage(formStage)
+		formGroup.OnSave = __gong__New__SerieFormCallback(
+			instancesTyped,
+			probe,
+			formGroup,
+		)
+		formGroup.HasSuppressButton = true
 		FillUpForm(instancesTyped, formGroup, probe)
 	case *models.Value:
 		formGroup := (&gongtable.FormGroup{
-			Name:  gongtable.FormGroupDefaultName.ToString(),
-			Label: "Update Value Form",
-			OnSave: __gong__New__ValueFormCallback(
-				instancesTyped,
-				probe,
-			),
+			Name:  formName,
+			Label: "Value Form",
 		}).Stage(formStage)
+		formGroup.OnSave = __gong__New__ValueFormCallback(
+			instancesTyped,
+			probe,
+			formGroup,
+		)
+		formGroup.HasSuppressButton = true
 		FillUpForm(instancesTyped, formGroup, probe)
 	default:
 		_ = instancesTyped

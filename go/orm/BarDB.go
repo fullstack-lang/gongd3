@@ -331,6 +331,14 @@ func (backRepoBar *BackRepoBarStruct) CommitPhaseTwoInstance(backRepo *BackRepoS
 		for _, serieAssocEnd := range bar.Set {
 			serieAssocEnd_DB :=
 				backRepo.BackRepoSerie.GetSerieDBFromSeriePtr(serieAssocEnd)
+			
+			// the stage might be inconsistant, meaning that the serieAssocEnd_DB might
+			// be missing from the stage. In this case, the commit operation is robust
+			// An alternative would be to crash here to reveal the missing element.
+			if serieAssocEnd_DB == nil {
+				continue
+			}
+			
 			barDB.BarPointersEncoding.Set =
 				append(barDB.BarPointersEncoding.Set, int(serieAssocEnd_DB.ID))
 		}

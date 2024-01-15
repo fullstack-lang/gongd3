@@ -233,6 +233,14 @@ func (backRepoSerie *BackRepoSerieStruct) CommitPhaseTwoInstance(backRepo *BackR
 		for _, valueAssocEnd := range serie.Values {
 			valueAssocEnd_DB :=
 				backRepo.BackRepoValue.GetValueDBFromValuePtr(valueAssocEnd)
+			
+			// the stage might be inconsistant, meaning that the valueAssocEnd_DB might
+			// be missing from the stage. In this case, the commit operation is robust
+			// An alternative would be to crash here to reveal the missing element.
+			if valueAssocEnd_DB == nil {
+				continue
+			}
+			
 			serieDB.SeriePointersEncoding.Values =
 				append(serieDB.SeriePointersEncoding.Values, int(valueAssocEnd_DB.ID))
 		}

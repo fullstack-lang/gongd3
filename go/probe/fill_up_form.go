@@ -20,52 +20,76 @@ func FillUpForm[T models.Gongstruct](
 	// insertion point
 	case *models.Bar:
 		// insertion point
-		BasicFieldtoForm("Name", instanceWithInferedType.Name, instanceWithInferedType, probe.formStage, formGroup, false)
+		BasicFieldtoForm("Name", instanceWithInferedType.Name, instanceWithInferedType, probe.formStage, formGroup,
+			false, false, 0, false, 0)
 		AssociationFieldToForm("X", instanceWithInferedType.X, formGroup, probe)
 		AssociationFieldToForm("Y", instanceWithInferedType.Y, formGroup, probe)
 		AssociationSliceToForm("Set", instanceWithInferedType, &instanceWithInferedType.Set, formGroup, probe)
-		BasicFieldtoForm("AutoDomainX", instanceWithInferedType.AutoDomainX, instanceWithInferedType, probe.formStage, formGroup, false)
-		BasicFieldtoForm("XMin", instanceWithInferedType.XMin, instanceWithInferedType, probe.formStage, formGroup, false)
-		BasicFieldtoForm("XMax", instanceWithInferedType.XMax, instanceWithInferedType, probe.formStage, formGroup, false)
-		BasicFieldtoForm("AutoDomainY", instanceWithInferedType.AutoDomainY, instanceWithInferedType, probe.formStage, formGroup, false)
-		BasicFieldtoForm("YMin", instanceWithInferedType.YMin, instanceWithInferedType, probe.formStage, formGroup, false)
-		BasicFieldtoForm("YMax", instanceWithInferedType.YMax, instanceWithInferedType, probe.formStage, formGroup, false)
-		BasicFieldtoForm("YLabelPresent", instanceWithInferedType.YLabelPresent, instanceWithInferedType, probe.formStage, formGroup, false)
-		BasicFieldtoForm("YLabelOffset", instanceWithInferedType.YLabelOffset, instanceWithInferedType, probe.formStage, formGroup, false)
-		BasicFieldtoForm("XLabelPresent", instanceWithInferedType.XLabelPresent, instanceWithInferedType, probe.formStage, formGroup, false)
-		BasicFieldtoForm("XLabelOffset", instanceWithInferedType.XLabelOffset, instanceWithInferedType, probe.formStage, formGroup, false)
-		BasicFieldtoForm("Width", instanceWithInferedType.Width, instanceWithInferedType, probe.formStage, formGroup, false)
-		BasicFieldtoForm("Heigth", instanceWithInferedType.Heigth, instanceWithInferedType, probe.formStage, formGroup, false)
-		BasicFieldtoForm("Margin", instanceWithInferedType.Margin, instanceWithInferedType, probe.formStage, formGroup, false)
+		BasicFieldtoForm("AutoDomainX", instanceWithInferedType.AutoDomainX, instanceWithInferedType, probe.formStage, formGroup,
+			false, false, 0, false, 0)
+		BasicFieldtoForm("XMin", instanceWithInferedType.XMin, instanceWithInferedType, probe.formStage, formGroup,
+			false, false, 0, false, 0)
+		BasicFieldtoForm("XMax", instanceWithInferedType.XMax, instanceWithInferedType, probe.formStage, formGroup,
+			false, false, 0, false, 0)
+		BasicFieldtoForm("AutoDomainY", instanceWithInferedType.AutoDomainY, instanceWithInferedType, probe.formStage, formGroup,
+			false, false, 0, false, 0)
+		BasicFieldtoForm("YMin", instanceWithInferedType.YMin, instanceWithInferedType, probe.formStage, formGroup,
+			false, false, 0, false, 0)
+		BasicFieldtoForm("YMax", instanceWithInferedType.YMax, instanceWithInferedType, probe.formStage, formGroup,
+			false, false, 0, false, 0)
+		BasicFieldtoForm("YLabelPresent", instanceWithInferedType.YLabelPresent, instanceWithInferedType, probe.formStage, formGroup,
+			false, false, 0, false, 0)
+		BasicFieldtoForm("YLabelOffset", instanceWithInferedType.YLabelOffset, instanceWithInferedType, probe.formStage, formGroup,
+			false, false, 0, false, 0)
+		BasicFieldtoForm("XLabelPresent", instanceWithInferedType.XLabelPresent, instanceWithInferedType, probe.formStage, formGroup,
+			false, false, 0, false, 0)
+		BasicFieldtoForm("XLabelOffset", instanceWithInferedType.XLabelOffset, instanceWithInferedType, probe.formStage, formGroup,
+			false, false, 0, false, 0)
+		BasicFieldtoForm("Width", instanceWithInferedType.Width, instanceWithInferedType, probe.formStage, formGroup,
+			false, false, 0, false, 0)
+		BasicFieldtoForm("Heigth", instanceWithInferedType.Heigth, instanceWithInferedType, probe.formStage, formGroup,
+			false, false, 0, false, 0)
+		BasicFieldtoForm("Margin", instanceWithInferedType.Margin, instanceWithInferedType, probe.formStage, formGroup,
+			false, false, 0, false, 0)
 
 	case *models.Key:
 		// insertion point
-		BasicFieldtoForm("Name", instanceWithInferedType.Name, instanceWithInferedType, probe.formStage, formGroup, false)
+		BasicFieldtoForm("Name", instanceWithInferedType.Name, instanceWithInferedType, probe.formStage, formGroup,
+			false, false, 0, false, 0)
 
 	case *models.Pie:
 		// insertion point
-		BasicFieldtoForm("Name", instanceWithInferedType.Name, instanceWithInferedType, probe.formStage, formGroup, false)
+		BasicFieldtoForm("Name", instanceWithInferedType.Name, instanceWithInferedType, probe.formStage, formGroup,
+			false, false, 0, false, 0)
 		AssociationFieldToForm("X", instanceWithInferedType.X, formGroup, probe)
 		AssociationFieldToForm("Y", instanceWithInferedType.Y, formGroup, probe)
 		AssociationSliceToForm("Set", instanceWithInferedType, &instanceWithInferedType.Set, formGroup, probe)
-		BasicFieldtoForm("Width", instanceWithInferedType.Width, instanceWithInferedType, probe.formStage, formGroup, false)
-		BasicFieldtoForm("Heigth", instanceWithInferedType.Heigth, instanceWithInferedType, probe.formStage, formGroup, false)
-		BasicFieldtoForm("Margin", instanceWithInferedType.Margin, instanceWithInferedType, probe.formStage, formGroup, false)
+		BasicFieldtoForm("Width", instanceWithInferedType.Width, instanceWithInferedType, probe.formStage, formGroup,
+			false, false, 0, false, 0)
+		BasicFieldtoForm("Heigth", instanceWithInferedType.Heigth, instanceWithInferedType, probe.formStage, formGroup,
+			false, false, 0, false, 0)
+		BasicFieldtoForm("Margin", instanceWithInferedType.Margin, instanceWithInferedType, probe.formStage, formGroup,
+			false, false, 0, false, 0)
 
 	case *models.Scatter:
 		// insertion point
-		BasicFieldtoForm("Name", instanceWithInferedType.Name, instanceWithInferedType, probe.formStage, formGroup, false)
+		BasicFieldtoForm("Name", instanceWithInferedType.Name, instanceWithInferedType, probe.formStage, formGroup,
+			false, false, 0, false, 0)
 		AssociationFieldToForm("X", instanceWithInferedType.X, formGroup, probe)
 		AssociationFieldToForm("Y", instanceWithInferedType.Y, formGroup, probe)
 		AssociationFieldToForm("Text", instanceWithInferedType.Text, formGroup, probe)
 		AssociationSliceToForm("Set", instanceWithInferedType, &instanceWithInferedType.Set, formGroup, probe)
-		BasicFieldtoForm("Width", instanceWithInferedType.Width, instanceWithInferedType, probe.formStage, formGroup, false)
-		BasicFieldtoForm("Heigth", instanceWithInferedType.Heigth, instanceWithInferedType, probe.formStage, formGroup, false)
-		BasicFieldtoForm("Margin", instanceWithInferedType.Margin, instanceWithInferedType, probe.formStage, formGroup, false)
+		BasicFieldtoForm("Width", instanceWithInferedType.Width, instanceWithInferedType, probe.formStage, formGroup,
+			false, false, 0, false, 0)
+		BasicFieldtoForm("Heigth", instanceWithInferedType.Heigth, instanceWithInferedType, probe.formStage, formGroup,
+			false, false, 0, false, 0)
+		BasicFieldtoForm("Margin", instanceWithInferedType.Margin, instanceWithInferedType, probe.formStage, formGroup,
+			false, false, 0, false, 0)
 
 	case *models.Serie:
 		// insertion point
-		BasicFieldtoForm("Name", instanceWithInferedType.Name, instanceWithInferedType, probe.formStage, formGroup, false)
+		BasicFieldtoForm("Name", instanceWithInferedType.Name, instanceWithInferedType, probe.formStage, formGroup,
+			false, false, 0, false, 0)
 		AssociationFieldToForm("Key", instanceWithInferedType.Key, formGroup, probe)
 		AssociationSliceToForm("Values", instanceWithInferedType, &instanceWithInferedType.Values, formGroup, probe)
 		{
@@ -88,7 +112,7 @@ func FillUpForm[T models.Gongstruct](
 					instanceWithInferedType,
 					formGroup,
 					probe)
-			}	
+			}
 		}
 		{
 			var rf models.ReverseField
@@ -110,7 +134,7 @@ func FillUpForm[T models.Gongstruct](
 					instanceWithInferedType,
 					formGroup,
 					probe)
-			}	
+			}
 		}
 		{
 			var rf models.ReverseField
@@ -132,12 +156,13 @@ func FillUpForm[T models.Gongstruct](
 					instanceWithInferedType,
 					formGroup,
 					probe)
-			}	
+			}
 		}
 
 	case *models.Value:
 		// insertion point
-		BasicFieldtoForm("Name", instanceWithInferedType.Name, instanceWithInferedType, probe.formStage, formGroup, false)
+		BasicFieldtoForm("Name", instanceWithInferedType.Name, instanceWithInferedType, probe.formStage, formGroup,
+			false, false, 0, false, 0)
 		{
 			var rf models.ReverseField
 			_ = rf
@@ -158,7 +183,7 @@ func FillUpForm[T models.Gongstruct](
 					instanceWithInferedType,
 					formGroup,
 					probe)
-			}	
+			}
 		}
 
 	default:

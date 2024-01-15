@@ -19,9 +19,9 @@ func FillUpFormFromGongstructName(
 	var prefix string
 
 	if isNewInstance {
-		prefix = "New"
+		prefix = ""
 	} else {
-		prefix = "Update"
+		prefix = ""
 	}
 
 	switch gongstructName {
@@ -29,68 +29,80 @@ func FillUpFormFromGongstructName(
 	case "Bar":
 		formGroup := (&form.FormGroup{
 			Name:  form.FormGroupDefaultName.ToString(),
-			Label: prefix + " Bar Form",
-			OnSave: __gong__New__BarFormCallback(
-				nil,
-				probe,
-			),
+			Label: prefix + "Bar Form",
 		}).Stage(formStage)
+		formGroup.OnSave = __gong__New__BarFormCallback(
+			nil,
+			probe,
+			formGroup,
+		)
 		bar := new(models.Bar)
+		formGroup.HasSuppressButton = !isNewInstance
 		FillUpForm(bar, formGroup, probe)
 	case "Key":
 		formGroup := (&form.FormGroup{
 			Name:  form.FormGroupDefaultName.ToString(),
-			Label: prefix + " Key Form",
-			OnSave: __gong__New__KeyFormCallback(
-				nil,
-				probe,
-			),
+			Label: prefix + "Key Form",
 		}).Stage(formStage)
+		formGroup.OnSave = __gong__New__KeyFormCallback(
+			nil,
+			probe,
+			formGroup,
+		)
 		key := new(models.Key)
+		formGroup.HasSuppressButton = !isNewInstance
 		FillUpForm(key, formGroup, probe)
 	case "Pie":
 		formGroup := (&form.FormGroup{
 			Name:  form.FormGroupDefaultName.ToString(),
-			Label: prefix + " Pie Form",
-			OnSave: __gong__New__PieFormCallback(
-				nil,
-				probe,
-			),
+			Label: prefix + "Pie Form",
 		}).Stage(formStage)
+		formGroup.OnSave = __gong__New__PieFormCallback(
+			nil,
+			probe,
+			formGroup,
+		)
 		pie := new(models.Pie)
+		formGroup.HasSuppressButton = !isNewInstance
 		FillUpForm(pie, formGroup, probe)
 	case "Scatter":
 		formGroup := (&form.FormGroup{
 			Name:  form.FormGroupDefaultName.ToString(),
-			Label: prefix + " Scatter Form",
-			OnSave: __gong__New__ScatterFormCallback(
-				nil,
-				probe,
-			),
+			Label: prefix + "Scatter Form",
 		}).Stage(formStage)
+		formGroup.OnSave = __gong__New__ScatterFormCallback(
+			nil,
+			probe,
+			formGroup,
+		)
 		scatter := new(models.Scatter)
+		formGroup.HasSuppressButton = !isNewInstance
 		FillUpForm(scatter, formGroup, probe)
 	case "Serie":
 		formGroup := (&form.FormGroup{
 			Name:  form.FormGroupDefaultName.ToString(),
-			Label: prefix + " Serie Form",
-			OnSave: __gong__New__SerieFormCallback(
-				nil,
-				probe,
-			),
+			Label: prefix + "Serie Form",
 		}).Stage(formStage)
+		formGroup.OnSave = __gong__New__SerieFormCallback(
+			nil,
+			probe,
+			formGroup,
+		)
 		serie := new(models.Serie)
+		formGroup.HasSuppressButton = !isNewInstance
 		FillUpForm(serie, formGroup, probe)
 	case "Value":
 		formGroup := (&form.FormGroup{
 			Name:  form.FormGroupDefaultName.ToString(),
-			Label: prefix + " Value Form",
-			OnSave: __gong__New__ValueFormCallback(
-				nil,
-				probe,
-			),
+			Label: prefix + "Value Form",
 		}).Stage(formStage)
+		formGroup.OnSave = __gong__New__ValueFormCallback(
+			nil,
+			probe,
+			formGroup,
+		)
 		value := new(models.Value)
+		formGroup.HasSuppressButton = !isNewInstance
 		FillUpForm(value, formGroup, probe)
 	}
 	formStage.Commit()

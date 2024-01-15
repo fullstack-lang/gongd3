@@ -267,6 +267,14 @@ func (backRepoPie *BackRepoPieStruct) CommitPhaseTwoInstance(backRepo *BackRepoS
 		for _, serieAssocEnd := range pie.Set {
 			serieAssocEnd_DB :=
 				backRepo.BackRepoSerie.GetSerieDBFromSeriePtr(serieAssocEnd)
+			
+			// the stage might be inconsistant, meaning that the serieAssocEnd_DB might
+			// be missing from the stage. In this case, the commit operation is robust
+			// An alternative would be to crash here to reveal the missing element.
+			if serieAssocEnd_DB == nil {
+				continue
+			}
+			
 			pieDB.PiePointersEncoding.Set =
 				append(pieDB.PiePointersEncoding.Set, int(serieAssocEnd_DB.ID))
 		}
