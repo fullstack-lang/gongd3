@@ -7,11 +7,13 @@ import { DOCUMENT, Location } from '@angular/common'
 /*
  * Behavior subject
  */
-import { BehaviorSubject } from 'rxjs';
-import { Observable, of } from 'rxjs';
-import { catchError, map, tap } from 'rxjs/operators';
+import { BehaviorSubject } from 'rxjs'
+import { Observable, of } from 'rxjs'
+import { catchError, map, tap } from 'rxjs/operators'
 
-import { PieDB } from './pie-db';
+import { PieDB } from './pie-db'
+import { Pie, CopyPieToPieDB } from './pie'
+
 import { FrontRepo, FrontRepoService } from './front-repo.service';
 
 // insertion point for imports
@@ -140,6 +142,25 @@ export class PieService {
     return this.http.delete<PieDB>(url, httpOptions).pipe(
       tap(_ => this.log(`deleted piedb id=${id}`)),
       catchError(this.handleError<PieDB>('deletePie'))
+    );
+  }
+
+  // updateFront copy pie to a version with encoded pointers and update to the back
+  updateFront(pie: Pie, GONG__StackPath: string): Observable<PieDB> {
+    let pieDB = new PieDB
+    CopyPieToPieDB(pie, pieDB)
+    const id = typeof pieDB === 'number' ? pieDB : pieDB.ID
+    const url = `${this.piesUrl}/${id}`;
+    let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
+    let httpOptions = {
+      headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
+      params: params
+    }
+
+    return this.http.put<PieDB>(url, pieDB, httpOptions).pipe(
+      tap(_ => {
+      }),
+      catchError(this.handleError<PieDB>('updatePie'))
     );
   }
 

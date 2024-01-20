@@ -7,11 +7,13 @@ import { DOCUMENT, Location } from '@angular/common'
 /*
  * Behavior subject
  */
-import { BehaviorSubject } from 'rxjs';
-import { Observable, of } from 'rxjs';
-import { catchError, map, tap } from 'rxjs/operators';
+import { BehaviorSubject } from 'rxjs'
+import { Observable, of } from 'rxjs'
+import { catchError, map, tap } from 'rxjs/operators'
 
-import { SerieDB } from './serie-db';
+import { SerieDB } from './serie-db'
+import { Serie, CopySerieToSerieDB } from './serie'
+
 import { FrontRepo, FrontRepoService } from './front-repo.service';
 
 // insertion point for imports
@@ -134,6 +136,25 @@ export class SerieService {
     return this.http.delete<SerieDB>(url, httpOptions).pipe(
       tap(_ => this.log(`deleted seriedb id=${id}`)),
       catchError(this.handleError<SerieDB>('deleteSerie'))
+    );
+  }
+
+  // updateFront copy serie to a version with encoded pointers and update to the back
+  updateFront(serie: Serie, GONG__StackPath: string): Observable<SerieDB> {
+    let serieDB = new SerieDB
+    CopySerieToSerieDB(serie, serieDB)
+    const id = typeof serieDB === 'number' ? serieDB : serieDB.ID
+    const url = `${this.seriesUrl}/${id}`;
+    let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
+    let httpOptions = {
+      headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
+      params: params
+    }
+
+    return this.http.put<SerieDB>(url, serieDB, httpOptions).pipe(
+      tap(_ => {
+      }),
+      catchError(this.handleError<SerieDB>('updateSerie'))
     );
   }
 

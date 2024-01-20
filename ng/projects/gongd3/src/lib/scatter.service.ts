@@ -7,11 +7,13 @@ import { DOCUMENT, Location } from '@angular/common'
 /*
  * Behavior subject
  */
-import { BehaviorSubject } from 'rxjs';
-import { Observable, of } from 'rxjs';
-import { catchError, map, tap } from 'rxjs/operators';
+import { BehaviorSubject } from 'rxjs'
+import { Observable, of } from 'rxjs'
+import { catchError, map, tap } from 'rxjs/operators'
 
-import { ScatterDB } from './scatter-db';
+import { ScatterDB } from './scatter-db'
+import { Scatter, CopyScatterToScatterDB } from './scatter'
+
 import { FrontRepo, FrontRepoService } from './front-repo.service';
 
 // insertion point for imports
@@ -146,6 +148,25 @@ export class ScatterService {
     return this.http.delete<ScatterDB>(url, httpOptions).pipe(
       tap(_ => this.log(`deleted scatterdb id=${id}`)),
       catchError(this.handleError<ScatterDB>('deleteScatter'))
+    );
+  }
+
+  // updateFront copy scatter to a version with encoded pointers and update to the back
+  updateFront(scatter: Scatter, GONG__StackPath: string): Observable<ScatterDB> {
+    let scatterDB = new ScatterDB
+    CopyScatterToScatterDB(scatter, scatterDB)
+    const id = typeof scatterDB === 'number' ? scatterDB : scatterDB.ID
+    const url = `${this.scattersUrl}/${id}`;
+    let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
+    let httpOptions = {
+      headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
+      params: params
+    }
+
+    return this.http.put<ScatterDB>(url, scatterDB, httpOptions).pipe(
+      tap(_ => {
+      }),
+      catchError(this.handleError<ScatterDB>('updateScatter'))
     );
   }
 

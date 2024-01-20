@@ -5,21 +5,27 @@ import { Observable, combineLatest, BehaviorSubject, of } from 'rxjs'
 
 // insertion point sub template for services imports
 import { BarDB } from './bar-db'
+import { Bar, CopyBarDBToBar } from './bar'
 import { BarService } from './bar.service'
 
 import { KeyDB } from './key-db'
+import { Key, CopyKeyDBToKey } from './key'
 import { KeyService } from './key.service'
 
 import { PieDB } from './pie-db'
+import { Pie, CopyPieDBToPie } from './pie'
 import { PieService } from './pie.service'
 
 import { ScatterDB } from './scatter-db'
+import { Scatter, CopyScatterDBToScatter } from './scatter'
 import { ScatterService } from './scatter.service'
 
 import { SerieDB } from './serie-db'
+import { Serie, CopySerieDBToSerie } from './serie'
 import { SerieService } from './serie.service'
 
 import { ValueDB } from './value-db'
+import { Value, CopyValueDBToValue } from './value'
 import { ValueService } from './value.service'
 
 export const StackType = "github.com/fullstack-lang/gongd3/go/models"
@@ -30,32 +36,50 @@ export class FrontRepo { // insertion point sub template
   Bars = new Map<number, BarDB>() // map of repo instances
   Bars_batch = new Map<number, BarDB>() // same but only in last GET (for finding repo instances to delete)
 
+  array_Bars = new Array<Bar>() // array of front instances
+  map_ID_Bar = new Map<number, Bar>() // map of front instances
+
   Keys_array = new Array<KeyDB>() // array of repo instances
   Keys = new Map<number, KeyDB>() // map of repo instances
   Keys_batch = new Map<number, KeyDB>() // same but only in last GET (for finding repo instances to delete)
+
+  array_Keys = new Array<Key>() // array of front instances
+  map_ID_Key = new Map<number, Key>() // map of front instances
 
   Pies_array = new Array<PieDB>() // array of repo instances
   Pies = new Map<number, PieDB>() // map of repo instances
   Pies_batch = new Map<number, PieDB>() // same but only in last GET (for finding repo instances to delete)
 
+  array_Pies = new Array<Pie>() // array of front instances
+  map_ID_Pie = new Map<number, Pie>() // map of front instances
+
   Scatters_array = new Array<ScatterDB>() // array of repo instances
   Scatters = new Map<number, ScatterDB>() // map of repo instances
   Scatters_batch = new Map<number, ScatterDB>() // same but only in last GET (for finding repo instances to delete)
+
+  array_Scatters = new Array<Scatter>() // array of front instances
+  map_ID_Scatter = new Map<number, Scatter>() // map of front instances
 
   Series_array = new Array<SerieDB>() // array of repo instances
   Series = new Map<number, SerieDB>() // map of repo instances
   Series_batch = new Map<number, SerieDB>() // same but only in last GET (for finding repo instances to delete)
 
+  array_Series = new Array<Serie>() // array of front instances
+  map_ID_Serie = new Map<number, Serie>() // map of front instances
+
   Values_array = new Array<ValueDB>() // array of repo instances
   Values = new Map<number, ValueDB>() // map of repo instances
   Values_batch = new Map<number, ValueDB>() // same but only in last GET (for finding repo instances to delete)
+
+  array_Values = new Array<Value>() // array of front instances
+  map_ID_Value = new Map<number, Value>() // map of front instances
 
 
   // getArray allows for a get function that is robust to refactoring of the named struct name
   // for instance frontRepo.getArray<Astruct>( Astruct.GONGSTRUCT_NAME), is robust to a refactoring of Astruct identifier
   // contrary to frontRepo.Astructs_array which is not refactored when Astruct identifier is modified
   getArray<Type>(gongStructName: string): Array<Type> {
-    switch (gongStructName) {
+    switch (gongStructName) { // deprecated
       // insertion point
       case 'Bar':
         return this.Bars_array as unknown as Array<Type>
@@ -74,8 +98,28 @@ export class FrontRepo { // insertion point sub template
     }
   }
 
+  getFrontArray<Type>(gongStructName: string): Array<Type> {
+    switch (gongStructName) {
+      // insertion point
+      case 'Bar':
+        return this.array_Bars as unknown as Array<Type>
+      case 'Key':
+        return this.array_Keys as unknown as Array<Type>
+      case 'Pie':
+        return this.array_Pies as unknown as Array<Type>
+      case 'Scatter':
+        return this.array_Scatters as unknown as Array<Type>
+      case 'Serie':
+        return this.array_Series as unknown as Array<Type>
+      case 'Value':
+        return this.array_Values as unknown as Array<Type>
+      default:
+        throw new Error("Type not recognized");
+    }
+  }
+
   // getMap allows for a get function that is robust to refactoring of the named struct name
-  getMap<Type>(gongStructName: string): Map<number, Type> {
+  getMap<Type>(gongStructName: string): Map<number, Type> { // deprecated
     switch (gongStructName) {
       // insertion point
       case 'Bar':
@@ -90,6 +134,26 @@ export class FrontRepo { // insertion point sub template
         return this.Series as unknown as Map<number, Type>
       case 'Value':
         return this.Values as unknown as Map<number, Type>
+      default:
+        throw new Error("Type not recognized");
+    }
+  }
+  
+  getFrontMap<Type>(gongStructName: string): Map<number, Type> {
+    switch (gongStructName) {
+      // insertion point
+      case 'Bar':
+        return this.map_ID_Bar as unknown as Map<number, Type>
+      case 'Key':
+        return this.map_ID_Key as unknown as Map<number, Type>
+      case 'Pie':
+        return this.map_ID_Pie as unknown as Map<number, Type>
+      case 'Scatter':
+        return this.map_ID_Scatter as unknown as Map<number, Type>
+      case 'Serie':
+        return this.map_ID_Serie as unknown as Map<number, Type>
+      case 'Value':
+        return this.map_ID_Value as unknown as Map<number, Type>
       default:
         throw new Error("Type not recognized");
     }
@@ -279,17 +343,17 @@ export class FrontRepoService {
             this.frontRepo.Bars_batch.clear()
 
             bars.forEach(
-              bar => {
-                this.frontRepo.Bars.set(bar.ID, bar)
-                this.frontRepo.Bars_batch.set(bar.ID, bar)
+              barDB => {
+                this.frontRepo.Bars.set(barDB.ID, barDB)
+                this.frontRepo.Bars_batch.set(barDB.ID, barDB)
               }
             )
 
             // clear bars that are absent from the batch
             this.frontRepo.Bars.forEach(
-              bar => {
-                if (this.frontRepo.Bars_batch.get(bar.ID) == undefined) {
-                  this.frontRepo.Bars.delete(bar.ID)
+              barDB => {
+                if (this.frontRepo.Bars_batch.get(barDB.ID) == undefined) {
+                  this.frontRepo.Bars.delete(barDB.ID)
                 }
               }
             )
@@ -312,17 +376,17 @@ export class FrontRepoService {
             this.frontRepo.Keys_batch.clear()
 
             keys.forEach(
-              key => {
-                this.frontRepo.Keys.set(key.ID, key)
-                this.frontRepo.Keys_batch.set(key.ID, key)
+              keyDB => {
+                this.frontRepo.Keys.set(keyDB.ID, keyDB)
+                this.frontRepo.Keys_batch.set(keyDB.ID, keyDB)
               }
             )
 
             // clear keys that are absent from the batch
             this.frontRepo.Keys.forEach(
-              key => {
-                if (this.frontRepo.Keys_batch.get(key.ID) == undefined) {
-                  this.frontRepo.Keys.delete(key.ID)
+              keyDB => {
+                if (this.frontRepo.Keys_batch.get(keyDB.ID) == undefined) {
+                  this.frontRepo.Keys.delete(keyDB.ID)
                 }
               }
             )
@@ -345,17 +409,17 @@ export class FrontRepoService {
             this.frontRepo.Pies_batch.clear()
 
             pies.forEach(
-              pie => {
-                this.frontRepo.Pies.set(pie.ID, pie)
-                this.frontRepo.Pies_batch.set(pie.ID, pie)
+              pieDB => {
+                this.frontRepo.Pies.set(pieDB.ID, pieDB)
+                this.frontRepo.Pies_batch.set(pieDB.ID, pieDB)
               }
             )
 
             // clear pies that are absent from the batch
             this.frontRepo.Pies.forEach(
-              pie => {
-                if (this.frontRepo.Pies_batch.get(pie.ID) == undefined) {
-                  this.frontRepo.Pies.delete(pie.ID)
+              pieDB => {
+                if (this.frontRepo.Pies_batch.get(pieDB.ID) == undefined) {
+                  this.frontRepo.Pies.delete(pieDB.ID)
                 }
               }
             )
@@ -378,17 +442,17 @@ export class FrontRepoService {
             this.frontRepo.Scatters_batch.clear()
 
             scatters.forEach(
-              scatter => {
-                this.frontRepo.Scatters.set(scatter.ID, scatter)
-                this.frontRepo.Scatters_batch.set(scatter.ID, scatter)
+              scatterDB => {
+                this.frontRepo.Scatters.set(scatterDB.ID, scatterDB)
+                this.frontRepo.Scatters_batch.set(scatterDB.ID, scatterDB)
               }
             )
 
             // clear scatters that are absent from the batch
             this.frontRepo.Scatters.forEach(
-              scatter => {
-                if (this.frontRepo.Scatters_batch.get(scatter.ID) == undefined) {
-                  this.frontRepo.Scatters.delete(scatter.ID)
+              scatterDB => {
+                if (this.frontRepo.Scatters_batch.get(scatterDB.ID) == undefined) {
+                  this.frontRepo.Scatters.delete(scatterDB.ID)
                 }
               }
             )
@@ -411,17 +475,17 @@ export class FrontRepoService {
             this.frontRepo.Series_batch.clear()
 
             series.forEach(
-              serie => {
-                this.frontRepo.Series.set(serie.ID, serie)
-                this.frontRepo.Series_batch.set(serie.ID, serie)
+              serieDB => {
+                this.frontRepo.Series.set(serieDB.ID, serieDB)
+                this.frontRepo.Series_batch.set(serieDB.ID, serieDB)
               }
             )
 
             // clear series that are absent from the batch
             this.frontRepo.Series.forEach(
-              serie => {
-                if (this.frontRepo.Series_batch.get(serie.ID) == undefined) {
-                  this.frontRepo.Series.delete(serie.ID)
+              serieDB => {
+                if (this.frontRepo.Series_batch.get(serieDB.ID) == undefined) {
+                  this.frontRepo.Series.delete(serieDB.ID)
                 }
               }
             )
@@ -444,17 +508,17 @@ export class FrontRepoService {
             this.frontRepo.Values_batch.clear()
 
             values.forEach(
-              value => {
-                this.frontRepo.Values.set(value.ID, value)
-                this.frontRepo.Values_batch.set(value.ID, value)
+              valueDB => {
+                this.frontRepo.Values.set(valueDB.ID, valueDB)
+                this.frontRepo.Values_batch.set(valueDB.ID, valueDB)
               }
             )
 
             // clear values that are absent from the batch
             this.frontRepo.Values.forEach(
-              value => {
-                if (this.frontRepo.Values_batch.get(value.ID) == undefined) {
-                  this.frontRepo.Values.delete(value.ID)
+              valueDB => {
+                if (this.frontRepo.Values_batch.get(valueDB.ID) == undefined) {
+                  this.frontRepo.Values.delete(valueDB.ID)
                 }
               }
             )
@@ -594,6 +658,89 @@ export class FrontRepoService {
                 // insertion point for pointers decoding
               }
             )
+
+            // 
+            // Third Step: reddeem front objects
+            // insertion point sub template for redeem 
+            
+            // init front objects
+            this.frontRepo.array_Bars = []
+            this.frontRepo.map_ID_Bar.clear()
+            this.frontRepo.Bars_array.forEach(
+              barDB => {
+                let bar = new Bar
+                CopyBarDBToBar(barDB, bar, this.frontRepo)
+                this.frontRepo.array_Bars.push(bar)
+                this.frontRepo.map_ID_Bar.set(bar.ID, bar)
+              }
+            )
+
+            
+            // init front objects
+            this.frontRepo.array_Keys = []
+            this.frontRepo.map_ID_Key.clear()
+            this.frontRepo.Keys_array.forEach(
+              keyDB => {
+                let key = new Key
+                CopyKeyDBToKey(keyDB, key, this.frontRepo)
+                this.frontRepo.array_Keys.push(key)
+                this.frontRepo.map_ID_Key.set(key.ID, key)
+              }
+            )
+
+            
+            // init front objects
+            this.frontRepo.array_Pies = []
+            this.frontRepo.map_ID_Pie.clear()
+            this.frontRepo.Pies_array.forEach(
+              pieDB => {
+                let pie = new Pie
+                CopyPieDBToPie(pieDB, pie, this.frontRepo)
+                this.frontRepo.array_Pies.push(pie)
+                this.frontRepo.map_ID_Pie.set(pie.ID, pie)
+              }
+            )
+
+            
+            // init front objects
+            this.frontRepo.array_Scatters = []
+            this.frontRepo.map_ID_Scatter.clear()
+            this.frontRepo.Scatters_array.forEach(
+              scatterDB => {
+                let scatter = new Scatter
+                CopyScatterDBToScatter(scatterDB, scatter, this.frontRepo)
+                this.frontRepo.array_Scatters.push(scatter)
+                this.frontRepo.map_ID_Scatter.set(scatter.ID, scatter)
+              }
+            )
+
+            
+            // init front objects
+            this.frontRepo.array_Series = []
+            this.frontRepo.map_ID_Serie.clear()
+            this.frontRepo.Series_array.forEach(
+              serieDB => {
+                let serie = new Serie
+                CopySerieDBToSerie(serieDB, serie, this.frontRepo)
+                this.frontRepo.array_Series.push(serie)
+                this.frontRepo.map_ID_Serie.set(serie.ID, serie)
+              }
+            )
+
+            
+            // init front objects
+            this.frontRepo.array_Values = []
+            this.frontRepo.map_ID_Value.clear()
+            this.frontRepo.Values_array.forEach(
+              valueDB => {
+                let value = new Value
+                CopyValueDBToValue(valueDB, value, this.frontRepo)
+                this.frontRepo.array_Values.push(value)
+                this.frontRepo.map_ID_Value.set(value.ID, value)
+              }
+            )
+
+
 
             // hand over control flow to observer
             observer.next(this.frontRepo)

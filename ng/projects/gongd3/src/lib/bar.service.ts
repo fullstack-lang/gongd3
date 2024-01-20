@@ -7,11 +7,13 @@ import { DOCUMENT, Location } from '@angular/common'
 /*
  * Behavior subject
  */
-import { BehaviorSubject } from 'rxjs';
-import { Observable, of } from 'rxjs';
-import { catchError, map, tap } from 'rxjs/operators';
+import { BehaviorSubject } from 'rxjs'
+import { Observable, of } from 'rxjs'
+import { catchError, map, tap } from 'rxjs/operators'
 
-import { BarDB } from './bar-db';
+import { BarDB } from './bar-db'
+import { Bar, CopyBarToBarDB } from './bar'
+
 import { FrontRepo, FrontRepoService } from './front-repo.service';
 
 // insertion point for imports
@@ -140,6 +142,25 @@ export class BarService {
     return this.http.delete<BarDB>(url, httpOptions).pipe(
       tap(_ => this.log(`deleted bardb id=${id}`)),
       catchError(this.handleError<BarDB>('deleteBar'))
+    );
+  }
+
+  // updateFront copy bar to a version with encoded pointers and update to the back
+  updateFront(bar: Bar, GONG__StackPath: string): Observable<BarDB> {
+    let barDB = new BarDB
+    CopyBarToBarDB(bar, barDB)
+    const id = typeof barDB === 'number' ? barDB : barDB.ID
+    const url = `${this.barsUrl}/${id}`;
+    let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
+    let httpOptions = {
+      headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
+      params: params
+    }
+
+    return this.http.put<BarDB>(url, barDB, httpOptions).pipe(
+      tap(_ => {
+      }),
+      catchError(this.handleError<BarDB>('updateBar'))
     );
   }
 

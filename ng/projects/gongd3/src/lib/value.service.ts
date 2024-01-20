@@ -7,11 +7,13 @@ import { DOCUMENT, Location } from '@angular/common'
 /*
  * Behavior subject
  */
-import { BehaviorSubject } from 'rxjs';
-import { Observable, of } from 'rxjs';
-import { catchError, map, tap } from 'rxjs/operators';
+import { BehaviorSubject } from 'rxjs'
+import { Observable, of } from 'rxjs'
+import { catchError, map, tap } from 'rxjs/operators'
 
-import { ValueDB } from './value-db';
+import { ValueDB } from './value-db'
+import { Value, CopyValueToValueDB } from './value'
+
 import { FrontRepo, FrontRepoService } from './front-repo.service';
 
 // insertion point for imports
@@ -114,6 +116,25 @@ export class ValueService {
     return this.http.delete<ValueDB>(url, httpOptions).pipe(
       tap(_ => this.log(`deleted valuedb id=${id}`)),
       catchError(this.handleError<ValueDB>('deleteValue'))
+    );
+  }
+
+  // updateFront copy value to a version with encoded pointers and update to the back
+  updateFront(value: Value, GONG__StackPath: string): Observable<ValueDB> {
+    let valueDB = new ValueDB
+    CopyValueToValueDB(value, valueDB)
+    const id = typeof valueDB === 'number' ? valueDB : valueDB.ID
+    const url = `${this.valuesUrl}/${id}`;
+    let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
+    let httpOptions = {
+      headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
+      params: params
+    }
+
+    return this.http.put<ValueDB>(url, valueDB, httpOptions).pipe(
+      tap(_ => {
+      }),
+      catchError(this.handleError<ValueDB>('updateValue'))
     );
   }
 

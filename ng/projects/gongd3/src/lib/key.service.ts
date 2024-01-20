@@ -7,11 +7,13 @@ import { DOCUMENT, Location } from '@angular/common'
 /*
  * Behavior subject
  */
-import { BehaviorSubject } from 'rxjs';
-import { Observable, of } from 'rxjs';
-import { catchError, map, tap } from 'rxjs/operators';
+import { BehaviorSubject } from 'rxjs'
+import { Observable, of } from 'rxjs'
+import { catchError, map, tap } from 'rxjs/operators'
 
-import { KeyDB } from './key-db';
+import { KeyDB } from './key-db'
+import { Key, CopyKeyToKeyDB } from './key'
+
 import { FrontRepo, FrontRepoService } from './front-repo.service';
 
 // insertion point for imports
@@ -114,6 +116,25 @@ export class KeyService {
     return this.http.delete<KeyDB>(url, httpOptions).pipe(
       tap(_ => this.log(`deleted keydb id=${id}`)),
       catchError(this.handleError<KeyDB>('deleteKey'))
+    );
+  }
+
+  // updateFront copy key to a version with encoded pointers and update to the back
+  updateFront(key: Key, GONG__StackPath: string): Observable<KeyDB> {
+    let keyDB = new KeyDB
+    CopyKeyToKeyDB(key, keyDB)
+    const id = typeof keyDB === 'number' ? keyDB : keyDB.ID
+    const url = `${this.keysUrl}/${id}`;
+    let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
+    let httpOptions = {
+      headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
+      params: params
+    }
+
+    return this.http.put<KeyDB>(url, keyDB, httpOptions).pipe(
+      tap(_ => {
+      }),
+      catchError(this.handleError<KeyDB>('updateKey'))
     );
   }
 
