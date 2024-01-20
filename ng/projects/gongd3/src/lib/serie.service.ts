@@ -78,6 +78,25 @@ export class SerieService {
     );
   }
 
+  // postFront copy serie to a version with encoded pointers and post to the back
+  postFront(serie: Serie, GONG__StackPath: string): Observable<SerieDB> {
+    let serieDB = new SerieDB
+    CopySerieToSerieDB(serie, serieDB)
+    const id = typeof serieDB === 'number' ? serieDB : serieDB.ID
+    const url = `${this.seriesUrl}/${id}`;
+    let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
+    let httpOptions = {
+      headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
+      params: params
+    }
+
+    return this.http.post<SerieDB>(url, serieDB, httpOptions).pipe(
+      tap(_ => {
+      }),
+      catchError(this.handleError<SerieDB>('postSerie'))
+    );
+  }
+  
   /** POST: add a new serie to the server */
   post(seriedb: SerieDB, GONG__StackPath: string, frontRepo: FrontRepo): Observable<SerieDB> {
     return this.postSerie(seriedb, GONG__StackPath, frontRepo)

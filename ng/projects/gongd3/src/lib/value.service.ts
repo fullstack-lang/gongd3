@@ -76,6 +76,25 @@ export class ValueService {
     );
   }
 
+  // postFront copy value to a version with encoded pointers and post to the back
+  postFront(value: Value, GONG__StackPath: string): Observable<ValueDB> {
+    let valueDB = new ValueDB
+    CopyValueToValueDB(value, valueDB)
+    const id = typeof valueDB === 'number' ? valueDB : valueDB.ID
+    const url = `${this.valuesUrl}/${id}`;
+    let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
+    let httpOptions = {
+      headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
+      params: params
+    }
+
+    return this.http.post<ValueDB>(url, valueDB, httpOptions).pipe(
+      tap(_ => {
+      }),
+      catchError(this.handleError<ValueDB>('postValue'))
+    );
+  }
+  
   /** POST: add a new value to the server */
   post(valuedb: ValueDB, GONG__StackPath: string, frontRepo: FrontRepo): Observable<ValueDB> {
     return this.postValue(valuedb, GONG__StackPath, frontRepo)

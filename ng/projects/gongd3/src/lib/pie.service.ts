@@ -78,6 +78,25 @@ export class PieService {
     );
   }
 
+  // postFront copy pie to a version with encoded pointers and post to the back
+  postFront(pie: Pie, GONG__StackPath: string): Observable<PieDB> {
+    let pieDB = new PieDB
+    CopyPieToPieDB(pie, pieDB)
+    const id = typeof pieDB === 'number' ? pieDB : pieDB.ID
+    const url = `${this.piesUrl}/${id}`;
+    let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
+    let httpOptions = {
+      headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
+      params: params
+    }
+
+    return this.http.post<PieDB>(url, pieDB, httpOptions).pipe(
+      tap(_ => {
+      }),
+      catchError(this.handleError<PieDB>('postPie'))
+    );
+  }
+  
   /** POST: add a new pie to the server */
   post(piedb: PieDB, GONG__StackPath: string, frontRepo: FrontRepo): Observable<PieDB> {
     return this.postPie(piedb, GONG__StackPath, frontRepo)

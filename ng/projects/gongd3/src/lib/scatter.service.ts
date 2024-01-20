@@ -78,6 +78,25 @@ export class ScatterService {
     );
   }
 
+  // postFront copy scatter to a version with encoded pointers and post to the back
+  postFront(scatter: Scatter, GONG__StackPath: string): Observable<ScatterDB> {
+    let scatterDB = new ScatterDB
+    CopyScatterToScatterDB(scatter, scatterDB)
+    const id = typeof scatterDB === 'number' ? scatterDB : scatterDB.ID
+    const url = `${this.scattersUrl}/${id}`;
+    let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
+    let httpOptions = {
+      headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
+      params: params
+    }
+
+    return this.http.post<ScatterDB>(url, scatterDB, httpOptions).pipe(
+      tap(_ => {
+      }),
+      catchError(this.handleError<ScatterDB>('postScatter'))
+    );
+  }
+  
   /** POST: add a new scatter to the server */
   post(scatterdb: ScatterDB, GONG__StackPath: string, frontRepo: FrontRepo): Observable<ScatterDB> {
     return this.postScatter(scatterdb, GONG__StackPath, frontRepo)

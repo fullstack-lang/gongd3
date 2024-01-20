@@ -76,6 +76,25 @@ export class KeyService {
     );
   }
 
+  // postFront copy key to a version with encoded pointers and post to the back
+  postFront(key: Key, GONG__StackPath: string): Observable<KeyDB> {
+    let keyDB = new KeyDB
+    CopyKeyToKeyDB(key, keyDB)
+    const id = typeof keyDB === 'number' ? keyDB : keyDB.ID
+    const url = `${this.keysUrl}/${id}`;
+    let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
+    let httpOptions = {
+      headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
+      params: params
+    }
+
+    return this.http.post<KeyDB>(url, keyDB, httpOptions).pipe(
+      tap(_ => {
+      }),
+      catchError(this.handleError<KeyDB>('postKey'))
+    );
+  }
+  
   /** POST: add a new key to the server */
   post(keydb: KeyDB, GONG__StackPath: string, frontRepo: FrontRepo): Observable<KeyDB> {
     return this.postKey(keydb, GONG__StackPath, frontRepo)

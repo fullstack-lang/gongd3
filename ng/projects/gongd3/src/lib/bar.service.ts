@@ -78,6 +78,25 @@ export class BarService {
     );
   }
 
+  // postFront copy bar to a version with encoded pointers and post to the back
+  postFront(bar: Bar, GONG__StackPath: string): Observable<BarDB> {
+    let barDB = new BarDB
+    CopyBarToBarDB(bar, barDB)
+    const id = typeof barDB === 'number' ? barDB : barDB.ID
+    const url = `${this.barsUrl}/${id}`;
+    let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
+    let httpOptions = {
+      headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
+      params: params
+    }
+
+    return this.http.post<BarDB>(url, barDB, httpOptions).pipe(
+      tap(_ => {
+      }),
+      catchError(this.handleError<BarDB>('postBar'))
+    );
+  }
+  
   /** POST: add a new bar to the server */
   post(bardb: BarDB, GONG__StackPath: string, frontRepo: FrontRepo): Observable<BarDB> {
     return this.postBar(bardb, GONG__StackPath, frontRepo)
