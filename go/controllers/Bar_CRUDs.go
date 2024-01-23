@@ -116,6 +116,7 @@ func (controller *Controller) GetBars(c *gin.Context) {
 func (controller *Controller) PostBar(c *gin.Context) {
 
 	mutexBar.Lock()
+	defer mutexBar.Unlock()
 
 	values := c.Request.URL.Query()
 	stackPath := ""
@@ -173,8 +174,6 @@ func (controller *Controller) PostBar(c *gin.Context) {
 	backRepo.IncrementPushFromFrontNb()
 
 	c.JSON(http.StatusOK, barDB)
-
-	mutexBar.Unlock()
 }
 
 // GetBar
@@ -236,6 +235,7 @@ func (controller *Controller) GetBar(c *gin.Context) {
 func (controller *Controller) UpdateBar(c *gin.Context) {
 
 	mutexBar.Lock()
+	defer mutexBar.Unlock()
 
 	values := c.Request.URL.Query()
 	stackPath := ""
@@ -310,8 +310,6 @@ func (controller *Controller) UpdateBar(c *gin.Context) {
 
 	// return status OK with the marshalling of the the barDB
 	c.JSON(http.StatusOK, barDB)
-
-	mutexBar.Unlock()
 }
 
 // DeleteBar
@@ -326,6 +324,7 @@ func (controller *Controller) UpdateBar(c *gin.Context) {
 func (controller *Controller) DeleteBar(c *gin.Context) {
 
 	mutexBar.Lock()
+	defer mutexBar.Unlock()
 
 	values := c.Request.URL.Query()
 	stackPath := ""
@@ -371,6 +370,4 @@ func (controller *Controller) DeleteBar(c *gin.Context) {
 	backRepo.IncrementPushFromFrontNb()
 
 	c.JSON(http.StatusOK, gin.H{"data": true})
-
-	mutexBar.Unlock()
 }

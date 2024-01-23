@@ -116,6 +116,7 @@ func (controller *Controller) GetScatters(c *gin.Context) {
 func (controller *Controller) PostScatter(c *gin.Context) {
 
 	mutexScatter.Lock()
+	defer mutexScatter.Unlock()
 
 	values := c.Request.URL.Query()
 	stackPath := ""
@@ -173,8 +174,6 @@ func (controller *Controller) PostScatter(c *gin.Context) {
 	backRepo.IncrementPushFromFrontNb()
 
 	c.JSON(http.StatusOK, scatterDB)
-
-	mutexScatter.Unlock()
 }
 
 // GetScatter
@@ -236,6 +235,7 @@ func (controller *Controller) GetScatter(c *gin.Context) {
 func (controller *Controller) UpdateScatter(c *gin.Context) {
 
 	mutexScatter.Lock()
+	defer mutexScatter.Unlock()
 
 	values := c.Request.URL.Query()
 	stackPath := ""
@@ -310,8 +310,6 @@ func (controller *Controller) UpdateScatter(c *gin.Context) {
 
 	// return status OK with the marshalling of the the scatterDB
 	c.JSON(http.StatusOK, scatterDB)
-
-	mutexScatter.Unlock()
 }
 
 // DeleteScatter
@@ -326,6 +324,7 @@ func (controller *Controller) UpdateScatter(c *gin.Context) {
 func (controller *Controller) DeleteScatter(c *gin.Context) {
 
 	mutexScatter.Lock()
+	defer mutexScatter.Unlock()
 
 	values := c.Request.URL.Query()
 	stackPath := ""
@@ -371,6 +370,4 @@ func (controller *Controller) DeleteScatter(c *gin.Context) {
 	backRepo.IncrementPushFromFrontNb()
 
 	c.JSON(http.StatusOK, gin.H{"data": true})
-
-	mutexScatter.Unlock()
 }

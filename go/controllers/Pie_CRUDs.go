@@ -116,6 +116,7 @@ func (controller *Controller) GetPies(c *gin.Context) {
 func (controller *Controller) PostPie(c *gin.Context) {
 
 	mutexPie.Lock()
+	defer mutexPie.Unlock()
 
 	values := c.Request.URL.Query()
 	stackPath := ""
@@ -173,8 +174,6 @@ func (controller *Controller) PostPie(c *gin.Context) {
 	backRepo.IncrementPushFromFrontNb()
 
 	c.JSON(http.StatusOK, pieDB)
-
-	mutexPie.Unlock()
 }
 
 // GetPie
@@ -236,6 +235,7 @@ func (controller *Controller) GetPie(c *gin.Context) {
 func (controller *Controller) UpdatePie(c *gin.Context) {
 
 	mutexPie.Lock()
+	defer mutexPie.Unlock()
 
 	values := c.Request.URL.Query()
 	stackPath := ""
@@ -310,8 +310,6 @@ func (controller *Controller) UpdatePie(c *gin.Context) {
 
 	// return status OK with the marshalling of the the pieDB
 	c.JSON(http.StatusOK, pieDB)
-
-	mutexPie.Unlock()
 }
 
 // DeletePie
@@ -326,6 +324,7 @@ func (controller *Controller) UpdatePie(c *gin.Context) {
 func (controller *Controller) DeletePie(c *gin.Context) {
 
 	mutexPie.Lock()
+	defer mutexPie.Unlock()
 
 	values := c.Request.URL.Query()
 	stackPath := ""
@@ -371,6 +370,4 @@ func (controller *Controller) DeletePie(c *gin.Context) {
 	backRepo.IncrementPushFromFrontNb()
 
 	c.JSON(http.StatusOK, gin.H{"data": true})
-
-	mutexPie.Unlock()
 }

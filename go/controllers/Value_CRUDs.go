@@ -116,6 +116,7 @@ func (controller *Controller) GetValues(c *gin.Context) {
 func (controller *Controller) PostValue(c *gin.Context) {
 
 	mutexValue.Lock()
+	defer mutexValue.Unlock()
 
 	values := c.Request.URL.Query()
 	stackPath := ""
@@ -173,8 +174,6 @@ func (controller *Controller) PostValue(c *gin.Context) {
 	backRepo.IncrementPushFromFrontNb()
 
 	c.JSON(http.StatusOK, valueDB)
-
-	mutexValue.Unlock()
 }
 
 // GetValue
@@ -236,6 +235,7 @@ func (controller *Controller) GetValue(c *gin.Context) {
 func (controller *Controller) UpdateValue(c *gin.Context) {
 
 	mutexValue.Lock()
+	defer mutexValue.Unlock()
 
 	values := c.Request.URL.Query()
 	stackPath := ""
@@ -310,8 +310,6 @@ func (controller *Controller) UpdateValue(c *gin.Context) {
 
 	// return status OK with the marshalling of the the valueDB
 	c.JSON(http.StatusOK, valueDB)
-
-	mutexValue.Unlock()
 }
 
 // DeleteValue
@@ -326,6 +324,7 @@ func (controller *Controller) UpdateValue(c *gin.Context) {
 func (controller *Controller) DeleteValue(c *gin.Context) {
 
 	mutexValue.Lock()
+	defer mutexValue.Unlock()
 
 	values := c.Request.URL.Query()
 	stackPath := ""
@@ -371,6 +370,4 @@ func (controller *Controller) DeleteValue(c *gin.Context) {
 	backRepo.IncrementPushFromFrontNb()
 
 	c.JSON(http.StatusOK, gin.H{"data": true})
-
-	mutexValue.Unlock()
 }

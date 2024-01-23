@@ -116,6 +116,7 @@ func (controller *Controller) GetKeys(c *gin.Context) {
 func (controller *Controller) PostKey(c *gin.Context) {
 
 	mutexKey.Lock()
+	defer mutexKey.Unlock()
 
 	values := c.Request.URL.Query()
 	stackPath := ""
@@ -173,8 +174,6 @@ func (controller *Controller) PostKey(c *gin.Context) {
 	backRepo.IncrementPushFromFrontNb()
 
 	c.JSON(http.StatusOK, keyDB)
-
-	mutexKey.Unlock()
 }
 
 // GetKey
@@ -236,6 +235,7 @@ func (controller *Controller) GetKey(c *gin.Context) {
 func (controller *Controller) UpdateKey(c *gin.Context) {
 
 	mutexKey.Lock()
+	defer mutexKey.Unlock()
 
 	values := c.Request.URL.Query()
 	stackPath := ""
@@ -310,8 +310,6 @@ func (controller *Controller) UpdateKey(c *gin.Context) {
 
 	// return status OK with the marshalling of the the keyDB
 	c.JSON(http.StatusOK, keyDB)
-
-	mutexKey.Unlock()
 }
 
 // DeleteKey
@@ -326,6 +324,7 @@ func (controller *Controller) UpdateKey(c *gin.Context) {
 func (controller *Controller) DeleteKey(c *gin.Context) {
 
 	mutexKey.Lock()
+	defer mutexKey.Unlock()
 
 	values := c.Request.URL.Query()
 	stackPath := ""
@@ -371,6 +370,4 @@ func (controller *Controller) DeleteKey(c *gin.Context) {
 	backRepo.IncrementPushFromFrontNb()
 
 	c.JSON(http.StatusOK, gin.H{"data": true})
-
-	mutexKey.Unlock()
 }
