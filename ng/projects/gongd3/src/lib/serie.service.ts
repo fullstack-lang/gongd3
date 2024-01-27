@@ -103,18 +103,6 @@ export class SerieService {
   }
   postSerie(seriedb: SerieDB, GONG__StackPath: string, frontRepo: FrontRepo): Observable<SerieDB> {
 
-    // insertion point for reset of pointers and reverse pointers (to avoid circular JSON)
-    if (seriedb.Key != undefined) {
-      seriedb.SeriePointersEncoding.KeyID.Int64 = seriedb.Key.ID
-      seriedb.SeriePointersEncoding.KeyID.Valid = true
-    }
-    seriedb.Key = undefined
-    seriedb.SeriePointersEncoding.Values = []
-    for (let _value of seriedb.Values) {
-      seriedb.SeriePointersEncoding.Values.push(_value.ID)
-    }
-    seriedb.Values = []
-
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
     let httpOptions = {
       headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
@@ -123,15 +111,6 @@ export class SerieService {
 
     return this.http.post<SerieDB>(this.seriesUrl, seriedb, httpOptions).pipe(
       tap(_ => {
-        // insertion point for restoration of reverse pointers
-        seriedb.Key = frontRepo.Keys.get(seriedb.SeriePointersEncoding.KeyID.Int64)
-        seriedb.Values = new Array<ValueDB>()
-        for (let _id of seriedb.SeriePointersEncoding.Values) {
-          let _value = frontRepo.Values.get(_id)
-          if (_value != undefined) {
-            seriedb.Values.push(_value!)
-          }
-        }
         // this.log(`posted seriedb id=${seriedb.ID}`)
       }),
       catchError(this.handleError<SerieDB>('postSerie'))
@@ -185,18 +164,6 @@ export class SerieService {
     const id = typeof seriedb === 'number' ? seriedb : seriedb.ID;
     const url = `${this.seriesUrl}/${id}`;
 
-    // insertion point for reset of pointers (to avoid circular JSON)
-    // and encoding of pointers
-    if (seriedb.Key != undefined) {
-      seriedb.SeriePointersEncoding.KeyID.Int64 = seriedb.Key.ID
-      seriedb.SeriePointersEncoding.KeyID.Valid = true
-    }
-    seriedb.Key = undefined
-    seriedb.SeriePointersEncoding.Values = []
-    for (let _value of seriedb.Values) {
-      seriedb.SeriePointersEncoding.Values.push(_value.ID)
-    }
-    seriedb.Values = []
 
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
     let httpOptions = {
@@ -206,15 +173,6 @@ export class SerieService {
 
     return this.http.put<SerieDB>(url, seriedb, httpOptions).pipe(
       tap(_ => {
-        // insertion point for restoration of reverse pointers
-        seriedb.Key = frontRepo.Keys.get(seriedb.SeriePointersEncoding.KeyID.Int64)
-        seriedb.Values = new Array<ValueDB>()
-        for (let _id of seriedb.SeriePointersEncoding.Values) {
-          let _value = frontRepo.Values.get(_id)
-          if (_value != undefined) {
-            seriedb.Values.push(_value!)
-          }
-        }
         // this.log(`updated seriedb id=${seriedb.ID}`)
       }),
       catchError(this.handleError<SerieDB>('updateSerie'))

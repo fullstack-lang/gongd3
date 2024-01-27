@@ -19,14 +19,7 @@ export class ScatterDB {
 	Heigth: number = 0
 	Margin: number = 0
 
-	// insertion point for pointers and slices of pointers declarations
-	X?: KeyDB
-
-	Y?: KeyDB
-
-	Text?: KeyDB
-
-	Set: Array<SerieDB> = []
+	// insertion point for other decls
 
 	ScatterPointersEncoding: ScatterPointersEncoding = new ScatterPointersEncoding
 }

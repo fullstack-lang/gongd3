@@ -64,7 +64,7 @@ export class ScatterComponent implements OnInit {
   private redraw(): void {
     this.gongd3FrontRepoService.pull(this.StackName).subscribe(
       frontRepo => {
-        for (let scatter of frontRepo.Scatters_array) {
+        for (let scatter of frontRepo.getFrontArray<gongd3.Scatter>(gongd3.Scatter.GONGSTRUCT_NAME)) {
           console.log("Scatter name " + scatter.Name)
           if (scatter.Name == this.name) {
             console.log("Selected Scatter name " + scatter.Name)

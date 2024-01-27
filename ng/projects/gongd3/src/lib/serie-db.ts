@@ -16,10 +16,7 @@ export class SerieDB {
 	// insertion point for basic fields declarations
 	Name: string = ""
 
-	// insertion point for pointers and slices of pointers declarations
-	Key?: KeyDB
-
-	Values: Array<ValueDB> = []
+	// insertion point for other decls
 
 	SeriePointersEncoding: SeriePointersEncoding = new SeriePointersEncoding
 }

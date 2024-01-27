@@ -32,7 +32,7 @@ export class BarComponent implements OnInit {
 
   private svg: any;
 
-  private bar = new (gongd3.BarDB)
+  private bar = new (gongd3.Bar)
 
   constructor(
     private route: ActivatedRoute,
@@ -72,7 +72,7 @@ export class BarComponent implements OnInit {
   private redraw(): void {
     this.gongd3FrontRepoService.pull(this.StackName).subscribe(
       frontRepo => {
-        for (let bar of frontRepo.Bars_array) {
+        for (let bar of frontRepo.getFrontArray<gongd3.Bar>(gongd3.Bar.GONGSTRUCT_NAME)) {
           console.log("Bar name " + bar.Name)
           if (bar.Name == this.name) {
             this.bar = bar

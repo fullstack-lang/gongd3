@@ -72,7 +72,7 @@ export class PieComponent implements OnInit {
   private redraw(): void {
     this.gongd3FrontRepoService.pull(this.StackName).subscribe(
       frontRepo => {
-        for (let pie of frontRepo.Pies_array) {
+        for (let pie of frontRepo.getFrontArray<gongd3.Pie>(gongd3.Bar.GONGSTRUCT_NAME)) {
           console.log("Pie name " + pie.Name)
           if (pie.Name == this.name) {
             console.log("Selected Pie name " + pie.Name)

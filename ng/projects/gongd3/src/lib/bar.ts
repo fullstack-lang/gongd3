@@ -47,7 +47,7 @@ export function CopyBarToBarDB(bar: Bar, barDB: BarDB) {
 	barDB.CreatedAt = bar.CreatedAt
 	barDB.DeletedAt = bar.DeletedAt
 	barDB.ID = bar.ID
-	
+
 	// insertion point for basic fields copy operations
 	barDB.Name = bar.Name
 	barDB.AutoDomainX = bar.AutoDomainX
@@ -65,35 +65,39 @@ export function CopyBarToBarDB(bar: Bar, barDB: BarDB) {
 	barDB.Margin = bar.Margin
 
 	// insertion point for pointer fields encoding
-    barDB.BarPointersEncoding.XID.Valid = true
+	barDB.BarPointersEncoding.XID.Valid = true
 	if (bar.X != undefined) {
 		barDB.BarPointersEncoding.XID.Int64 = bar.X.ID  
-    } else {
+	} else {
 		barDB.BarPointersEncoding.XID.Int64 = 0 		
 	}
 
-    barDB.BarPointersEncoding.YID.Valid = true
+	barDB.BarPointersEncoding.YID.Valid = true
 	if (bar.Y != undefined) {
 		barDB.BarPointersEncoding.YID.Int64 = bar.Y.ID  
-    } else {
+	} else {
 		barDB.BarPointersEncoding.YID.Int64 = 0 		
 	}
 
 
 	// insertion point for slice of pointers fields encoding
 	barDB.BarPointersEncoding.Set = []
-    for (let _serie of bar.Set) {
+	for (let _serie of bar.Set) {
 		barDB.BarPointersEncoding.Set.push(_serie.ID)
-    }
-	
+	}
+
 }
 
+// CopyBarDBToBar update basic, pointers and slice of pointers fields of bar
+// from respectively the basic fields and encoded fields of pointers and slices of pointers of barDB
+// this function uses frontRepo.map_ID_<structname> to decode the encoded fields
+// a condition is that those maps has to be initialized before
 export function CopyBarDBToBar(barDB: BarDB, bar: Bar, frontRepo: FrontRepo) {
 
 	bar.CreatedAt = barDB.CreatedAt
 	bar.DeletedAt = barDB.DeletedAt
 	bar.ID = barDB.ID
-	
+
 	// insertion point for basic fields copy operations
 	bar.Name = barDB.Name
 	bar.AutoDomainX = barDB.AutoDomainX
@@ -111,15 +115,15 @@ export function CopyBarDBToBar(barDB: BarDB, bar: Bar, frontRepo: FrontRepo) {
 	bar.Margin = barDB.Margin
 
 	// insertion point for pointer fields encoding
-	bar.X = frontRepo.Keys.get(barDB.BarPointersEncoding.XID.Int64)
-	bar.Y = frontRepo.Keys.get(barDB.BarPointersEncoding.YID.Int64)
+	bar.X = frontRepo.map_ID_Key.get(barDB.BarPointersEncoding.XID.Int64)
+	bar.Y = frontRepo.map_ID_Key.get(barDB.BarPointersEncoding.YID.Int64)
 
 	// insertion point for slice of pointers fields encoding
 	bar.Set = new Array<Serie>()
 	for (let _id of barDB.BarPointersEncoding.Set) {
-	  let _serie = frontRepo.Series.get(_id)
-	  if (_serie != undefined) {
-		bar.Set.push(_serie!)
-	  }
+		let _serie = frontRepo.map_ID_Serie.get(_id)
+		if (_serie != undefined) {
+			bar.Set.push(_serie!)
+		}
 	}
 }

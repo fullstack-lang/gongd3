@@ -103,23 +103,6 @@ export class BarService {
   }
   postBar(bardb: BarDB, GONG__StackPath: string, frontRepo: FrontRepo): Observable<BarDB> {
 
-    // insertion point for reset of pointers and reverse pointers (to avoid circular JSON)
-    if (bardb.X != undefined) {
-      bardb.BarPointersEncoding.XID.Int64 = bardb.X.ID
-      bardb.BarPointersEncoding.XID.Valid = true
-    }
-    bardb.X = undefined
-    if (bardb.Y != undefined) {
-      bardb.BarPointersEncoding.YID.Int64 = bardb.Y.ID
-      bardb.BarPointersEncoding.YID.Valid = true
-    }
-    bardb.Y = undefined
-    bardb.BarPointersEncoding.Set = []
-    for (let _serie of bardb.Set) {
-      bardb.BarPointersEncoding.Set.push(_serie.ID)
-    }
-    bardb.Set = []
-
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
     let httpOptions = {
       headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
@@ -128,16 +111,6 @@ export class BarService {
 
     return this.http.post<BarDB>(this.barsUrl, bardb, httpOptions).pipe(
       tap(_ => {
-        // insertion point for restoration of reverse pointers
-        bardb.X = frontRepo.Keys.get(bardb.BarPointersEncoding.XID.Int64)
-        bardb.Y = frontRepo.Keys.get(bardb.BarPointersEncoding.YID.Int64)
-        bardb.Set = new Array<SerieDB>()
-        for (let _id of bardb.BarPointersEncoding.Set) {
-          let _serie = frontRepo.Series.get(_id)
-          if (_serie != undefined) {
-            bardb.Set.push(_serie!)
-          }
-        }
         // this.log(`posted bardb id=${bardb.ID}`)
       }),
       catchError(this.handleError<BarDB>('postBar'))
@@ -191,23 +164,6 @@ export class BarService {
     const id = typeof bardb === 'number' ? bardb : bardb.ID;
     const url = `${this.barsUrl}/${id}`;
 
-    // insertion point for reset of pointers (to avoid circular JSON)
-    // and encoding of pointers
-    if (bardb.X != undefined) {
-      bardb.BarPointersEncoding.XID.Int64 = bardb.X.ID
-      bardb.BarPointersEncoding.XID.Valid = true
-    }
-    bardb.X = undefined
-    if (bardb.Y != undefined) {
-      bardb.BarPointersEncoding.YID.Int64 = bardb.Y.ID
-      bardb.BarPointersEncoding.YID.Valid = true
-    }
-    bardb.Y = undefined
-    bardb.BarPointersEncoding.Set = []
-    for (let _serie of bardb.Set) {
-      bardb.BarPointersEncoding.Set.push(_serie.ID)
-    }
-    bardb.Set = []
 
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
     let httpOptions = {
@@ -217,16 +173,6 @@ export class BarService {
 
     return this.http.put<BarDB>(url, bardb, httpOptions).pipe(
       tap(_ => {
-        // insertion point for restoration of reverse pointers
-        bardb.X = frontRepo.Keys.get(bardb.BarPointersEncoding.XID.Int64)
-        bardb.Y = frontRepo.Keys.get(bardb.BarPointersEncoding.YID.Int64)
-        bardb.Set = new Array<SerieDB>()
-        for (let _id of bardb.BarPointersEncoding.Set) {
-          let _serie = frontRepo.Series.get(_id)
-          if (_serie != undefined) {
-            bardb.Set.push(_serie!)
-          }
-        }
         // this.log(`updated bardb id=${bardb.ID}`)
       }),
       catchError(this.handleError<BarDB>('updateBar'))

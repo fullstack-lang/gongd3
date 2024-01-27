@@ -101,8 +101,6 @@ export class KeyService {
   }
   postKey(keydb: KeyDB, GONG__StackPath: string, frontRepo: FrontRepo): Observable<KeyDB> {
 
-    // insertion point for reset of pointers and reverse pointers (to avoid circular JSON)
-
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
     let httpOptions = {
       headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
@@ -111,7 +109,6 @@ export class KeyService {
 
     return this.http.post<KeyDB>(this.keysUrl, keydb, httpOptions).pipe(
       tap(_ => {
-        // insertion point for restoration of reverse pointers
         // this.log(`posted keydb id=${keydb.ID}`)
       }),
       catchError(this.handleError<KeyDB>('postKey'))
@@ -165,8 +162,6 @@ export class KeyService {
     const id = typeof keydb === 'number' ? keydb : keydb.ID;
     const url = `${this.keysUrl}/${id}`;
 
-    // insertion point for reset of pointers (to avoid circular JSON)
-    // and encoding of pointers
 
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
     let httpOptions = {
@@ -176,7 +171,6 @@ export class KeyService {
 
     return this.http.put<KeyDB>(url, keydb, httpOptions).pipe(
       tap(_ => {
-        // insertion point for restoration of reverse pointers
         // this.log(`updated keydb id=${keydb.ID}`)
       }),
       catchError(this.handleError<KeyDB>('updateKey'))

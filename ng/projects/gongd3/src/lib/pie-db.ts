@@ -19,12 +19,7 @@ export class PieDB {
 	Heigth: number = 0
 	Margin: number = 0
 
-	// insertion point for pointers and slices of pointers declarations
-	X?: KeyDB
-
-	Y?: KeyDB
-
-	Set: Array<SerieDB> = []
+	// insertion point for other decls
 
 	PiePointersEncoding: PiePointersEncoding = new PiePointersEncoding
 }
