@@ -38,6 +38,7 @@ type SerieAPI struct {
 	models.Serie_WOP
 
 	// encoding of pointers
+	// for API, it cannot be embedded
 	SeriePointersEncoding SeriePointersEncoding
 }
 
@@ -67,7 +68,9 @@ type SerieDB struct {
 
 	// Declation for basic field serieDB.Name
 	Name_Data sql.NullString
+	
 	// encoding of pointers
+	// for GORM serialization, it is necessary to embed to Pointer Encoding declaration
 	SeriePointersEncoding
 }
 

@@ -3,9 +3,9 @@
 // usefull for managing pointer ID values that can be nullable
 import { NullInt64 } from './null-int64'
 
-export class ValueDB {
+export class KeyAPI {
 
-	static GONGSTRUCT_NAME = "Value"
+	static GONGSTRUCT_NAME = "Key"
 
 	CreatedAt?: string
 	DeletedAt?: string
@@ -16,9 +16,9 @@ export class ValueDB {
 
 	// insertion point for other decls
 
-	ValuePointersEncoding: ValuePointersEncoding = new ValuePointersEncoding
+	KeyPointersEncoding: KeyPointersEncoding = new KeyPointersEncoding
 }
 
-export class ValuePointersEncoding {
+export class KeyPointersEncoding {
 	// insertion point for pointers and slices of pointers encoding fields
 }

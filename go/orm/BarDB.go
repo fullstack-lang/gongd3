@@ -38,6 +38,7 @@ type BarAPI struct {
 	models.Bar_WOP
 
 	// encoding of pointers
+	// for API, it cannot be embedded
 	BarPointersEncoding BarPointersEncoding
 }
 
@@ -114,7 +115,9 @@ type BarDB struct {
 
 	// Declation for basic field barDB.Margin
 	Margin_Data sql.NullFloat64
+	
 	// encoding of pointers
+	// for GORM serialization, it is necessary to embed to Pointer Encoding declaration
 	BarPointersEncoding
 }
 

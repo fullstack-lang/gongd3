@@ -1,32 +1,35 @@
 import { Injectable } from '@angular/core'
-import { HttpClient, HttpHeaders } from '@angular/common/http'
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http'
 
 import { Observable, combineLatest, BehaviorSubject, of } from 'rxjs'
 
 // insertion point sub template for services imports
-import { BarDB } from './bar-db'
-import { Bar, CopyBarDBToBar } from './bar'
+import { BarAPI } from './bar-api'
+import { Bar, CopyBarAPIToBar } from './bar'
 import { BarService } from './bar.service'
 
-import { KeyDB } from './key-db'
-import { Key, CopyKeyDBToKey } from './key'
+import { KeyAPI } from './key-api'
+import { Key, CopyKeyAPIToKey } from './key'
 import { KeyService } from './key.service'
 
-import { PieDB } from './pie-db'
-import { Pie, CopyPieDBToPie } from './pie'
+import { PieAPI } from './pie-api'
+import { Pie, CopyPieAPIToPie } from './pie'
 import { PieService } from './pie.service'
 
-import { ScatterDB } from './scatter-db'
-import { Scatter, CopyScatterDBToScatter } from './scatter'
+import { ScatterAPI } from './scatter-api'
+import { Scatter, CopyScatterAPIToScatter } from './scatter'
 import { ScatterService } from './scatter.service'
 
-import { SerieDB } from './serie-db'
-import { Serie, CopySerieDBToSerie } from './serie'
+import { SerieAPI } from './serie-api'
+import { Serie, CopySerieAPIToSerie } from './serie'
 import { SerieService } from './serie.service'
 
-import { ValueDB } from './value-db'
-import { Value, CopyValueDBToValue } from './value'
+import { ValueAPI } from './value-api'
+import { Value, CopyValueAPIToValue } from './value'
 import { ValueService } from './value.service'
+
+
+import { BackRepoData } from './back-repo-data'
 
 export const StackType = "github.com/fullstack-lang/gongd3/go/models"
 
@@ -73,7 +76,7 @@ export class FrontRepo { // insertion point sub template
 				throw new Error("Type not recognized");
 		}
 	}
-	
+
 	getFrontMap<Type>(gongStructName: string): Map<number, Type> {
 		switch (gongStructName) {
 			// insertion point
@@ -143,6 +146,7 @@ export enum SelectionMode {
 export class FrontRepoService {
 
 	GONG__StackPath: string = ""
+	private socket: WebSocket | undefined
 
 	httpOptions = {
 		headers: new HttpHeaders({ 'Content-Type': 'application/json' })
@@ -193,12 +197,12 @@ export class FrontRepoService {
 	observableFrontRepo: [
 		Observable<null>, // see below for the of(null) observable
 		// insertion point sub template 
-		Observable<BarDB[]>,
-		Observable<KeyDB[]>,
-		Observable<PieDB[]>,
-		Observable<ScatterDB[]>,
-		Observable<SerieDB[]>,
-		Observable<ValueDB[]>,
+		Observable<BarAPI[]>,
+		Observable<KeyAPI[]>,
+		Observable<PieAPI[]>,
+		Observable<ScatterAPI[]>,
+		Observable<SerieAPI[]>,
+		Observable<ValueAPI[]>,
 	] = [
 			// Using "combineLatest" with a placeholder observable.
 			//
@@ -256,18 +260,18 @@ export class FrontRepoService {
 						let _this = this
 						// Typing can be messy with many items. Therefore, type casting is necessary here
 						// insertion point sub template for type casting 
-						var bars: BarDB[]
-						bars = bars_ as BarDB[]
-						var keys: KeyDB[]
-						keys = keys_ as KeyDB[]
-						var pies: PieDB[]
-						pies = pies_ as PieDB[]
-						var scatters: ScatterDB[]
-						scatters = scatters_ as ScatterDB[]
-						var series: SerieDB[]
-						series = series_ as SerieDB[]
-						var values: ValueDB[]
-						values = values_ as ValueDB[]
+						var bars: BarAPI[]
+						bars = bars_ as BarAPI[]
+						var keys: KeyAPI[]
+						keys = keys_ as KeyAPI[]
+						var pies: PieAPI[]
+						pies = pies_ as PieAPI[]
+						var scatters: ScatterAPI[]
+						scatters = scatters_ as ScatterAPI[]
+						var series: SerieAPI[]
+						series = series_ as SerieAPI[]
+						var values: ValueAPI[]
+						values = values_ as ValueAPI[]
 
 						// 
 						// First Step: init map of instances
@@ -277,10 +281,10 @@ export class FrontRepoService {
 						this.frontRepo.map_ID_Bar.clear()
 
 						bars.forEach(
-							barDB => {
+							barAPI => {
 								let bar = new Bar
 								this.frontRepo.array_Bars.push(bar)
-								this.frontRepo.map_ID_Bar.set(barDB.ID, bar)
+								this.frontRepo.map_ID_Bar.set(barAPI.ID, bar)
 							}
 						)
 
@@ -289,10 +293,10 @@ export class FrontRepoService {
 						this.frontRepo.map_ID_Key.clear()
 
 						keys.forEach(
-							keyDB => {
+							keyAPI => {
 								let key = new Key
 								this.frontRepo.array_Keys.push(key)
-								this.frontRepo.map_ID_Key.set(keyDB.ID, key)
+								this.frontRepo.map_ID_Key.set(keyAPI.ID, key)
 							}
 						)
 
@@ -301,10 +305,10 @@ export class FrontRepoService {
 						this.frontRepo.map_ID_Pie.clear()
 
 						pies.forEach(
-							pieDB => {
+							pieAPI => {
 								let pie = new Pie
 								this.frontRepo.array_Pies.push(pie)
-								this.frontRepo.map_ID_Pie.set(pieDB.ID, pie)
+								this.frontRepo.map_ID_Pie.set(pieAPI.ID, pie)
 							}
 						)
 
@@ -313,10 +317,10 @@ export class FrontRepoService {
 						this.frontRepo.map_ID_Scatter.clear()
 
 						scatters.forEach(
-							scatterDB => {
+							scatterAPI => {
 								let scatter = new Scatter
 								this.frontRepo.array_Scatters.push(scatter)
-								this.frontRepo.map_ID_Scatter.set(scatterDB.ID, scatter)
+								this.frontRepo.map_ID_Scatter.set(scatterAPI.ID, scatter)
 							}
 						)
 
@@ -325,10 +329,10 @@ export class FrontRepoService {
 						this.frontRepo.map_ID_Serie.clear()
 
 						series.forEach(
-							serieDB => {
+							serieAPI => {
 								let serie = new Serie
 								this.frontRepo.array_Series.push(serie)
-								this.frontRepo.map_ID_Serie.set(serieDB.ID, serie)
+								this.frontRepo.map_ID_Serie.set(serieAPI.ID, serie)
 							}
 						)
 
@@ -337,10 +341,10 @@ export class FrontRepoService {
 						this.frontRepo.map_ID_Value.clear()
 
 						values.forEach(
-							valueDB => {
+							valueAPI => {
 								let value = new Value
 								this.frontRepo.array_Values.push(value)
-								this.frontRepo.map_ID_Value.set(valueDB.ID, value)
+								this.frontRepo.map_ID_Value.set(valueAPI.ID, value)
 							}
 						)
 
@@ -350,49 +354,49 @@ export class FrontRepoService {
 						// insertion point sub template for redeem 
 						// fill up front objects
 						bars.forEach(
-							barDB => {
-								let bar = this.frontRepo.map_ID_Bar.get(barDB.ID)
-								CopyBarDBToBar(barDB, bar!, this.frontRepo)
+							barAPI => {
+								let bar = this.frontRepo.map_ID_Bar.get(barAPI.ID)
+								CopyBarAPIToBar(barAPI, bar!, this.frontRepo)
 							}
 						)
 
 						// fill up front objects
 						keys.forEach(
-							keyDB => {
-								let key = this.frontRepo.map_ID_Key.get(keyDB.ID)
-								CopyKeyDBToKey(keyDB, key!, this.frontRepo)
+							keyAPI => {
+								let key = this.frontRepo.map_ID_Key.get(keyAPI.ID)
+								CopyKeyAPIToKey(keyAPI, key!, this.frontRepo)
 							}
 						)
 
 						// fill up front objects
 						pies.forEach(
-							pieDB => {
-								let pie = this.frontRepo.map_ID_Pie.get(pieDB.ID)
-								CopyPieDBToPie(pieDB, pie!, this.frontRepo)
+							pieAPI => {
+								let pie = this.frontRepo.map_ID_Pie.get(pieAPI.ID)
+								CopyPieAPIToPie(pieAPI, pie!, this.frontRepo)
 							}
 						)
 
 						// fill up front objects
 						scatters.forEach(
-							scatterDB => {
-								let scatter = this.frontRepo.map_ID_Scatter.get(scatterDB.ID)
-								CopyScatterDBToScatter(scatterDB, scatter!, this.frontRepo)
+							scatterAPI => {
+								let scatter = this.frontRepo.map_ID_Scatter.get(scatterAPI.ID)
+								CopyScatterAPIToScatter(scatterAPI, scatter!, this.frontRepo)
 							}
 						)
 
 						// fill up front objects
 						series.forEach(
-							serieDB => {
-								let serie = this.frontRepo.map_ID_Serie.get(serieDB.ID)
-								CopySerieDBToSerie(serieDB, serie!, this.frontRepo)
+							serieAPI => {
+								let serie = this.frontRepo.map_ID_Serie.get(serieAPI.ID)
+								CopySerieAPIToSerie(serieAPI, serie!, this.frontRepo)
 							}
 						)
 
 						// fill up front objects
 						values.forEach(
-							valueDB => {
-								let value = this.frontRepo.map_ID_Value.get(valueDB.ID)
-								CopyValueDBToValue(valueDB, value!, this.frontRepo)
+							valueAPI => {
+								let value = this.frontRepo.map_ID_Value.get(valueAPI.ID)
+								CopyValueAPIToValue(valueAPI, value!, this.frontRepo)
 							}
 						)
 
@@ -403,6 +407,171 @@ export class FrontRepoService {
 				)
 			}
 		)
+	}
+
+	public connectToWebSocket(GONG__StackPath: string): Observable<FrontRepo> {
+
+		this.GONG__StackPath = GONG__StackPath
+
+
+		let params = new HttpParams().set("GONG__StackPath", this.GONG__StackPath)
+		let basePath = 'ws://localhost:8080/api/github.com/fullstack-lang/gongd3/go/v1/ws/stage'
+		let paramString = params.toString()
+		let url = `${basePath}?${paramString}`
+		this.socket = new WebSocket(url)
+
+		return new Observable(observer => {
+			this.socket!.onmessage = event => {
+				let _this = this
+
+				const backRepoData = new BackRepoData(JSON.parse(event.data))
+
+				// 
+				// First Step: init map of instances
+				// insertion point sub template for init 
+				// init the arrays
+				// insertion point sub template for init 
+				// init the arrays
+				this.frontRepo.array_Bars = []
+				this.frontRepo.map_ID_Bar.clear()
+
+				backRepoData.BarAPIs.forEach(
+					barAPI => {
+						let bar = new Bar
+						this.frontRepo.array_Bars.push(bar)
+						this.frontRepo.map_ID_Bar.set(barAPI.ID, bar)
+					}
+				)
+
+				// init the arrays
+				this.frontRepo.array_Keys = []
+				this.frontRepo.map_ID_Key.clear()
+
+				backRepoData.KeyAPIs.forEach(
+					keyAPI => {
+						let key = new Key
+						this.frontRepo.array_Keys.push(key)
+						this.frontRepo.map_ID_Key.set(keyAPI.ID, key)
+					}
+				)
+
+				// init the arrays
+				this.frontRepo.array_Pies = []
+				this.frontRepo.map_ID_Pie.clear()
+
+				backRepoData.PieAPIs.forEach(
+					pieAPI => {
+						let pie = new Pie
+						this.frontRepo.array_Pies.push(pie)
+						this.frontRepo.map_ID_Pie.set(pieAPI.ID, pie)
+					}
+				)
+
+				// init the arrays
+				this.frontRepo.array_Scatters = []
+				this.frontRepo.map_ID_Scatter.clear()
+
+				backRepoData.ScatterAPIs.forEach(
+					scatterAPI => {
+						let scatter = new Scatter
+						this.frontRepo.array_Scatters.push(scatter)
+						this.frontRepo.map_ID_Scatter.set(scatterAPI.ID, scatter)
+					}
+				)
+
+				// init the arrays
+				this.frontRepo.array_Series = []
+				this.frontRepo.map_ID_Serie.clear()
+
+				backRepoData.SerieAPIs.forEach(
+					serieAPI => {
+						let serie = new Serie
+						this.frontRepo.array_Series.push(serie)
+						this.frontRepo.map_ID_Serie.set(serieAPI.ID, serie)
+					}
+				)
+
+				// init the arrays
+				this.frontRepo.array_Values = []
+				this.frontRepo.map_ID_Value.clear()
+
+				backRepoData.ValueAPIs.forEach(
+					valueAPI => {
+						let value = new Value
+						this.frontRepo.array_Values.push(value)
+						this.frontRepo.map_ID_Value.set(valueAPI.ID, value)
+					}
+				)
+
+
+				// 
+				// Second Step: reddeem front objects
+				// insertion point sub template for redeem 
+				// fill up front objects
+				// insertion point sub template for redeem 
+				// fill up front objects
+				backRepoData.BarAPIs.forEach(
+					barAPI => {
+						let bar = this.frontRepo.map_ID_Bar.get(barAPI.ID)
+						CopyBarAPIToBar(barAPI, bar!, this.frontRepo)
+					}
+				)
+
+				// fill up front objects
+				backRepoData.KeyAPIs.forEach(
+					keyAPI => {
+						let key = this.frontRepo.map_ID_Key.get(keyAPI.ID)
+						CopyKeyAPIToKey(keyAPI, key!, this.frontRepo)
+					}
+				)
+
+				// fill up front objects
+				backRepoData.PieAPIs.forEach(
+					pieAPI => {
+						let pie = this.frontRepo.map_ID_Pie.get(pieAPI.ID)
+						CopyPieAPIToPie(pieAPI, pie!, this.frontRepo)
+					}
+				)
+
+				// fill up front objects
+				backRepoData.ScatterAPIs.forEach(
+					scatterAPI => {
+						let scatter = this.frontRepo.map_ID_Scatter.get(scatterAPI.ID)
+						CopyScatterAPIToScatter(scatterAPI, scatter!, this.frontRepo)
+					}
+				)
+
+				// fill up front objects
+				backRepoData.SerieAPIs.forEach(
+					serieAPI => {
+						let serie = this.frontRepo.map_ID_Serie.get(serieAPI.ID)
+						CopySerieAPIToSerie(serieAPI, serie!, this.frontRepo)
+					}
+				)
+
+				// fill up front objects
+				backRepoData.ValueAPIs.forEach(
+					valueAPI => {
+						let value = this.frontRepo.map_ID_Value.get(valueAPI.ID)
+						CopyValueAPIToValue(valueAPI, value!, this.frontRepo)
+					}
+				)
+
+
+
+				observer.next(this.frontRepo)
+			}
+			this.socket!.onerror = event => {
+				observer.error(event)
+			}
+			this.socket!.onclose = event => {
+				observer.complete()
+			}
+
+			return () => {
+				this.socket!.close()
+			}
+		})
 	}
 }
 

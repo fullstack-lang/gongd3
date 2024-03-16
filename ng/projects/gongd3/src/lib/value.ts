@@ -1,6 +1,6 @@
 // generated code - do not edit
 
-import { ValueDB } from './value-db'
+import { ValueAPI } from './value-api'
 import { FrontRepo } from './front-repo.service';
 
 // insertion point for imports
@@ -22,32 +22,32 @@ export class Value {
 	// insertion point for pointers and slices of pointers declarations
 }
 
-export function CopyValueToValueDB(value: Value, valueDB: ValueDB) {
+export function CopyValueToValueAPI(value: Value, valueAPI: ValueAPI) {
 
-	valueDB.CreatedAt = value.CreatedAt
-	valueDB.DeletedAt = value.DeletedAt
-	valueDB.ID = value.ID
+	valueAPI.CreatedAt = value.CreatedAt
+	valueAPI.DeletedAt = value.DeletedAt
+	valueAPI.ID = value.ID
 
 	// insertion point for basic fields copy operations
-	valueDB.Name = value.Name
+	valueAPI.Name = value.Name
 
 	// insertion point for pointer fields encoding
 
 	// insertion point for slice of pointers fields encoding
 }
 
-// CopyValueDBToValue update basic, pointers and slice of pointers fields of value
-// from respectively the basic fields and encoded fields of pointers and slices of pointers of valueDB
+// CopyValueAPIToValue update basic, pointers and slice of pointers fields of value
+// from respectively the basic fields and encoded fields of pointers and slices of pointers of valueAPI
 // this function uses frontRepo.map_ID_<structname> to decode the encoded fields
 // a condition is that those maps has to be initialized before
-export function CopyValueDBToValue(valueDB: ValueDB, value: Value, frontRepo: FrontRepo) {
+export function CopyValueAPIToValue(valueAPI: ValueAPI, value: Value, frontRepo: FrontRepo) {
 
-	value.CreatedAt = valueDB.CreatedAt
-	value.DeletedAt = valueDB.DeletedAt
-	value.ID = valueDB.ID
+	value.CreatedAt = valueAPI.CreatedAt
+	value.DeletedAt = valueAPI.DeletedAt
+	value.ID = valueAPI.ID
 
 	// insertion point for basic fields copy operations
-	value.Name = valueDB.Name
+	value.Name = valueAPI.Name
 
 	// insertion point for pointer fields encoding
 

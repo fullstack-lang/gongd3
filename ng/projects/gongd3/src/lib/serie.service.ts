@@ -11,14 +11,14 @@ import { BehaviorSubject } from 'rxjs'
 import { Observable, of } from 'rxjs'
 import { catchError, map, tap } from 'rxjs/operators'
 
-import { SerieDB } from './serie-db'
-import { Serie, CopySerieToSerieDB } from './serie'
+import { SerieAPI } from './serie-api'
+import { Serie, CopySerieToSerieAPI } from './serie'
 
 import { FrontRepo, FrontRepoService } from './front-repo.service';
 
 // insertion point for imports
-import { KeyDB } from './key-db'
-import { ValueDB } from './value-db'
+import { KeyAPI } from './key-api'
+import { ValueAPI } from './value-api'
 
 @Injectable({
   providedIn: 'root'
@@ -48,41 +48,41 @@ export class SerieService {
 
   /** GET series from the server */
   // gets is more robust to refactoring
-  gets(GONG__StackPath: string, frontRepo: FrontRepo): Observable<SerieDB[]> {
+  gets(GONG__StackPath: string, frontRepo: FrontRepo): Observable<SerieAPI[]> {
     return this.getSeries(GONG__StackPath, frontRepo)
   }
-  getSeries(GONG__StackPath: string, frontRepo: FrontRepo): Observable<SerieDB[]> {
+  getSeries(GONG__StackPath: string, frontRepo: FrontRepo): Observable<SerieAPI[]> {
 
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
 
-    return this.http.get<SerieDB[]>(this.seriesUrl, { params: params })
+    return this.http.get<SerieAPI[]>(this.seriesUrl, { params: params })
       .pipe(
         tap(),
-        catchError(this.handleError<SerieDB[]>('getSeries', []))
+        catchError(this.handleError<SerieAPI[]>('getSeries', []))
       );
   }
 
   /** GET serie by id. Will 404 if id not found */
   // more robust API to refactoring
-  get(id: number, GONG__StackPath: string, frontRepo: FrontRepo): Observable<SerieDB> {
+  get(id: number, GONG__StackPath: string, frontRepo: FrontRepo): Observable<SerieAPI> {
     return this.getSerie(id, GONG__StackPath, frontRepo)
   }
-  getSerie(id: number, GONG__StackPath: string, frontRepo: FrontRepo): Observable<SerieDB> {
+  getSerie(id: number, GONG__StackPath: string, frontRepo: FrontRepo): Observable<SerieAPI> {
 
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
 
     const url = `${this.seriesUrl}/${id}`;
-    return this.http.get<SerieDB>(url, { params: params }).pipe(
+    return this.http.get<SerieAPI>(url, { params: params }).pipe(
       // tap(_ => this.log(`fetched serie id=${id}`)),
-      catchError(this.handleError<SerieDB>(`getSerie id=${id}`))
+      catchError(this.handleError<SerieAPI>(`getSerie id=${id}`))
     );
   }
 
   // postFront copy serie to a version with encoded pointers and post to the back
-  postFront(serie: Serie, GONG__StackPath: string): Observable<SerieDB> {
-    let serieDB = new SerieDB
-    CopySerieToSerieDB(serie, serieDB)
-    const id = typeof serieDB === 'number' ? serieDB : serieDB.ID
+  postFront(serie: Serie, GONG__StackPath: string): Observable<SerieAPI> {
+    let serieAPI = new SerieAPI
+    CopySerieToSerieAPI(serie, serieAPI)
+    const id = typeof serieAPI === 'number' ? serieAPI : serieAPI.ID
     const url = `${this.seriesUrl}/${id}`;
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
     let httpOptions = {
@@ -90,18 +90,18 @@ export class SerieService {
       params: params
     }
 
-    return this.http.post<SerieDB>(url, serieDB, httpOptions).pipe(
+    return this.http.post<SerieAPI>(url, serieAPI, httpOptions).pipe(
       tap(_ => {
       }),
-      catchError(this.handleError<SerieDB>('postSerie'))
+      catchError(this.handleError<SerieAPI>('postSerie'))
     );
   }
   
   /** POST: add a new serie to the server */
-  post(seriedb: SerieDB, GONG__StackPath: string, frontRepo: FrontRepo): Observable<SerieDB> {
+  post(seriedb: SerieAPI, GONG__StackPath: string, frontRepo: FrontRepo): Observable<SerieAPI> {
     return this.postSerie(seriedb, GONG__StackPath, frontRepo)
   }
-  postSerie(seriedb: SerieDB, GONG__StackPath: string, frontRepo: FrontRepo): Observable<SerieDB> {
+  postSerie(seriedb: SerieAPI, GONG__StackPath: string, frontRepo: FrontRepo): Observable<SerieAPI> {
 
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
     let httpOptions = {
@@ -109,19 +109,19 @@ export class SerieService {
       params: params
     }
 
-    return this.http.post<SerieDB>(this.seriesUrl, seriedb, httpOptions).pipe(
+    return this.http.post<SerieAPI>(this.seriesUrl, seriedb, httpOptions).pipe(
       tap(_ => {
         // this.log(`posted seriedb id=${seriedb.ID}`)
       }),
-      catchError(this.handleError<SerieDB>('postSerie'))
+      catchError(this.handleError<SerieAPI>('postSerie'))
     );
   }
 
   /** DELETE: delete the seriedb from the server */
-  delete(seriedb: SerieDB | number, GONG__StackPath: string): Observable<SerieDB> {
+  delete(seriedb: SerieAPI | number, GONG__StackPath: string): Observable<SerieAPI> {
     return this.deleteSerie(seriedb, GONG__StackPath)
   }
-  deleteSerie(seriedb: SerieDB | number, GONG__StackPath: string): Observable<SerieDB> {
+  deleteSerie(seriedb: SerieAPI | number, GONG__StackPath: string): Observable<SerieAPI> {
     const id = typeof seriedb === 'number' ? seriedb : seriedb.ID;
     const url = `${this.seriesUrl}/${id}`;
 
@@ -131,17 +131,17 @@ export class SerieService {
       params: params
     };
 
-    return this.http.delete<SerieDB>(url, httpOptions).pipe(
+    return this.http.delete<SerieAPI>(url, httpOptions).pipe(
       tap(_ => this.log(`deleted seriedb id=${id}`)),
-      catchError(this.handleError<SerieDB>('deleteSerie'))
+      catchError(this.handleError<SerieAPI>('deleteSerie'))
     );
   }
 
   // updateFront copy serie to a version with encoded pointers and update to the back
-  updateFront(serie: Serie, GONG__StackPath: string): Observable<SerieDB> {
-    let serieDB = new SerieDB
-    CopySerieToSerieDB(serie, serieDB)
-    const id = typeof serieDB === 'number' ? serieDB : serieDB.ID
+  updateFront(serie: Serie, GONG__StackPath: string): Observable<SerieAPI> {
+    let serieAPI = new SerieAPI
+    CopySerieToSerieAPI(serie, serieAPI)
+    const id = typeof serieAPI === 'number' ? serieAPI : serieAPI.ID
     const url = `${this.seriesUrl}/${id}`;
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
     let httpOptions = {
@@ -149,18 +149,18 @@ export class SerieService {
       params: params
     }
 
-    return this.http.put<SerieDB>(url, serieDB, httpOptions).pipe(
+    return this.http.put<SerieAPI>(url, serieAPI, httpOptions).pipe(
       tap(_ => {
       }),
-      catchError(this.handleError<SerieDB>('updateSerie'))
+      catchError(this.handleError<SerieAPI>('updateSerie'))
     );
   }
 
   /** PUT: update the seriedb on the server */
-  update(seriedb: SerieDB, GONG__StackPath: string, frontRepo: FrontRepo): Observable<SerieDB> {
+  update(seriedb: SerieAPI, GONG__StackPath: string, frontRepo: FrontRepo): Observable<SerieAPI> {
     return this.updateSerie(seriedb, GONG__StackPath, frontRepo)
   }
-  updateSerie(seriedb: SerieDB, GONG__StackPath: string, frontRepo: FrontRepo): Observable<SerieDB> {
+  updateSerie(seriedb: SerieAPI, GONG__StackPath: string, frontRepo: FrontRepo): Observable<SerieAPI> {
     const id = typeof seriedb === 'number' ? seriedb : seriedb.ID;
     const url = `${this.seriesUrl}/${id}`;
 
@@ -171,11 +171,11 @@ export class SerieService {
       params: params
     };
 
-    return this.http.put<SerieDB>(url, seriedb, httpOptions).pipe(
+    return this.http.put<SerieAPI>(url, seriedb, httpOptions).pipe(
       tap(_ => {
         // this.log(`updated seriedb id=${seriedb.ID}`)
       }),
-      catchError(this.handleError<SerieDB>('updateSerie'))
+      catchError(this.handleError<SerieAPI>('updateSerie'))
     );
   }
 

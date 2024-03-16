@@ -38,6 +38,7 @@ type ValueAPI struct {
 	models.Value_WOP
 
 	// encoding of pointers
+	// for API, it cannot be embedded
 	ValuePointersEncoding ValuePointersEncoding
 }
 
@@ -60,7 +61,9 @@ type ValueDB struct {
 
 	// Declation for basic field valueDB.Name
 	Name_Data sql.NullString
+	
 	// encoding of pointers
+	// for GORM serialization, it is necessary to embed to Pointer Encoding declaration
 	ValuePointersEncoding
 }
 

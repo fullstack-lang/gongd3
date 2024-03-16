@@ -11,14 +11,14 @@ import { BehaviorSubject } from 'rxjs'
 import { Observable, of } from 'rxjs'
 import { catchError, map, tap } from 'rxjs/operators'
 
-import { ScatterDB } from './scatter-db'
-import { Scatter, CopyScatterToScatterDB } from './scatter'
+import { ScatterAPI } from './scatter-api'
+import { Scatter, CopyScatterToScatterAPI } from './scatter'
 
 import { FrontRepo, FrontRepoService } from './front-repo.service';
 
 // insertion point for imports
-import { KeyDB } from './key-db'
-import { SerieDB } from './serie-db'
+import { KeyAPI } from './key-api'
+import { SerieAPI } from './serie-api'
 
 @Injectable({
   providedIn: 'root'
@@ -48,41 +48,41 @@ export class ScatterService {
 
   /** GET scatters from the server */
   // gets is more robust to refactoring
-  gets(GONG__StackPath: string, frontRepo: FrontRepo): Observable<ScatterDB[]> {
+  gets(GONG__StackPath: string, frontRepo: FrontRepo): Observable<ScatterAPI[]> {
     return this.getScatters(GONG__StackPath, frontRepo)
   }
-  getScatters(GONG__StackPath: string, frontRepo: FrontRepo): Observable<ScatterDB[]> {
+  getScatters(GONG__StackPath: string, frontRepo: FrontRepo): Observable<ScatterAPI[]> {
 
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
 
-    return this.http.get<ScatterDB[]>(this.scattersUrl, { params: params })
+    return this.http.get<ScatterAPI[]>(this.scattersUrl, { params: params })
       .pipe(
         tap(),
-        catchError(this.handleError<ScatterDB[]>('getScatters', []))
+        catchError(this.handleError<ScatterAPI[]>('getScatters', []))
       );
   }
 
   /** GET scatter by id. Will 404 if id not found */
   // more robust API to refactoring
-  get(id: number, GONG__StackPath: string, frontRepo: FrontRepo): Observable<ScatterDB> {
+  get(id: number, GONG__StackPath: string, frontRepo: FrontRepo): Observable<ScatterAPI> {
     return this.getScatter(id, GONG__StackPath, frontRepo)
   }
-  getScatter(id: number, GONG__StackPath: string, frontRepo: FrontRepo): Observable<ScatterDB> {
+  getScatter(id: number, GONG__StackPath: string, frontRepo: FrontRepo): Observable<ScatterAPI> {
 
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
 
     const url = `${this.scattersUrl}/${id}`;
-    return this.http.get<ScatterDB>(url, { params: params }).pipe(
+    return this.http.get<ScatterAPI>(url, { params: params }).pipe(
       // tap(_ => this.log(`fetched scatter id=${id}`)),
-      catchError(this.handleError<ScatterDB>(`getScatter id=${id}`))
+      catchError(this.handleError<ScatterAPI>(`getScatter id=${id}`))
     );
   }
 
   // postFront copy scatter to a version with encoded pointers and post to the back
-  postFront(scatter: Scatter, GONG__StackPath: string): Observable<ScatterDB> {
-    let scatterDB = new ScatterDB
-    CopyScatterToScatterDB(scatter, scatterDB)
-    const id = typeof scatterDB === 'number' ? scatterDB : scatterDB.ID
+  postFront(scatter: Scatter, GONG__StackPath: string): Observable<ScatterAPI> {
+    let scatterAPI = new ScatterAPI
+    CopyScatterToScatterAPI(scatter, scatterAPI)
+    const id = typeof scatterAPI === 'number' ? scatterAPI : scatterAPI.ID
     const url = `${this.scattersUrl}/${id}`;
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
     let httpOptions = {
@@ -90,18 +90,18 @@ export class ScatterService {
       params: params
     }
 
-    return this.http.post<ScatterDB>(url, scatterDB, httpOptions).pipe(
+    return this.http.post<ScatterAPI>(url, scatterAPI, httpOptions).pipe(
       tap(_ => {
       }),
-      catchError(this.handleError<ScatterDB>('postScatter'))
+      catchError(this.handleError<ScatterAPI>('postScatter'))
     );
   }
   
   /** POST: add a new scatter to the server */
-  post(scatterdb: ScatterDB, GONG__StackPath: string, frontRepo: FrontRepo): Observable<ScatterDB> {
+  post(scatterdb: ScatterAPI, GONG__StackPath: string, frontRepo: FrontRepo): Observable<ScatterAPI> {
     return this.postScatter(scatterdb, GONG__StackPath, frontRepo)
   }
-  postScatter(scatterdb: ScatterDB, GONG__StackPath: string, frontRepo: FrontRepo): Observable<ScatterDB> {
+  postScatter(scatterdb: ScatterAPI, GONG__StackPath: string, frontRepo: FrontRepo): Observable<ScatterAPI> {
 
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
     let httpOptions = {
@@ -109,19 +109,19 @@ export class ScatterService {
       params: params
     }
 
-    return this.http.post<ScatterDB>(this.scattersUrl, scatterdb, httpOptions).pipe(
+    return this.http.post<ScatterAPI>(this.scattersUrl, scatterdb, httpOptions).pipe(
       tap(_ => {
         // this.log(`posted scatterdb id=${scatterdb.ID}`)
       }),
-      catchError(this.handleError<ScatterDB>('postScatter'))
+      catchError(this.handleError<ScatterAPI>('postScatter'))
     );
   }
 
   /** DELETE: delete the scatterdb from the server */
-  delete(scatterdb: ScatterDB | number, GONG__StackPath: string): Observable<ScatterDB> {
+  delete(scatterdb: ScatterAPI | number, GONG__StackPath: string): Observable<ScatterAPI> {
     return this.deleteScatter(scatterdb, GONG__StackPath)
   }
-  deleteScatter(scatterdb: ScatterDB | number, GONG__StackPath: string): Observable<ScatterDB> {
+  deleteScatter(scatterdb: ScatterAPI | number, GONG__StackPath: string): Observable<ScatterAPI> {
     const id = typeof scatterdb === 'number' ? scatterdb : scatterdb.ID;
     const url = `${this.scattersUrl}/${id}`;
 
@@ -131,17 +131,17 @@ export class ScatterService {
       params: params
     };
 
-    return this.http.delete<ScatterDB>(url, httpOptions).pipe(
+    return this.http.delete<ScatterAPI>(url, httpOptions).pipe(
       tap(_ => this.log(`deleted scatterdb id=${id}`)),
-      catchError(this.handleError<ScatterDB>('deleteScatter'))
+      catchError(this.handleError<ScatterAPI>('deleteScatter'))
     );
   }
 
   // updateFront copy scatter to a version with encoded pointers and update to the back
-  updateFront(scatter: Scatter, GONG__StackPath: string): Observable<ScatterDB> {
-    let scatterDB = new ScatterDB
-    CopyScatterToScatterDB(scatter, scatterDB)
-    const id = typeof scatterDB === 'number' ? scatterDB : scatterDB.ID
+  updateFront(scatter: Scatter, GONG__StackPath: string): Observable<ScatterAPI> {
+    let scatterAPI = new ScatterAPI
+    CopyScatterToScatterAPI(scatter, scatterAPI)
+    const id = typeof scatterAPI === 'number' ? scatterAPI : scatterAPI.ID
     const url = `${this.scattersUrl}/${id}`;
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
     let httpOptions = {
@@ -149,18 +149,18 @@ export class ScatterService {
       params: params
     }
 
-    return this.http.put<ScatterDB>(url, scatterDB, httpOptions).pipe(
+    return this.http.put<ScatterAPI>(url, scatterAPI, httpOptions).pipe(
       tap(_ => {
       }),
-      catchError(this.handleError<ScatterDB>('updateScatter'))
+      catchError(this.handleError<ScatterAPI>('updateScatter'))
     );
   }
 
   /** PUT: update the scatterdb on the server */
-  update(scatterdb: ScatterDB, GONG__StackPath: string, frontRepo: FrontRepo): Observable<ScatterDB> {
+  update(scatterdb: ScatterAPI, GONG__StackPath: string, frontRepo: FrontRepo): Observable<ScatterAPI> {
     return this.updateScatter(scatterdb, GONG__StackPath, frontRepo)
   }
-  updateScatter(scatterdb: ScatterDB, GONG__StackPath: string, frontRepo: FrontRepo): Observable<ScatterDB> {
+  updateScatter(scatterdb: ScatterAPI, GONG__StackPath: string, frontRepo: FrontRepo): Observable<ScatterAPI> {
     const id = typeof scatterdb === 'number' ? scatterdb : scatterdb.ID;
     const url = `${this.scattersUrl}/${id}`;
 
@@ -171,11 +171,11 @@ export class ScatterService {
       params: params
     };
 
-    return this.http.put<ScatterDB>(url, scatterdb, httpOptions).pipe(
+    return this.http.put<ScatterAPI>(url, scatterdb, httpOptions).pipe(
       tap(_ => {
         // this.log(`updated scatterdb id=${scatterdb.ID}`)
       }),
-      catchError(this.handleError<ScatterDB>('updateScatter'))
+      catchError(this.handleError<ScatterAPI>('updateScatter'))
     );
   }
 

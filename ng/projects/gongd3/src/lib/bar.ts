@@ -1,6 +1,6 @@
 // generated code - do not edit
 
-import { BarDB } from './bar-db'
+import { BarAPI } from './bar-api'
 import { FrontRepo } from './front-repo.service';
 
 // insertion point for imports
@@ -42,85 +42,85 @@ export class Bar {
 	Set: Array<Serie> = []
 }
 
-export function CopyBarToBarDB(bar: Bar, barDB: BarDB) {
+export function CopyBarToBarAPI(bar: Bar, barAPI: BarAPI) {
 
-	barDB.CreatedAt = bar.CreatedAt
-	barDB.DeletedAt = bar.DeletedAt
-	barDB.ID = bar.ID
+	barAPI.CreatedAt = bar.CreatedAt
+	barAPI.DeletedAt = bar.DeletedAt
+	barAPI.ID = bar.ID
 
 	// insertion point for basic fields copy operations
-	barDB.Name = bar.Name
-	barDB.AutoDomainX = bar.AutoDomainX
-	barDB.XMin = bar.XMin
-	barDB.XMax = bar.XMax
-	barDB.AutoDomainY = bar.AutoDomainY
-	barDB.YMin = bar.YMin
-	barDB.YMax = bar.YMax
-	barDB.YLabelPresent = bar.YLabelPresent
-	barDB.YLabelOffset = bar.YLabelOffset
-	barDB.XLabelPresent = bar.XLabelPresent
-	barDB.XLabelOffset = bar.XLabelOffset
-	barDB.Width = bar.Width
-	barDB.Heigth = bar.Heigth
-	barDB.Margin = bar.Margin
+	barAPI.Name = bar.Name
+	barAPI.AutoDomainX = bar.AutoDomainX
+	barAPI.XMin = bar.XMin
+	barAPI.XMax = bar.XMax
+	barAPI.AutoDomainY = bar.AutoDomainY
+	barAPI.YMin = bar.YMin
+	barAPI.YMax = bar.YMax
+	barAPI.YLabelPresent = bar.YLabelPresent
+	barAPI.YLabelOffset = bar.YLabelOffset
+	barAPI.XLabelPresent = bar.XLabelPresent
+	barAPI.XLabelOffset = bar.XLabelOffset
+	barAPI.Width = bar.Width
+	barAPI.Heigth = bar.Heigth
+	barAPI.Margin = bar.Margin
 
 	// insertion point for pointer fields encoding
-	barDB.BarPointersEncoding.XID.Valid = true
+	barAPI.BarPointersEncoding.XID.Valid = true
 	if (bar.X != undefined) {
-		barDB.BarPointersEncoding.XID.Int64 = bar.X.ID  
+		barAPI.BarPointersEncoding.XID.Int64 = bar.X.ID  
 	} else {
-		barDB.BarPointersEncoding.XID.Int64 = 0 		
+		barAPI.BarPointersEncoding.XID.Int64 = 0 		
 	}
 
-	barDB.BarPointersEncoding.YID.Valid = true
+	barAPI.BarPointersEncoding.YID.Valid = true
 	if (bar.Y != undefined) {
-		barDB.BarPointersEncoding.YID.Int64 = bar.Y.ID  
+		barAPI.BarPointersEncoding.YID.Int64 = bar.Y.ID  
 	} else {
-		barDB.BarPointersEncoding.YID.Int64 = 0 		
+		barAPI.BarPointersEncoding.YID.Int64 = 0 		
 	}
 
 
 	// insertion point for slice of pointers fields encoding
-	barDB.BarPointersEncoding.Set = []
+	barAPI.BarPointersEncoding.Set = []
 	for (let _serie of bar.Set) {
-		barDB.BarPointersEncoding.Set.push(_serie.ID)
+		barAPI.BarPointersEncoding.Set.push(_serie.ID)
 	}
 
 }
 
-// CopyBarDBToBar update basic, pointers and slice of pointers fields of bar
-// from respectively the basic fields and encoded fields of pointers and slices of pointers of barDB
+// CopyBarAPIToBar update basic, pointers and slice of pointers fields of bar
+// from respectively the basic fields and encoded fields of pointers and slices of pointers of barAPI
 // this function uses frontRepo.map_ID_<structname> to decode the encoded fields
 // a condition is that those maps has to be initialized before
-export function CopyBarDBToBar(barDB: BarDB, bar: Bar, frontRepo: FrontRepo) {
+export function CopyBarAPIToBar(barAPI: BarAPI, bar: Bar, frontRepo: FrontRepo) {
 
-	bar.CreatedAt = barDB.CreatedAt
-	bar.DeletedAt = barDB.DeletedAt
-	bar.ID = barDB.ID
+	bar.CreatedAt = barAPI.CreatedAt
+	bar.DeletedAt = barAPI.DeletedAt
+	bar.ID = barAPI.ID
 
 	// insertion point for basic fields copy operations
-	bar.Name = barDB.Name
-	bar.AutoDomainX = barDB.AutoDomainX
-	bar.XMin = barDB.XMin
-	bar.XMax = barDB.XMax
-	bar.AutoDomainY = barDB.AutoDomainY
-	bar.YMin = barDB.YMin
-	bar.YMax = barDB.YMax
-	bar.YLabelPresent = barDB.YLabelPresent
-	bar.YLabelOffset = barDB.YLabelOffset
-	bar.XLabelPresent = barDB.XLabelPresent
-	bar.XLabelOffset = barDB.XLabelOffset
-	bar.Width = barDB.Width
-	bar.Heigth = barDB.Heigth
-	bar.Margin = barDB.Margin
+	bar.Name = barAPI.Name
+	bar.AutoDomainX = barAPI.AutoDomainX
+	bar.XMin = barAPI.XMin
+	bar.XMax = barAPI.XMax
+	bar.AutoDomainY = barAPI.AutoDomainY
+	bar.YMin = barAPI.YMin
+	bar.YMax = barAPI.YMax
+	bar.YLabelPresent = barAPI.YLabelPresent
+	bar.YLabelOffset = barAPI.YLabelOffset
+	bar.XLabelPresent = barAPI.XLabelPresent
+	bar.XLabelOffset = barAPI.XLabelOffset
+	bar.Width = barAPI.Width
+	bar.Heigth = barAPI.Heigth
+	bar.Margin = barAPI.Margin
 
 	// insertion point for pointer fields encoding
-	bar.X = frontRepo.map_ID_Key.get(barDB.BarPointersEncoding.XID.Int64)
-	bar.Y = frontRepo.map_ID_Key.get(barDB.BarPointersEncoding.YID.Int64)
+	bar.X = frontRepo.map_ID_Key.get(barAPI.BarPointersEncoding.XID.Int64)
+	bar.Y = frontRepo.map_ID_Key.get(barAPI.BarPointersEncoding.YID.Int64)
 
 	// insertion point for slice of pointers fields encoding
 	bar.Set = new Array<Serie>()
-	for (let _id of barDB.BarPointersEncoding.Set) {
+	for (let _id of barAPI.BarPointersEncoding.Set) {
 		let _serie = frontRepo.map_ID_Serie.get(_id)
 		if (_serie != undefined) {
 			bar.Set.push(_serie!)

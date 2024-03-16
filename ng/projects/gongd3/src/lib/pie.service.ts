@@ -11,14 +11,14 @@ import { BehaviorSubject } from 'rxjs'
 import { Observable, of } from 'rxjs'
 import { catchError, map, tap } from 'rxjs/operators'
 
-import { PieDB } from './pie-db'
-import { Pie, CopyPieToPieDB } from './pie'
+import { PieAPI } from './pie-api'
+import { Pie, CopyPieToPieAPI } from './pie'
 
 import { FrontRepo, FrontRepoService } from './front-repo.service';
 
 // insertion point for imports
-import { KeyDB } from './key-db'
-import { SerieDB } from './serie-db'
+import { KeyAPI } from './key-api'
+import { SerieAPI } from './serie-api'
 
 @Injectable({
   providedIn: 'root'
@@ -48,41 +48,41 @@ export class PieService {
 
   /** GET pies from the server */
   // gets is more robust to refactoring
-  gets(GONG__StackPath: string, frontRepo: FrontRepo): Observable<PieDB[]> {
+  gets(GONG__StackPath: string, frontRepo: FrontRepo): Observable<PieAPI[]> {
     return this.getPies(GONG__StackPath, frontRepo)
   }
-  getPies(GONG__StackPath: string, frontRepo: FrontRepo): Observable<PieDB[]> {
+  getPies(GONG__StackPath: string, frontRepo: FrontRepo): Observable<PieAPI[]> {
 
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
 
-    return this.http.get<PieDB[]>(this.piesUrl, { params: params })
+    return this.http.get<PieAPI[]>(this.piesUrl, { params: params })
       .pipe(
         tap(),
-        catchError(this.handleError<PieDB[]>('getPies', []))
+        catchError(this.handleError<PieAPI[]>('getPies', []))
       );
   }
 
   /** GET pie by id. Will 404 if id not found */
   // more robust API to refactoring
-  get(id: number, GONG__StackPath: string, frontRepo: FrontRepo): Observable<PieDB> {
+  get(id: number, GONG__StackPath: string, frontRepo: FrontRepo): Observable<PieAPI> {
     return this.getPie(id, GONG__StackPath, frontRepo)
   }
-  getPie(id: number, GONG__StackPath: string, frontRepo: FrontRepo): Observable<PieDB> {
+  getPie(id: number, GONG__StackPath: string, frontRepo: FrontRepo): Observable<PieAPI> {
 
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
 
     const url = `${this.piesUrl}/${id}`;
-    return this.http.get<PieDB>(url, { params: params }).pipe(
+    return this.http.get<PieAPI>(url, { params: params }).pipe(
       // tap(_ => this.log(`fetched pie id=${id}`)),
-      catchError(this.handleError<PieDB>(`getPie id=${id}`))
+      catchError(this.handleError<PieAPI>(`getPie id=${id}`))
     );
   }
 
   // postFront copy pie to a version with encoded pointers and post to the back
-  postFront(pie: Pie, GONG__StackPath: string): Observable<PieDB> {
-    let pieDB = new PieDB
-    CopyPieToPieDB(pie, pieDB)
-    const id = typeof pieDB === 'number' ? pieDB : pieDB.ID
+  postFront(pie: Pie, GONG__StackPath: string): Observable<PieAPI> {
+    let pieAPI = new PieAPI
+    CopyPieToPieAPI(pie, pieAPI)
+    const id = typeof pieAPI === 'number' ? pieAPI : pieAPI.ID
     const url = `${this.piesUrl}/${id}`;
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
     let httpOptions = {
@@ -90,18 +90,18 @@ export class PieService {
       params: params
     }
 
-    return this.http.post<PieDB>(url, pieDB, httpOptions).pipe(
+    return this.http.post<PieAPI>(url, pieAPI, httpOptions).pipe(
       tap(_ => {
       }),
-      catchError(this.handleError<PieDB>('postPie'))
+      catchError(this.handleError<PieAPI>('postPie'))
     );
   }
   
   /** POST: add a new pie to the server */
-  post(piedb: PieDB, GONG__StackPath: string, frontRepo: FrontRepo): Observable<PieDB> {
+  post(piedb: PieAPI, GONG__StackPath: string, frontRepo: FrontRepo): Observable<PieAPI> {
     return this.postPie(piedb, GONG__StackPath, frontRepo)
   }
-  postPie(piedb: PieDB, GONG__StackPath: string, frontRepo: FrontRepo): Observable<PieDB> {
+  postPie(piedb: PieAPI, GONG__StackPath: string, frontRepo: FrontRepo): Observable<PieAPI> {
 
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
     let httpOptions = {
@@ -109,19 +109,19 @@ export class PieService {
       params: params
     }
 
-    return this.http.post<PieDB>(this.piesUrl, piedb, httpOptions).pipe(
+    return this.http.post<PieAPI>(this.piesUrl, piedb, httpOptions).pipe(
       tap(_ => {
         // this.log(`posted piedb id=${piedb.ID}`)
       }),
-      catchError(this.handleError<PieDB>('postPie'))
+      catchError(this.handleError<PieAPI>('postPie'))
     );
   }
 
   /** DELETE: delete the piedb from the server */
-  delete(piedb: PieDB | number, GONG__StackPath: string): Observable<PieDB> {
+  delete(piedb: PieAPI | number, GONG__StackPath: string): Observable<PieAPI> {
     return this.deletePie(piedb, GONG__StackPath)
   }
-  deletePie(piedb: PieDB | number, GONG__StackPath: string): Observable<PieDB> {
+  deletePie(piedb: PieAPI | number, GONG__StackPath: string): Observable<PieAPI> {
     const id = typeof piedb === 'number' ? piedb : piedb.ID;
     const url = `${this.piesUrl}/${id}`;
 
@@ -131,17 +131,17 @@ export class PieService {
       params: params
     };
 
-    return this.http.delete<PieDB>(url, httpOptions).pipe(
+    return this.http.delete<PieAPI>(url, httpOptions).pipe(
       tap(_ => this.log(`deleted piedb id=${id}`)),
-      catchError(this.handleError<PieDB>('deletePie'))
+      catchError(this.handleError<PieAPI>('deletePie'))
     );
   }
 
   // updateFront copy pie to a version with encoded pointers and update to the back
-  updateFront(pie: Pie, GONG__StackPath: string): Observable<PieDB> {
-    let pieDB = new PieDB
-    CopyPieToPieDB(pie, pieDB)
-    const id = typeof pieDB === 'number' ? pieDB : pieDB.ID
+  updateFront(pie: Pie, GONG__StackPath: string): Observable<PieAPI> {
+    let pieAPI = new PieAPI
+    CopyPieToPieAPI(pie, pieAPI)
+    const id = typeof pieAPI === 'number' ? pieAPI : pieAPI.ID
     const url = `${this.piesUrl}/${id}`;
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
     let httpOptions = {
@@ -149,18 +149,18 @@ export class PieService {
       params: params
     }
 
-    return this.http.put<PieDB>(url, pieDB, httpOptions).pipe(
+    return this.http.put<PieAPI>(url, pieAPI, httpOptions).pipe(
       tap(_ => {
       }),
-      catchError(this.handleError<PieDB>('updatePie'))
+      catchError(this.handleError<PieAPI>('updatePie'))
     );
   }
 
   /** PUT: update the piedb on the server */
-  update(piedb: PieDB, GONG__StackPath: string, frontRepo: FrontRepo): Observable<PieDB> {
+  update(piedb: PieAPI, GONG__StackPath: string, frontRepo: FrontRepo): Observable<PieAPI> {
     return this.updatePie(piedb, GONG__StackPath, frontRepo)
   }
-  updatePie(piedb: PieDB, GONG__StackPath: string, frontRepo: FrontRepo): Observable<PieDB> {
+  updatePie(piedb: PieAPI, GONG__StackPath: string, frontRepo: FrontRepo): Observable<PieAPI> {
     const id = typeof piedb === 'number' ? piedb : piedb.ID;
     const url = `${this.piesUrl}/${id}`;
 
@@ -171,11 +171,11 @@ export class PieService {
       params: params
     };
 
-    return this.http.put<PieDB>(url, piedb, httpOptions).pipe(
+    return this.http.put<PieAPI>(url, piedb, httpOptions).pipe(
       tap(_ => {
         // this.log(`updated piedb id=${piedb.ID}`)
       }),
-      catchError(this.handleError<PieDB>('updatePie'))
+      catchError(this.handleError<PieAPI>('updatePie'))
     );
   }
 

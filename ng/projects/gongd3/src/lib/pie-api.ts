@@ -1,13 +1,13 @@
 // insertion point for imports
-import { KeyDB } from './key-db'
-import { SerieDB } from './serie-db'
+import { KeyAPI } from './key-api'
+import { SerieAPI } from './serie-api'
 
 // usefull for managing pointer ID values that can be nullable
 import { NullInt64 } from './null-int64'
 
-export class BarDB {
+export class PieAPI {
 
-	static GONGSTRUCT_NAME = "Bar"
+	static GONGSTRUCT_NAME = "Pie"
 
 	CreatedAt?: string
 	DeletedAt?: string
@@ -15,26 +15,16 @@ export class BarDB {
 
 	// insertion point for basic fields declarations
 	Name: string = ""
-	AutoDomainX: boolean = false
-	XMin: number = 0
-	XMax: number = 0
-	AutoDomainY: boolean = false
-	YMin: number = 0
-	YMax: number = 0
-	YLabelPresent: boolean = false
-	YLabelOffset: number = 0
-	XLabelPresent: boolean = false
-	XLabelOffset: number = 0
 	Width: number = 0
 	Heigth: number = 0
 	Margin: number = 0
 
 	// insertion point for other decls
 
-	BarPointersEncoding: BarPointersEncoding = new BarPointersEncoding
+	PiePointersEncoding: PiePointersEncoding = new PiePointersEncoding
 }
 
-export class BarPointersEncoding {
+export class PiePointersEncoding {
 	// insertion point for pointers and slices of pointers encoding fields
 	XID: NullInt64 = new NullInt64 // if pointer is null, X.ID = 0
 

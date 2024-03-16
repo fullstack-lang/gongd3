@@ -11,8 +11,8 @@ import { BehaviorSubject } from 'rxjs'
 import { Observable, of } from 'rxjs'
 import { catchError, map, tap } from 'rxjs/operators'
 
-import { ValueDB } from './value-db'
-import { Value, CopyValueToValueDB } from './value'
+import { ValueAPI } from './value-api'
+import { Value, CopyValueToValueAPI } from './value'
 
 import { FrontRepo, FrontRepoService } from './front-repo.service';
 
@@ -46,41 +46,41 @@ export class ValueService {
 
   /** GET values from the server */
   // gets is more robust to refactoring
-  gets(GONG__StackPath: string, frontRepo: FrontRepo): Observable<ValueDB[]> {
+  gets(GONG__StackPath: string, frontRepo: FrontRepo): Observable<ValueAPI[]> {
     return this.getValues(GONG__StackPath, frontRepo)
   }
-  getValues(GONG__StackPath: string, frontRepo: FrontRepo): Observable<ValueDB[]> {
+  getValues(GONG__StackPath: string, frontRepo: FrontRepo): Observable<ValueAPI[]> {
 
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
 
-    return this.http.get<ValueDB[]>(this.valuesUrl, { params: params })
+    return this.http.get<ValueAPI[]>(this.valuesUrl, { params: params })
       .pipe(
         tap(),
-        catchError(this.handleError<ValueDB[]>('getValues', []))
+        catchError(this.handleError<ValueAPI[]>('getValues', []))
       );
   }
 
   /** GET value by id. Will 404 if id not found */
   // more robust API to refactoring
-  get(id: number, GONG__StackPath: string, frontRepo: FrontRepo): Observable<ValueDB> {
+  get(id: number, GONG__StackPath: string, frontRepo: FrontRepo): Observable<ValueAPI> {
     return this.getValue(id, GONG__StackPath, frontRepo)
   }
-  getValue(id: number, GONG__StackPath: string, frontRepo: FrontRepo): Observable<ValueDB> {
+  getValue(id: number, GONG__StackPath: string, frontRepo: FrontRepo): Observable<ValueAPI> {
 
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
 
     const url = `${this.valuesUrl}/${id}`;
-    return this.http.get<ValueDB>(url, { params: params }).pipe(
+    return this.http.get<ValueAPI>(url, { params: params }).pipe(
       // tap(_ => this.log(`fetched value id=${id}`)),
-      catchError(this.handleError<ValueDB>(`getValue id=${id}`))
+      catchError(this.handleError<ValueAPI>(`getValue id=${id}`))
     );
   }
 
   // postFront copy value to a version with encoded pointers and post to the back
-  postFront(value: Value, GONG__StackPath: string): Observable<ValueDB> {
-    let valueDB = new ValueDB
-    CopyValueToValueDB(value, valueDB)
-    const id = typeof valueDB === 'number' ? valueDB : valueDB.ID
+  postFront(value: Value, GONG__StackPath: string): Observable<ValueAPI> {
+    let valueAPI = new ValueAPI
+    CopyValueToValueAPI(value, valueAPI)
+    const id = typeof valueAPI === 'number' ? valueAPI : valueAPI.ID
     const url = `${this.valuesUrl}/${id}`;
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
     let httpOptions = {
@@ -88,18 +88,18 @@ export class ValueService {
       params: params
     }
 
-    return this.http.post<ValueDB>(url, valueDB, httpOptions).pipe(
+    return this.http.post<ValueAPI>(url, valueAPI, httpOptions).pipe(
       tap(_ => {
       }),
-      catchError(this.handleError<ValueDB>('postValue'))
+      catchError(this.handleError<ValueAPI>('postValue'))
     );
   }
   
   /** POST: add a new value to the server */
-  post(valuedb: ValueDB, GONG__StackPath: string, frontRepo: FrontRepo): Observable<ValueDB> {
+  post(valuedb: ValueAPI, GONG__StackPath: string, frontRepo: FrontRepo): Observable<ValueAPI> {
     return this.postValue(valuedb, GONG__StackPath, frontRepo)
   }
-  postValue(valuedb: ValueDB, GONG__StackPath: string, frontRepo: FrontRepo): Observable<ValueDB> {
+  postValue(valuedb: ValueAPI, GONG__StackPath: string, frontRepo: FrontRepo): Observable<ValueAPI> {
 
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
     let httpOptions = {
@@ -107,19 +107,19 @@ export class ValueService {
       params: params
     }
 
-    return this.http.post<ValueDB>(this.valuesUrl, valuedb, httpOptions).pipe(
+    return this.http.post<ValueAPI>(this.valuesUrl, valuedb, httpOptions).pipe(
       tap(_ => {
         // this.log(`posted valuedb id=${valuedb.ID}`)
       }),
-      catchError(this.handleError<ValueDB>('postValue'))
+      catchError(this.handleError<ValueAPI>('postValue'))
     );
   }
 
   /** DELETE: delete the valuedb from the server */
-  delete(valuedb: ValueDB | number, GONG__StackPath: string): Observable<ValueDB> {
+  delete(valuedb: ValueAPI | number, GONG__StackPath: string): Observable<ValueAPI> {
     return this.deleteValue(valuedb, GONG__StackPath)
   }
-  deleteValue(valuedb: ValueDB | number, GONG__StackPath: string): Observable<ValueDB> {
+  deleteValue(valuedb: ValueAPI | number, GONG__StackPath: string): Observable<ValueAPI> {
     const id = typeof valuedb === 'number' ? valuedb : valuedb.ID;
     const url = `${this.valuesUrl}/${id}`;
 
@@ -129,17 +129,17 @@ export class ValueService {
       params: params
     };
 
-    return this.http.delete<ValueDB>(url, httpOptions).pipe(
+    return this.http.delete<ValueAPI>(url, httpOptions).pipe(
       tap(_ => this.log(`deleted valuedb id=${id}`)),
-      catchError(this.handleError<ValueDB>('deleteValue'))
+      catchError(this.handleError<ValueAPI>('deleteValue'))
     );
   }
 
   // updateFront copy value to a version with encoded pointers and update to the back
-  updateFront(value: Value, GONG__StackPath: string): Observable<ValueDB> {
-    let valueDB = new ValueDB
-    CopyValueToValueDB(value, valueDB)
-    const id = typeof valueDB === 'number' ? valueDB : valueDB.ID
+  updateFront(value: Value, GONG__StackPath: string): Observable<ValueAPI> {
+    let valueAPI = new ValueAPI
+    CopyValueToValueAPI(value, valueAPI)
+    const id = typeof valueAPI === 'number' ? valueAPI : valueAPI.ID
     const url = `${this.valuesUrl}/${id}`;
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
     let httpOptions = {
@@ -147,18 +147,18 @@ export class ValueService {
       params: params
     }
 
-    return this.http.put<ValueDB>(url, valueDB, httpOptions).pipe(
+    return this.http.put<ValueAPI>(url, valueAPI, httpOptions).pipe(
       tap(_ => {
       }),
-      catchError(this.handleError<ValueDB>('updateValue'))
+      catchError(this.handleError<ValueAPI>('updateValue'))
     );
   }
 
   /** PUT: update the valuedb on the server */
-  update(valuedb: ValueDB, GONG__StackPath: string, frontRepo: FrontRepo): Observable<ValueDB> {
+  update(valuedb: ValueAPI, GONG__StackPath: string, frontRepo: FrontRepo): Observable<ValueAPI> {
     return this.updateValue(valuedb, GONG__StackPath, frontRepo)
   }
-  updateValue(valuedb: ValueDB, GONG__StackPath: string, frontRepo: FrontRepo): Observable<ValueDB> {
+  updateValue(valuedb: ValueAPI, GONG__StackPath: string, frontRepo: FrontRepo): Observable<ValueAPI> {
     const id = typeof valuedb === 'number' ? valuedb : valuedb.ID;
     const url = `${this.valuesUrl}/${id}`;
 
@@ -169,11 +169,11 @@ export class ValueService {
       params: params
     };
 
-    return this.http.put<ValueDB>(url, valuedb, httpOptions).pipe(
+    return this.http.put<ValueAPI>(url, valuedb, httpOptions).pipe(
       tap(_ => {
         // this.log(`updated valuedb id=${valuedb.ID}`)
       }),
-      catchError(this.handleError<ValueDB>('updateValue'))
+      catchError(this.handleError<ValueAPI>('updateValue'))
     );
   }
 

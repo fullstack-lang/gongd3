@@ -1,13 +1,13 @@
 // insertion point for imports
-import { KeyDB } from './key-db'
-import { SerieDB } from './serie-db'
+import { KeyAPI } from './key-api'
+import { SerieAPI } from './serie-api'
 
 // usefull for managing pointer ID values that can be nullable
 import { NullInt64 } from './null-int64'
 
-export class PieDB {
+export class ScatterAPI {
 
-	static GONGSTRUCT_NAME = "Pie"
+	static GONGSTRUCT_NAME = "Scatter"
 
 	CreatedAt?: string
 	DeletedAt?: string
@@ -21,14 +21,16 @@ export class PieDB {
 
 	// insertion point for other decls
 
-	PiePointersEncoding: PiePointersEncoding = new PiePointersEncoding
+	ScatterPointersEncoding: ScatterPointersEncoding = new ScatterPointersEncoding
 }
 
-export class PiePointersEncoding {
+export class ScatterPointersEncoding {
 	// insertion point for pointers and slices of pointers encoding fields
 	XID: NullInt64 = new NullInt64 // if pointer is null, X.ID = 0
 
 	YID: NullInt64 = new NullInt64 // if pointer is null, Y.ID = 0
+
+	TextID: NullInt64 = new NullInt64 // if pointer is null, Text.ID = 0
 
 	Set: number[] = []
 }

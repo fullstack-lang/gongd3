@@ -1,13 +1,11 @@
 // insertion point for imports
-import { KeyDB } from './key-db'
-import { ValueDB } from './value-db'
 
 // usefull for managing pointer ID values that can be nullable
 import { NullInt64 } from './null-int64'
 
-export class SerieDB {
+export class ValueAPI {
 
-	static GONGSTRUCT_NAME = "Serie"
+	static GONGSTRUCT_NAME = "Value"
 
 	CreatedAt?: string
 	DeletedAt?: string
@@ -18,12 +16,9 @@ export class SerieDB {
 
 	// insertion point for other decls
 
-	SeriePointersEncoding: SeriePointersEncoding = new SeriePointersEncoding
+	ValuePointersEncoding: ValuePointersEncoding = new ValuePointersEncoding
 }
 
-export class SeriePointersEncoding {
+export class ValuePointersEncoding {
 	// insertion point for pointers and slices of pointers encoding fields
-	KeyID: NullInt64 = new NullInt64 // if pointer is null, Key.ID = 0
-
-	Values: number[] = []
 }

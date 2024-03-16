@@ -38,6 +38,7 @@ type ScatterAPI struct {
 	models.Scatter_WOP
 
 	// encoding of pointers
+	// for API, it cannot be embedded
 	ScatterPointersEncoding ScatterPointersEncoding
 }
 
@@ -84,7 +85,9 @@ type ScatterDB struct {
 
 	// Declation for basic field scatterDB.Margin
 	Margin_Data sql.NullFloat64
+	
 	// encoding of pointers
+	// for GORM serialization, it is necessary to embed to Pointer Encoding declaration
 	ScatterPointersEncoding
 }
 

@@ -11,8 +11,8 @@ import { BehaviorSubject } from 'rxjs'
 import { Observable, of } from 'rxjs'
 import { catchError, map, tap } from 'rxjs/operators'
 
-import { KeyDB } from './key-db'
-import { Key, CopyKeyToKeyDB } from './key'
+import { KeyAPI } from './key-api'
+import { Key, CopyKeyToKeyAPI } from './key'
 
 import { FrontRepo, FrontRepoService } from './front-repo.service';
 
@@ -46,41 +46,41 @@ export class KeyService {
 
   /** GET keys from the server */
   // gets is more robust to refactoring
-  gets(GONG__StackPath: string, frontRepo: FrontRepo): Observable<KeyDB[]> {
+  gets(GONG__StackPath: string, frontRepo: FrontRepo): Observable<KeyAPI[]> {
     return this.getKeys(GONG__StackPath, frontRepo)
   }
-  getKeys(GONG__StackPath: string, frontRepo: FrontRepo): Observable<KeyDB[]> {
+  getKeys(GONG__StackPath: string, frontRepo: FrontRepo): Observable<KeyAPI[]> {
 
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
 
-    return this.http.get<KeyDB[]>(this.keysUrl, { params: params })
+    return this.http.get<KeyAPI[]>(this.keysUrl, { params: params })
       .pipe(
         tap(),
-        catchError(this.handleError<KeyDB[]>('getKeys', []))
+        catchError(this.handleError<KeyAPI[]>('getKeys', []))
       );
   }
 
   /** GET key by id. Will 404 if id not found */
   // more robust API to refactoring
-  get(id: number, GONG__StackPath: string, frontRepo: FrontRepo): Observable<KeyDB> {
+  get(id: number, GONG__StackPath: string, frontRepo: FrontRepo): Observable<KeyAPI> {
     return this.getKey(id, GONG__StackPath, frontRepo)
   }
-  getKey(id: number, GONG__StackPath: string, frontRepo: FrontRepo): Observable<KeyDB> {
+  getKey(id: number, GONG__StackPath: string, frontRepo: FrontRepo): Observable<KeyAPI> {
 
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
 
     const url = `${this.keysUrl}/${id}`;
-    return this.http.get<KeyDB>(url, { params: params }).pipe(
+    return this.http.get<KeyAPI>(url, { params: params }).pipe(
       // tap(_ => this.log(`fetched key id=${id}`)),
-      catchError(this.handleError<KeyDB>(`getKey id=${id}`))
+      catchError(this.handleError<KeyAPI>(`getKey id=${id}`))
     );
   }
 
   // postFront copy key to a version with encoded pointers and post to the back
-  postFront(key: Key, GONG__StackPath: string): Observable<KeyDB> {
-    let keyDB = new KeyDB
-    CopyKeyToKeyDB(key, keyDB)
-    const id = typeof keyDB === 'number' ? keyDB : keyDB.ID
+  postFront(key: Key, GONG__StackPath: string): Observable<KeyAPI> {
+    let keyAPI = new KeyAPI
+    CopyKeyToKeyAPI(key, keyAPI)
+    const id = typeof keyAPI === 'number' ? keyAPI : keyAPI.ID
     const url = `${this.keysUrl}/${id}`;
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
     let httpOptions = {
@@ -88,18 +88,18 @@ export class KeyService {
       params: params
     }
 
-    return this.http.post<KeyDB>(url, keyDB, httpOptions).pipe(
+    return this.http.post<KeyAPI>(url, keyAPI, httpOptions).pipe(
       tap(_ => {
       }),
-      catchError(this.handleError<KeyDB>('postKey'))
+      catchError(this.handleError<KeyAPI>('postKey'))
     );
   }
   
   /** POST: add a new key to the server */
-  post(keydb: KeyDB, GONG__StackPath: string, frontRepo: FrontRepo): Observable<KeyDB> {
+  post(keydb: KeyAPI, GONG__StackPath: string, frontRepo: FrontRepo): Observable<KeyAPI> {
     return this.postKey(keydb, GONG__StackPath, frontRepo)
   }
-  postKey(keydb: KeyDB, GONG__StackPath: string, frontRepo: FrontRepo): Observable<KeyDB> {
+  postKey(keydb: KeyAPI, GONG__StackPath: string, frontRepo: FrontRepo): Observable<KeyAPI> {
 
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
     let httpOptions = {
@@ -107,19 +107,19 @@ export class KeyService {
       params: params
     }
 
-    return this.http.post<KeyDB>(this.keysUrl, keydb, httpOptions).pipe(
+    return this.http.post<KeyAPI>(this.keysUrl, keydb, httpOptions).pipe(
       tap(_ => {
         // this.log(`posted keydb id=${keydb.ID}`)
       }),
-      catchError(this.handleError<KeyDB>('postKey'))
+      catchError(this.handleError<KeyAPI>('postKey'))
     );
   }
 
   /** DELETE: delete the keydb from the server */
-  delete(keydb: KeyDB | number, GONG__StackPath: string): Observable<KeyDB> {
+  delete(keydb: KeyAPI | number, GONG__StackPath: string): Observable<KeyAPI> {
     return this.deleteKey(keydb, GONG__StackPath)
   }
-  deleteKey(keydb: KeyDB | number, GONG__StackPath: string): Observable<KeyDB> {
+  deleteKey(keydb: KeyAPI | number, GONG__StackPath: string): Observable<KeyAPI> {
     const id = typeof keydb === 'number' ? keydb : keydb.ID;
     const url = `${this.keysUrl}/${id}`;
 
@@ -129,17 +129,17 @@ export class KeyService {
       params: params
     };
 
-    return this.http.delete<KeyDB>(url, httpOptions).pipe(
+    return this.http.delete<KeyAPI>(url, httpOptions).pipe(
       tap(_ => this.log(`deleted keydb id=${id}`)),
-      catchError(this.handleError<KeyDB>('deleteKey'))
+      catchError(this.handleError<KeyAPI>('deleteKey'))
     );
   }
 
   // updateFront copy key to a version with encoded pointers and update to the back
-  updateFront(key: Key, GONG__StackPath: string): Observable<KeyDB> {
-    let keyDB = new KeyDB
-    CopyKeyToKeyDB(key, keyDB)
-    const id = typeof keyDB === 'number' ? keyDB : keyDB.ID
+  updateFront(key: Key, GONG__StackPath: string): Observable<KeyAPI> {
+    let keyAPI = new KeyAPI
+    CopyKeyToKeyAPI(key, keyAPI)
+    const id = typeof keyAPI === 'number' ? keyAPI : keyAPI.ID
     const url = `${this.keysUrl}/${id}`;
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
     let httpOptions = {
@@ -147,18 +147,18 @@ export class KeyService {
       params: params
     }
 
-    return this.http.put<KeyDB>(url, keyDB, httpOptions).pipe(
+    return this.http.put<KeyAPI>(url, keyAPI, httpOptions).pipe(
       tap(_ => {
       }),
-      catchError(this.handleError<KeyDB>('updateKey'))
+      catchError(this.handleError<KeyAPI>('updateKey'))
     );
   }
 
   /** PUT: update the keydb on the server */
-  update(keydb: KeyDB, GONG__StackPath: string, frontRepo: FrontRepo): Observable<KeyDB> {
+  update(keydb: KeyAPI, GONG__StackPath: string, frontRepo: FrontRepo): Observable<KeyAPI> {
     return this.updateKey(keydb, GONG__StackPath, frontRepo)
   }
-  updateKey(keydb: KeyDB, GONG__StackPath: string, frontRepo: FrontRepo): Observable<KeyDB> {
+  updateKey(keydb: KeyAPI, GONG__StackPath: string, frontRepo: FrontRepo): Observable<KeyAPI> {
     const id = typeof keydb === 'number' ? keydb : keydb.ID;
     const url = `${this.keysUrl}/${id}`;
 
@@ -169,11 +169,11 @@ export class KeyService {
       params: params
     };
 
-    return this.http.put<KeyDB>(url, keydb, httpOptions).pipe(
+    return this.http.put<KeyAPI>(url, keydb, httpOptions).pipe(
       tap(_ => {
         // this.log(`updated keydb id=${keydb.ID}`)
       }),
-      catchError(this.handleError<KeyDB>('updateKey'))
+      catchError(this.handleError<KeyAPI>('updateKey'))
     );
   }
 

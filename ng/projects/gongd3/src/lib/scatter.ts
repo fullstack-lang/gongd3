@@ -1,6 +1,6 @@
 // generated code - do not edit
 
-import { ScatterDB } from './scatter-db'
+import { ScatterAPI } from './scatter-api'
 import { FrontRepo } from './front-repo.service';
 
 // insertion point for imports
@@ -34,73 +34,73 @@ export class Scatter {
 	Set: Array<Serie> = []
 }
 
-export function CopyScatterToScatterDB(scatter: Scatter, scatterDB: ScatterDB) {
+export function CopyScatterToScatterAPI(scatter: Scatter, scatterAPI: ScatterAPI) {
 
-	scatterDB.CreatedAt = scatter.CreatedAt
-	scatterDB.DeletedAt = scatter.DeletedAt
-	scatterDB.ID = scatter.ID
+	scatterAPI.CreatedAt = scatter.CreatedAt
+	scatterAPI.DeletedAt = scatter.DeletedAt
+	scatterAPI.ID = scatter.ID
 
 	// insertion point for basic fields copy operations
-	scatterDB.Name = scatter.Name
-	scatterDB.Width = scatter.Width
-	scatterDB.Heigth = scatter.Heigth
-	scatterDB.Margin = scatter.Margin
+	scatterAPI.Name = scatter.Name
+	scatterAPI.Width = scatter.Width
+	scatterAPI.Heigth = scatter.Heigth
+	scatterAPI.Margin = scatter.Margin
 
 	// insertion point for pointer fields encoding
-	scatterDB.ScatterPointersEncoding.XID.Valid = true
+	scatterAPI.ScatterPointersEncoding.XID.Valid = true
 	if (scatter.X != undefined) {
-		scatterDB.ScatterPointersEncoding.XID.Int64 = scatter.X.ID  
+		scatterAPI.ScatterPointersEncoding.XID.Int64 = scatter.X.ID  
 	} else {
-		scatterDB.ScatterPointersEncoding.XID.Int64 = 0 		
+		scatterAPI.ScatterPointersEncoding.XID.Int64 = 0 		
 	}
 
-	scatterDB.ScatterPointersEncoding.YID.Valid = true
+	scatterAPI.ScatterPointersEncoding.YID.Valid = true
 	if (scatter.Y != undefined) {
-		scatterDB.ScatterPointersEncoding.YID.Int64 = scatter.Y.ID  
+		scatterAPI.ScatterPointersEncoding.YID.Int64 = scatter.Y.ID  
 	} else {
-		scatterDB.ScatterPointersEncoding.YID.Int64 = 0 		
+		scatterAPI.ScatterPointersEncoding.YID.Int64 = 0 		
 	}
 
-	scatterDB.ScatterPointersEncoding.TextID.Valid = true
+	scatterAPI.ScatterPointersEncoding.TextID.Valid = true
 	if (scatter.Text != undefined) {
-		scatterDB.ScatterPointersEncoding.TextID.Int64 = scatter.Text.ID  
+		scatterAPI.ScatterPointersEncoding.TextID.Int64 = scatter.Text.ID  
 	} else {
-		scatterDB.ScatterPointersEncoding.TextID.Int64 = 0 		
+		scatterAPI.ScatterPointersEncoding.TextID.Int64 = 0 		
 	}
 
 
 	// insertion point for slice of pointers fields encoding
-	scatterDB.ScatterPointersEncoding.Set = []
+	scatterAPI.ScatterPointersEncoding.Set = []
 	for (let _serie of scatter.Set) {
-		scatterDB.ScatterPointersEncoding.Set.push(_serie.ID)
+		scatterAPI.ScatterPointersEncoding.Set.push(_serie.ID)
 	}
 
 }
 
-// CopyScatterDBToScatter update basic, pointers and slice of pointers fields of scatter
-// from respectively the basic fields and encoded fields of pointers and slices of pointers of scatterDB
+// CopyScatterAPIToScatter update basic, pointers and slice of pointers fields of scatter
+// from respectively the basic fields and encoded fields of pointers and slices of pointers of scatterAPI
 // this function uses frontRepo.map_ID_<structname> to decode the encoded fields
 // a condition is that those maps has to be initialized before
-export function CopyScatterDBToScatter(scatterDB: ScatterDB, scatter: Scatter, frontRepo: FrontRepo) {
+export function CopyScatterAPIToScatter(scatterAPI: ScatterAPI, scatter: Scatter, frontRepo: FrontRepo) {
 
-	scatter.CreatedAt = scatterDB.CreatedAt
-	scatter.DeletedAt = scatterDB.DeletedAt
-	scatter.ID = scatterDB.ID
+	scatter.CreatedAt = scatterAPI.CreatedAt
+	scatter.DeletedAt = scatterAPI.DeletedAt
+	scatter.ID = scatterAPI.ID
 
 	// insertion point for basic fields copy operations
-	scatter.Name = scatterDB.Name
-	scatter.Width = scatterDB.Width
-	scatter.Heigth = scatterDB.Heigth
-	scatter.Margin = scatterDB.Margin
+	scatter.Name = scatterAPI.Name
+	scatter.Width = scatterAPI.Width
+	scatter.Heigth = scatterAPI.Heigth
+	scatter.Margin = scatterAPI.Margin
 
 	// insertion point for pointer fields encoding
-	scatter.X = frontRepo.map_ID_Key.get(scatterDB.ScatterPointersEncoding.XID.Int64)
-	scatter.Y = frontRepo.map_ID_Key.get(scatterDB.ScatterPointersEncoding.YID.Int64)
-	scatter.Text = frontRepo.map_ID_Key.get(scatterDB.ScatterPointersEncoding.TextID.Int64)
+	scatter.X = frontRepo.map_ID_Key.get(scatterAPI.ScatterPointersEncoding.XID.Int64)
+	scatter.Y = frontRepo.map_ID_Key.get(scatterAPI.ScatterPointersEncoding.YID.Int64)
+	scatter.Text = frontRepo.map_ID_Key.get(scatterAPI.ScatterPointersEncoding.TextID.Int64)
 
 	// insertion point for slice of pointers fields encoding
 	scatter.Set = new Array<Serie>()
-	for (let _id of scatterDB.ScatterPointersEncoding.Set) {
+	for (let _id of scatterAPI.ScatterPointersEncoding.Set) {
 		let _serie = frontRepo.map_ID_Serie.get(_id)
 		if (_serie != undefined) {
 			scatter.Set.push(_serie!)

@@ -1,6 +1,6 @@
 // generated code - do not edit
 
-import { KeyDB } from './key-db'
+import { KeyAPI } from './key-api'
 import { FrontRepo } from './front-repo.service';
 
 // insertion point for imports
@@ -22,32 +22,32 @@ export class Key {
 	// insertion point for pointers and slices of pointers declarations
 }
 
-export function CopyKeyToKeyDB(key: Key, keyDB: KeyDB) {
+export function CopyKeyToKeyAPI(key: Key, keyAPI: KeyAPI) {
 
-	keyDB.CreatedAt = key.CreatedAt
-	keyDB.DeletedAt = key.DeletedAt
-	keyDB.ID = key.ID
+	keyAPI.CreatedAt = key.CreatedAt
+	keyAPI.DeletedAt = key.DeletedAt
+	keyAPI.ID = key.ID
 
 	// insertion point for basic fields copy operations
-	keyDB.Name = key.Name
+	keyAPI.Name = key.Name
 
 	// insertion point for pointer fields encoding
 
 	// insertion point for slice of pointers fields encoding
 }
 
-// CopyKeyDBToKey update basic, pointers and slice of pointers fields of key
-// from respectively the basic fields and encoded fields of pointers and slices of pointers of keyDB
+// CopyKeyAPIToKey update basic, pointers and slice of pointers fields of key
+// from respectively the basic fields and encoded fields of pointers and slices of pointers of keyAPI
 // this function uses frontRepo.map_ID_<structname> to decode the encoded fields
 // a condition is that those maps has to be initialized before
-export function CopyKeyDBToKey(keyDB: KeyDB, key: Key, frontRepo: FrontRepo) {
+export function CopyKeyAPIToKey(keyAPI: KeyAPI, key: Key, frontRepo: FrontRepo) {
 
-	key.CreatedAt = keyDB.CreatedAt
-	key.DeletedAt = keyDB.DeletedAt
-	key.ID = keyDB.ID
+	key.CreatedAt = keyAPI.CreatedAt
+	key.DeletedAt = keyAPI.DeletedAt
+	key.ID = keyAPI.ID
 
 	// insertion point for basic fields copy operations
-	key.Name = keyDB.Name
+	key.Name = keyAPI.Name
 
 	// insertion point for pointer fields encoding
 

@@ -1,6 +1,6 @@
 // generated code - do not edit
 
-import { PieDB } from './pie-db'
+import { PieAPI } from './pie-api'
 import { FrontRepo } from './front-repo.service';
 
 // insertion point for imports
@@ -32,65 +32,65 @@ export class Pie {
 	Set: Array<Serie> = []
 }
 
-export function CopyPieToPieDB(pie: Pie, pieDB: PieDB) {
+export function CopyPieToPieAPI(pie: Pie, pieAPI: PieAPI) {
 
-	pieDB.CreatedAt = pie.CreatedAt
-	pieDB.DeletedAt = pie.DeletedAt
-	pieDB.ID = pie.ID
+	pieAPI.CreatedAt = pie.CreatedAt
+	pieAPI.DeletedAt = pie.DeletedAt
+	pieAPI.ID = pie.ID
 
 	// insertion point for basic fields copy operations
-	pieDB.Name = pie.Name
-	pieDB.Width = pie.Width
-	pieDB.Heigth = pie.Heigth
-	pieDB.Margin = pie.Margin
+	pieAPI.Name = pie.Name
+	pieAPI.Width = pie.Width
+	pieAPI.Heigth = pie.Heigth
+	pieAPI.Margin = pie.Margin
 
 	// insertion point for pointer fields encoding
-	pieDB.PiePointersEncoding.XID.Valid = true
+	pieAPI.PiePointersEncoding.XID.Valid = true
 	if (pie.X != undefined) {
-		pieDB.PiePointersEncoding.XID.Int64 = pie.X.ID  
+		pieAPI.PiePointersEncoding.XID.Int64 = pie.X.ID  
 	} else {
-		pieDB.PiePointersEncoding.XID.Int64 = 0 		
+		pieAPI.PiePointersEncoding.XID.Int64 = 0 		
 	}
 
-	pieDB.PiePointersEncoding.YID.Valid = true
+	pieAPI.PiePointersEncoding.YID.Valid = true
 	if (pie.Y != undefined) {
-		pieDB.PiePointersEncoding.YID.Int64 = pie.Y.ID  
+		pieAPI.PiePointersEncoding.YID.Int64 = pie.Y.ID  
 	} else {
-		pieDB.PiePointersEncoding.YID.Int64 = 0 		
+		pieAPI.PiePointersEncoding.YID.Int64 = 0 		
 	}
 
 
 	// insertion point for slice of pointers fields encoding
-	pieDB.PiePointersEncoding.Set = []
+	pieAPI.PiePointersEncoding.Set = []
 	for (let _serie of pie.Set) {
-		pieDB.PiePointersEncoding.Set.push(_serie.ID)
+		pieAPI.PiePointersEncoding.Set.push(_serie.ID)
 	}
 
 }
 
-// CopyPieDBToPie update basic, pointers and slice of pointers fields of pie
-// from respectively the basic fields and encoded fields of pointers and slices of pointers of pieDB
+// CopyPieAPIToPie update basic, pointers and slice of pointers fields of pie
+// from respectively the basic fields and encoded fields of pointers and slices of pointers of pieAPI
 // this function uses frontRepo.map_ID_<structname> to decode the encoded fields
 // a condition is that those maps has to be initialized before
-export function CopyPieDBToPie(pieDB: PieDB, pie: Pie, frontRepo: FrontRepo) {
+export function CopyPieAPIToPie(pieAPI: PieAPI, pie: Pie, frontRepo: FrontRepo) {
 
-	pie.CreatedAt = pieDB.CreatedAt
-	pie.DeletedAt = pieDB.DeletedAt
-	pie.ID = pieDB.ID
+	pie.CreatedAt = pieAPI.CreatedAt
+	pie.DeletedAt = pieAPI.DeletedAt
+	pie.ID = pieAPI.ID
 
 	// insertion point for basic fields copy operations
-	pie.Name = pieDB.Name
-	pie.Width = pieDB.Width
-	pie.Heigth = pieDB.Heigth
-	pie.Margin = pieDB.Margin
+	pie.Name = pieAPI.Name
+	pie.Width = pieAPI.Width
+	pie.Heigth = pieAPI.Heigth
+	pie.Margin = pieAPI.Margin
 
 	// insertion point for pointer fields encoding
-	pie.X = frontRepo.map_ID_Key.get(pieDB.PiePointersEncoding.XID.Int64)
-	pie.Y = frontRepo.map_ID_Key.get(pieDB.PiePointersEncoding.YID.Int64)
+	pie.X = frontRepo.map_ID_Key.get(pieAPI.PiePointersEncoding.XID.Int64)
+	pie.Y = frontRepo.map_ID_Key.get(pieAPI.PiePointersEncoding.YID.Int64)
 
 	// insertion point for slice of pointers fields encoding
 	pie.Set = new Array<Serie>()
-	for (let _id of pieDB.PiePointersEncoding.Set) {
+	for (let _id of pieAPI.PiePointersEncoding.Set) {
 		let _serie = frontRepo.map_ID_Serie.get(_id)
 		if (_serie != undefined) {
 			pie.Set.push(_serie!)

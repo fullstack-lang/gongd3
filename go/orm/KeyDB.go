@@ -38,6 +38,7 @@ type KeyAPI struct {
 	models.Key_WOP
 
 	// encoding of pointers
+	// for API, it cannot be embedded
 	KeyPointersEncoding KeyPointersEncoding
 }
 
@@ -60,7 +61,9 @@ type KeyDB struct {
 
 	// Declation for basic field keyDB.Name
 	Name_Data sql.NullString
+	
 	// encoding of pointers
+	// for GORM serialization, it is necessary to embed to Pointer Encoding declaration
 	KeyPointersEncoding
 }
 

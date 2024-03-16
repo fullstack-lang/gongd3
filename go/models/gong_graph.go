@@ -30,51 +30,51 @@ func IsStaged[Type Gongstruct](stage *StageStruct, instance *Type) (ok bool) {
 }
 
 // insertion point for stage per struct
-	func (stage *StageStruct) IsStagedBar(bar *Bar) (ok bool) {
+func (stage *StageStruct) IsStagedBar(bar *Bar) (ok bool) {
 
-		_, ok = stage.Bars[bar]
-	
-		return
-	}
+	_, ok = stage.Bars[bar]
 
-	func (stage *StageStruct) IsStagedKey(key *Key) (ok bool) {
+	return
+}
 
-		_, ok = stage.Keys[key]
-	
-		return
-	}
+func (stage *StageStruct) IsStagedKey(key *Key) (ok bool) {
 
-	func (stage *StageStruct) IsStagedPie(pie *Pie) (ok bool) {
+	_, ok = stage.Keys[key]
 
-		_, ok = stage.Pies[pie]
-	
-		return
-	}
+	return
+}
 
-	func (stage *StageStruct) IsStagedScatter(scatter *Scatter) (ok bool) {
+func (stage *StageStruct) IsStagedPie(pie *Pie) (ok bool) {
 
-		_, ok = stage.Scatters[scatter]
-	
-		return
-	}
+	_, ok = stage.Pies[pie]
 
-	func (stage *StageStruct) IsStagedSerie(serie *Serie) (ok bool) {
+	return
+}
 
-		_, ok = stage.Series[serie]
-	
-		return
-	}
+func (stage *StageStruct) IsStagedScatter(scatter *Scatter) (ok bool) {
 
-	func (stage *StageStruct) IsStagedValue(value *Value) (ok bool) {
+	_, ok = stage.Scatters[scatter]
 
-		_, ok = stage.Values[value]
-	
-		return
-	}
+	return
+}
+
+func (stage *StageStruct) IsStagedSerie(serie *Serie) (ok bool) {
+
+	_, ok = stage.Series[serie]
+
+	return
+}
+
+func (stage *StageStruct) IsStagedValue(value *Value) (ok bool) {
+
+	_, ok = stage.Values[value]
+
+	return
+}
 
 
 // StageBranch stages instance and apply StageBranch on all gongstruct instances that are
-// referenced by pointers or slices of pointers of the insance
+// referenced by pointers or slices of pointers of the instance
 //
 // the algorithm stops along the course of graph if a vertex is already staged
 func StageBranch[Type Gongstruct](stage *StageStruct, instance *Type) {
@@ -229,6 +229,199 @@ func (stage *StageStruct) StageBranchValue(value *Value) {
 
 	//insertion point for the staging of instances referenced by slice of pointers
 
+}
+
+
+// CopyBranch stages instance and apply CopyBranch on all gongstruct instances that are
+// referenced by pointers or slices of pointers of the instance
+//
+// the algorithm stops along the course of graph if a vertex is already staged
+func CopyBranch[Type Gongstruct](from *Type) (to *Type) {
+
+	mapOrigCopy := make(map[any]any)
+	_ = mapOrigCopy
+
+	switch fromT := any(from).(type) {
+	// insertion point for stage branch
+	case *Bar:
+		toT := CopyBranchBar(mapOrigCopy, fromT)
+		return any(toT).(*Type)
+
+	case *Key:
+		toT := CopyBranchKey(mapOrigCopy, fromT)
+		return any(toT).(*Type)
+
+	case *Pie:
+		toT := CopyBranchPie(mapOrigCopy, fromT)
+		return any(toT).(*Type)
+
+	case *Scatter:
+		toT := CopyBranchScatter(mapOrigCopy, fromT)
+		return any(toT).(*Type)
+
+	case *Serie:
+		toT := CopyBranchSerie(mapOrigCopy, fromT)
+		return any(toT).(*Type)
+
+	case *Value:
+		toT := CopyBranchValue(mapOrigCopy, fromT)
+		return any(toT).(*Type)
+
+	default:
+		_ = fromT // to espace compilation issue when model is empty
+	}
+	return
+}
+
+// insertion point for stage branch per struct
+func CopyBranchBar(mapOrigCopy map[any]any, barFrom *Bar) (barTo  *Bar){
+
+	// barFrom has already been copied
+	if _barTo, ok := mapOrigCopy[barFrom]; ok {
+		barTo = _barTo.(*Bar)
+		return
+	}
+
+	barTo = new(Bar)
+	mapOrigCopy[barFrom] = barTo
+	barFrom.CopyBasicFields(barTo)
+
+	//insertion point for the staging of instances referenced by pointers
+	if barFrom.X != nil {
+		barTo.X = CopyBranchKey(mapOrigCopy, barFrom.X)
+	}
+	if barFrom.Y != nil {
+		barTo.Y = CopyBranchKey(mapOrigCopy, barFrom.Y)
+	}
+
+	//insertion point for the staging of instances referenced by slice of pointers
+	for _, _serie := range barFrom.Set {
+		barTo.Set = append( barTo.Set, CopyBranchSerie(mapOrigCopy, _serie))
+	}
+
+	return
+}
+
+func CopyBranchKey(mapOrigCopy map[any]any, keyFrom *Key) (keyTo  *Key){
+
+	// keyFrom has already been copied
+	if _keyTo, ok := mapOrigCopy[keyFrom]; ok {
+		keyTo = _keyTo.(*Key)
+		return
+	}
+
+	keyTo = new(Key)
+	mapOrigCopy[keyFrom] = keyTo
+	keyFrom.CopyBasicFields(keyTo)
+
+	//insertion point for the staging of instances referenced by pointers
+
+	//insertion point for the staging of instances referenced by slice of pointers
+
+	return
+}
+
+func CopyBranchPie(mapOrigCopy map[any]any, pieFrom *Pie) (pieTo  *Pie){
+
+	// pieFrom has already been copied
+	if _pieTo, ok := mapOrigCopy[pieFrom]; ok {
+		pieTo = _pieTo.(*Pie)
+		return
+	}
+
+	pieTo = new(Pie)
+	mapOrigCopy[pieFrom] = pieTo
+	pieFrom.CopyBasicFields(pieTo)
+
+	//insertion point for the staging of instances referenced by pointers
+	if pieFrom.X != nil {
+		pieTo.X = CopyBranchKey(mapOrigCopy, pieFrom.X)
+	}
+	if pieFrom.Y != nil {
+		pieTo.Y = CopyBranchKey(mapOrigCopy, pieFrom.Y)
+	}
+
+	//insertion point for the staging of instances referenced by slice of pointers
+	for _, _serie := range pieFrom.Set {
+		pieTo.Set = append( pieTo.Set, CopyBranchSerie(mapOrigCopy, _serie))
+	}
+
+	return
+}
+
+func CopyBranchScatter(mapOrigCopy map[any]any, scatterFrom *Scatter) (scatterTo  *Scatter){
+
+	// scatterFrom has already been copied
+	if _scatterTo, ok := mapOrigCopy[scatterFrom]; ok {
+		scatterTo = _scatterTo.(*Scatter)
+		return
+	}
+
+	scatterTo = new(Scatter)
+	mapOrigCopy[scatterFrom] = scatterTo
+	scatterFrom.CopyBasicFields(scatterTo)
+
+	//insertion point for the staging of instances referenced by pointers
+	if scatterFrom.X != nil {
+		scatterTo.X = CopyBranchKey(mapOrigCopy, scatterFrom.X)
+	}
+	if scatterFrom.Y != nil {
+		scatterTo.Y = CopyBranchKey(mapOrigCopy, scatterFrom.Y)
+	}
+	if scatterFrom.Text != nil {
+		scatterTo.Text = CopyBranchKey(mapOrigCopy, scatterFrom.Text)
+	}
+
+	//insertion point for the staging of instances referenced by slice of pointers
+	for _, _serie := range scatterFrom.Set {
+		scatterTo.Set = append( scatterTo.Set, CopyBranchSerie(mapOrigCopy, _serie))
+	}
+
+	return
+}
+
+func CopyBranchSerie(mapOrigCopy map[any]any, serieFrom *Serie) (serieTo  *Serie){
+
+	// serieFrom has already been copied
+	if _serieTo, ok := mapOrigCopy[serieFrom]; ok {
+		serieTo = _serieTo.(*Serie)
+		return
+	}
+
+	serieTo = new(Serie)
+	mapOrigCopy[serieFrom] = serieTo
+	serieFrom.CopyBasicFields(serieTo)
+
+	//insertion point for the staging of instances referenced by pointers
+	if serieFrom.Key != nil {
+		serieTo.Key = CopyBranchKey(mapOrigCopy, serieFrom.Key)
+	}
+
+	//insertion point for the staging of instances referenced by slice of pointers
+	for _, _value := range serieFrom.Values {
+		serieTo.Values = append( serieTo.Values, CopyBranchValue(mapOrigCopy, _value))
+	}
+
+	return
+}
+
+func CopyBranchValue(mapOrigCopy map[any]any, valueFrom *Value) (valueTo  *Value){
+
+	// valueFrom has already been copied
+	if _valueTo, ok := mapOrigCopy[valueFrom]; ok {
+		valueTo = _valueTo.(*Value)
+		return
+	}
+
+	valueTo = new(Value)
+	mapOrigCopy[valueFrom] = valueTo
+	valueFrom.CopyBasicFields(valueTo)
+
+	//insertion point for the staging of instances referenced by pointers
+
+	//insertion point for the staging of instances referenced by slice of pointers
+
+	return
 }
 
 

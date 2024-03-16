@@ -11,14 +11,14 @@ import { BehaviorSubject } from 'rxjs'
 import { Observable, of } from 'rxjs'
 import { catchError, map, tap } from 'rxjs/operators'
 
-import { BarDB } from './bar-db'
-import { Bar, CopyBarToBarDB } from './bar'
+import { BarAPI } from './bar-api'
+import { Bar, CopyBarToBarAPI } from './bar'
 
 import { FrontRepo, FrontRepoService } from './front-repo.service';
 
 // insertion point for imports
-import { KeyDB } from './key-db'
-import { SerieDB } from './serie-db'
+import { KeyAPI } from './key-api'
+import { SerieAPI } from './serie-api'
 
 @Injectable({
   providedIn: 'root'
@@ -48,41 +48,41 @@ export class BarService {
 
   /** GET bars from the server */
   // gets is more robust to refactoring
-  gets(GONG__StackPath: string, frontRepo: FrontRepo): Observable<BarDB[]> {
+  gets(GONG__StackPath: string, frontRepo: FrontRepo): Observable<BarAPI[]> {
     return this.getBars(GONG__StackPath, frontRepo)
   }
-  getBars(GONG__StackPath: string, frontRepo: FrontRepo): Observable<BarDB[]> {
+  getBars(GONG__StackPath: string, frontRepo: FrontRepo): Observable<BarAPI[]> {
 
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
 
-    return this.http.get<BarDB[]>(this.barsUrl, { params: params })
+    return this.http.get<BarAPI[]>(this.barsUrl, { params: params })
       .pipe(
         tap(),
-        catchError(this.handleError<BarDB[]>('getBars', []))
+        catchError(this.handleError<BarAPI[]>('getBars', []))
       );
   }
 
   /** GET bar by id. Will 404 if id not found */
   // more robust API to refactoring
-  get(id: number, GONG__StackPath: string, frontRepo: FrontRepo): Observable<BarDB> {
+  get(id: number, GONG__StackPath: string, frontRepo: FrontRepo): Observable<BarAPI> {
     return this.getBar(id, GONG__StackPath, frontRepo)
   }
-  getBar(id: number, GONG__StackPath: string, frontRepo: FrontRepo): Observable<BarDB> {
+  getBar(id: number, GONG__StackPath: string, frontRepo: FrontRepo): Observable<BarAPI> {
 
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
 
     const url = `${this.barsUrl}/${id}`;
-    return this.http.get<BarDB>(url, { params: params }).pipe(
+    return this.http.get<BarAPI>(url, { params: params }).pipe(
       // tap(_ => this.log(`fetched bar id=${id}`)),
-      catchError(this.handleError<BarDB>(`getBar id=${id}`))
+      catchError(this.handleError<BarAPI>(`getBar id=${id}`))
     );
   }
 
   // postFront copy bar to a version with encoded pointers and post to the back
-  postFront(bar: Bar, GONG__StackPath: string): Observable<BarDB> {
-    let barDB = new BarDB
-    CopyBarToBarDB(bar, barDB)
-    const id = typeof barDB === 'number' ? barDB : barDB.ID
+  postFront(bar: Bar, GONG__StackPath: string): Observable<BarAPI> {
+    let barAPI = new BarAPI
+    CopyBarToBarAPI(bar, barAPI)
+    const id = typeof barAPI === 'number' ? barAPI : barAPI.ID
     const url = `${this.barsUrl}/${id}`;
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
     let httpOptions = {
@@ -90,18 +90,18 @@ export class BarService {
       params: params
     }
 
-    return this.http.post<BarDB>(url, barDB, httpOptions).pipe(
+    return this.http.post<BarAPI>(url, barAPI, httpOptions).pipe(
       tap(_ => {
       }),
-      catchError(this.handleError<BarDB>('postBar'))
+      catchError(this.handleError<BarAPI>('postBar'))
     );
   }
   
   /** POST: add a new bar to the server */
-  post(bardb: BarDB, GONG__StackPath: string, frontRepo: FrontRepo): Observable<BarDB> {
+  post(bardb: BarAPI, GONG__StackPath: string, frontRepo: FrontRepo): Observable<BarAPI> {
     return this.postBar(bardb, GONG__StackPath, frontRepo)
   }
-  postBar(bardb: BarDB, GONG__StackPath: string, frontRepo: FrontRepo): Observable<BarDB> {
+  postBar(bardb: BarAPI, GONG__StackPath: string, frontRepo: FrontRepo): Observable<BarAPI> {
 
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
     let httpOptions = {
@@ -109,19 +109,19 @@ export class BarService {
       params: params
     }
 
-    return this.http.post<BarDB>(this.barsUrl, bardb, httpOptions).pipe(
+    return this.http.post<BarAPI>(this.barsUrl, bardb, httpOptions).pipe(
       tap(_ => {
         // this.log(`posted bardb id=${bardb.ID}`)
       }),
-      catchError(this.handleError<BarDB>('postBar'))
+      catchError(this.handleError<BarAPI>('postBar'))
     );
   }
 
   /** DELETE: delete the bardb from the server */
-  delete(bardb: BarDB | number, GONG__StackPath: string): Observable<BarDB> {
+  delete(bardb: BarAPI | number, GONG__StackPath: string): Observable<BarAPI> {
     return this.deleteBar(bardb, GONG__StackPath)
   }
-  deleteBar(bardb: BarDB | number, GONG__StackPath: string): Observable<BarDB> {
+  deleteBar(bardb: BarAPI | number, GONG__StackPath: string): Observable<BarAPI> {
     const id = typeof bardb === 'number' ? bardb : bardb.ID;
     const url = `${this.barsUrl}/${id}`;
 
@@ -131,17 +131,17 @@ export class BarService {
       params: params
     };
 
-    return this.http.delete<BarDB>(url, httpOptions).pipe(
+    return this.http.delete<BarAPI>(url, httpOptions).pipe(
       tap(_ => this.log(`deleted bardb id=${id}`)),
-      catchError(this.handleError<BarDB>('deleteBar'))
+      catchError(this.handleError<BarAPI>('deleteBar'))
     );
   }
 
   // updateFront copy bar to a version with encoded pointers and update to the back
-  updateFront(bar: Bar, GONG__StackPath: string): Observable<BarDB> {
-    let barDB = new BarDB
-    CopyBarToBarDB(bar, barDB)
-    const id = typeof barDB === 'number' ? barDB : barDB.ID
+  updateFront(bar: Bar, GONG__StackPath: string): Observable<BarAPI> {
+    let barAPI = new BarAPI
+    CopyBarToBarAPI(bar, barAPI)
+    const id = typeof barAPI === 'number' ? barAPI : barAPI.ID
     const url = `${this.barsUrl}/${id}`;
     let params = new HttpParams().set("GONG__StackPath", GONG__StackPath)
     let httpOptions = {
@@ -149,18 +149,18 @@ export class BarService {
       params: params
     }
 
-    return this.http.put<BarDB>(url, barDB, httpOptions).pipe(
+    return this.http.put<BarAPI>(url, barAPI, httpOptions).pipe(
       tap(_ => {
       }),
-      catchError(this.handleError<BarDB>('updateBar'))
+      catchError(this.handleError<BarAPI>('updateBar'))
     );
   }
 
   /** PUT: update the bardb on the server */
-  update(bardb: BarDB, GONG__StackPath: string, frontRepo: FrontRepo): Observable<BarDB> {
+  update(bardb: BarAPI, GONG__StackPath: string, frontRepo: FrontRepo): Observable<BarAPI> {
     return this.updateBar(bardb, GONG__StackPath, frontRepo)
   }
-  updateBar(bardb: BarDB, GONG__StackPath: string, frontRepo: FrontRepo): Observable<BarDB> {
+  updateBar(bardb: BarAPI, GONG__StackPath: string, frontRepo: FrontRepo): Observable<BarAPI> {
     const id = typeof bardb === 'number' ? bardb : bardb.ID;
     const url = `${this.barsUrl}/${id}`;
 
@@ -171,11 +171,11 @@ export class BarService {
       params: params
     };
 
-    return this.http.put<BarDB>(url, bardb, httpOptions).pipe(
+    return this.http.put<BarAPI>(url, bardb, httpOptions).pipe(
       tap(_ => {
         // this.log(`updated bardb id=${bardb.ID}`)
       }),
-      catchError(this.handleError<BarDB>('updateBar'))
+      catchError(this.handleError<BarAPI>('updateBar'))
     );
   }
 
