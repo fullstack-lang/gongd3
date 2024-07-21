@@ -3,7 +3,8 @@ import { ActivatedRoute, Router } from '@angular/router';
 import * as d3 from 'd3';
 import { Observable, Subscription, timer } from 'rxjs';
 
-import * as gongd3 from 'gongd3'
+
+import * as gongd3 from '../../../../gongd3/src/public-api'
 import { keyBy } from 'lodash';
 import { index } from 'd3';
 
@@ -14,6 +15,7 @@ interface LooseObject {
 @Component({
   selector: 'lib-bar',
   templateUrl: './bar.component.html',
+  standalone: true,
   styleUrls: ['./bar.component.css']
 })
 export class BarComponent implements OnInit {

@@ -10,7 +10,7 @@ import * as topojson_specification from 'topojson-specification'
 export class TopographyService {
     constructor(private http: HttpClient) { }
 
-    getTopographyData(source : string): Observable<any> {
+    getTopographyData(source: string): Observable<any> {
 
         console.log("Topography service")
 

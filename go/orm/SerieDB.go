@@ -361,7 +361,7 @@ func (backRepoSerie *BackRepoSerieStruct) CheckoutPhaseTwoInstance(backRepo *Bac
 func (serieDB *SerieDB) DecodePointers(backRepo *BackRepoStruct, serie *models.Serie) {
 
 	// insertion point for checkout of pointer encoding
-	// Key field
+	// Key field, hello here
 	serie.Key = nil
 	if serieDB.KeyID.Int64 != 0 {
 		serie.Key = backRepo.BackRepoKey.Map_KeyDBID_KeyPtr[uint(serieDB.KeyID.Int64)]

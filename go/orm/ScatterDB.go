@@ -411,17 +411,17 @@ func (backRepoScatter *BackRepoScatterStruct) CheckoutPhaseTwoInstance(backRepo 
 func (scatterDB *ScatterDB) DecodePointers(backRepo *BackRepoStruct, scatter *models.Scatter) {
 
 	// insertion point for checkout of pointer encoding
-	// X field
+	// X field, hello here
 	scatter.X = nil
 	if scatterDB.XID.Int64 != 0 {
 		scatter.X = backRepo.BackRepoKey.Map_KeyDBID_KeyPtr[uint(scatterDB.XID.Int64)]
 	}
-	// Y field
+	// Y field, hello here
 	scatter.Y = nil
 	if scatterDB.YID.Int64 != 0 {
 		scatter.Y = backRepo.BackRepoKey.Map_KeyDBID_KeyPtr[uint(scatterDB.YID.Int64)]
 	}
-	// Text field
+	// Text field, hello here
 	scatter.Text = nil
 	if scatterDB.TextID.Int64 != 0 {
 		scatter.Text = backRepo.BackRepoKey.Map_KeyDBID_KeyPtr[uint(scatterDB.TextID.Int64)]

@@ -3,11 +3,13 @@ import { ActivatedRoute, Router } from '@angular/router';
 import * as d3 from 'd3';
 import { Observable, Subscription, timer } from 'rxjs';
 
-import * as gongd3 from 'gongd3'
+import * as gongd3 from '../../../../gongd3/src/public-api'
+
 
 @Component({
   selector: 'lib-pie',
   templateUrl: './pie.component.html',
+  standalone: true,
   styleUrls: ['./pie.component.css']
 })
 export class PieComponent implements OnInit {

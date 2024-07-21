@@ -72,7 +72,6 @@ func (stage *StageStruct) IsStagedValue(value *Value) (ok bool) {
 	return
 }
 
-
 // StageBranch stages instance and apply StageBranch on all gongstruct instances that are
 // referenced by pointers or slices of pointers of the instance
 //
@@ -231,7 +230,6 @@ func (stage *StageStruct) StageBranchValue(value *Value) {
 
 }
 
-
 // CopyBranch stages instance and apply CopyBranch on all gongstruct instances that are
 // referenced by pointers or slices of pointers of the instance
 //
@@ -274,7 +272,7 @@ func CopyBranch[Type Gongstruct](from *Type) (to *Type) {
 }
 
 // insertion point for stage branch per struct
-func CopyBranchBar(mapOrigCopy map[any]any, barFrom *Bar) (barTo  *Bar){
+func CopyBranchBar(mapOrigCopy map[any]any, barFrom *Bar) (barTo *Bar) {
 
 	// barFrom has already been copied
 	if _barTo, ok := mapOrigCopy[barFrom]; ok {
@@ -296,13 +294,13 @@ func CopyBranchBar(mapOrigCopy map[any]any, barFrom *Bar) (barTo  *Bar){
 
 	//insertion point for the staging of instances referenced by slice of pointers
 	for _, _serie := range barFrom.Set {
-		barTo.Set = append( barTo.Set, CopyBranchSerie(mapOrigCopy, _serie))
+		barTo.Set = append(barTo.Set, CopyBranchSerie(mapOrigCopy, _serie))
 	}
 
 	return
 }
 
-func CopyBranchKey(mapOrigCopy map[any]any, keyFrom *Key) (keyTo  *Key){
+func CopyBranchKey(mapOrigCopy map[any]any, keyFrom *Key) (keyTo *Key) {
 
 	// keyFrom has already been copied
 	if _keyTo, ok := mapOrigCopy[keyFrom]; ok {
@@ -321,7 +319,7 @@ func CopyBranchKey(mapOrigCopy map[any]any, keyFrom *Key) (keyTo  *Key){
 	return
 }
 
-func CopyBranchPie(mapOrigCopy map[any]any, pieFrom *Pie) (pieTo  *Pie){
+func CopyBranchPie(mapOrigCopy map[any]any, pieFrom *Pie) (pieTo *Pie) {
 
 	// pieFrom has already been copied
 	if _pieTo, ok := mapOrigCopy[pieFrom]; ok {
@@ -343,13 +341,13 @@ func CopyBranchPie(mapOrigCopy map[any]any, pieFrom *Pie) (pieTo  *Pie){
 
 	//insertion point for the staging of instances referenced by slice of pointers
 	for _, _serie := range pieFrom.Set {
-		pieTo.Set = append( pieTo.Set, CopyBranchSerie(mapOrigCopy, _serie))
+		pieTo.Set = append(pieTo.Set, CopyBranchSerie(mapOrigCopy, _serie))
 	}
 
 	return
 }
 
-func CopyBranchScatter(mapOrigCopy map[any]any, scatterFrom *Scatter) (scatterTo  *Scatter){
+func CopyBranchScatter(mapOrigCopy map[any]any, scatterFrom *Scatter) (scatterTo *Scatter) {
 
 	// scatterFrom has already been copied
 	if _scatterTo, ok := mapOrigCopy[scatterFrom]; ok {
@@ -374,13 +372,13 @@ func CopyBranchScatter(mapOrigCopy map[any]any, scatterFrom *Scatter) (scatterTo
 
 	//insertion point for the staging of instances referenced by slice of pointers
 	for _, _serie := range scatterFrom.Set {
-		scatterTo.Set = append( scatterTo.Set, CopyBranchSerie(mapOrigCopy, _serie))
+		scatterTo.Set = append(scatterTo.Set, CopyBranchSerie(mapOrigCopy, _serie))
 	}
 
 	return
 }
 
-func CopyBranchSerie(mapOrigCopy map[any]any, serieFrom *Serie) (serieTo  *Serie){
+func CopyBranchSerie(mapOrigCopy map[any]any, serieFrom *Serie) (serieTo *Serie) {
 
 	// serieFrom has already been copied
 	if _serieTo, ok := mapOrigCopy[serieFrom]; ok {
@@ -399,13 +397,13 @@ func CopyBranchSerie(mapOrigCopy map[any]any, serieFrom *Serie) (serieTo  *Serie
 
 	//insertion point for the staging of instances referenced by slice of pointers
 	for _, _value := range serieFrom.Values {
-		serieTo.Values = append( serieTo.Values, CopyBranchValue(mapOrigCopy, _value))
+		serieTo.Values = append(serieTo.Values, CopyBranchValue(mapOrigCopy, _value))
 	}
 
 	return
 }
 
-func CopyBranchValue(mapOrigCopy map[any]any, valueFrom *Value) (valueTo  *Value){
+func CopyBranchValue(mapOrigCopy map[any]any, valueFrom *Value) (valueTo *Value) {
 
 	// valueFrom has already been copied
 	if _valueTo, ok := mapOrigCopy[valueFrom]; ok {
@@ -423,7 +421,6 @@ func CopyBranchValue(mapOrigCopy map[any]any, valueFrom *Value) (valueTo  *Value
 
 	return
 }
-
 
 // UnstageBranch stages instance and apply UnstageBranch on all gongstruct instances that are
 // referenced by pointers or slices of pointers of the insance
@@ -460,7 +457,7 @@ func UnstageBranch[Type Gongstruct](stage *StageStruct, instance *Type) {
 func (stage *StageStruct) UnstageBranchBar(bar *Bar) {
 
 	// check if instance is already staged
-	if ! IsStaged(stage, bar) {
+	if !IsStaged(stage, bar) {
 		return
 	}
 
@@ -484,7 +481,7 @@ func (stage *StageStruct) UnstageBranchBar(bar *Bar) {
 func (stage *StageStruct) UnstageBranchKey(key *Key) {
 
 	// check if instance is already staged
-	if ! IsStaged(stage, key) {
+	if !IsStaged(stage, key) {
 		return
 	}
 
@@ -499,7 +496,7 @@ func (stage *StageStruct) UnstageBranchKey(key *Key) {
 func (stage *StageStruct) UnstageBranchPie(pie *Pie) {
 
 	// check if instance is already staged
-	if ! IsStaged(stage, pie) {
+	if !IsStaged(stage, pie) {
 		return
 	}
 
@@ -523,7 +520,7 @@ func (stage *StageStruct) UnstageBranchPie(pie *Pie) {
 func (stage *StageStruct) UnstageBranchScatter(scatter *Scatter) {
 
 	// check if instance is already staged
-	if ! IsStaged(stage, scatter) {
+	if !IsStaged(stage, scatter) {
 		return
 	}
 
@@ -550,7 +547,7 @@ func (stage *StageStruct) UnstageBranchScatter(scatter *Scatter) {
 func (stage *StageStruct) UnstageBranchSerie(serie *Serie) {
 
 	// check if instance is already staged
-	if ! IsStaged(stage, serie) {
+	if !IsStaged(stage, serie) {
 		return
 	}
 
@@ -571,7 +568,7 @@ func (stage *StageStruct) UnstageBranchSerie(serie *Serie) {
 func (stage *StageStruct) UnstageBranchValue(value *Value) {
 
 	// check if instance is already staged
-	if ! IsStaged(stage, value) {
+	if !IsStaged(stage, value) {
 		return
 	}
 
@@ -582,4 +579,3 @@ func (stage *StageStruct) UnstageBranchValue(value *Value) {
 	//insertion point for the staging of instances referenced by slice of pointers
 
 }
-

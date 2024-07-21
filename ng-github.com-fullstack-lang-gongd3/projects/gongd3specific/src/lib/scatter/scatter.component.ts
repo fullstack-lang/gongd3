@@ -3,11 +3,12 @@ import { ActivatedRoute, Router } from '@angular/router';
 import * as d3 from 'd3';
 import { Observable, Subscription, timer } from 'rxjs';
 
-import * as gongd3 from 'gongd3'
+import * as gongd3 from '../../../../gongd3/src/public-api'
 
 @Component({
   selector: 'lib-scatter',
   templateUrl: './scatter.component.html',
+  standalone: true,
   styleUrls: ['./scatter.component.css']
 })
 export class ScatterComponent implements OnInit {

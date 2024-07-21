@@ -18,6 +18,7 @@ const fr_map = 'assets/fr-departments.json'
 @Component({
   selector: 'lib-geojson',
   templateUrl: './geojson.component.html',
+  standalone: true,
   styleUrls: ['./geojson.component.css']
 })
 export class GeojsonComponent implements OnInit {

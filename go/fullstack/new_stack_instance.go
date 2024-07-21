@@ -11,7 +11,7 @@ import (
 	// this will import the angular front end source code directory (versionned with git) in the vendor directory
 	// this path will be included in the "tsconfig.json" front end compilation paths
 	// to include this stack front end code
-	_ "github.com/fullstack-lang/gongd3/ng/projects"
+	_ "github.com/fullstack-lang/gongd3/ng-github.com-fullstack-lang-gongd3/projects"
 )
 
 // NewStackInstance creates a new stack instance from the Stack Model

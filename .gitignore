@@ -9,3 +9,5 @@ ng/src/assets/FR_regions-avant-redecoupage-2015.geojson
 ng/src/assets/FR_regions.geojson
 go/cmd/gongd3/__debug_bin
 go/cmd/gongd3/__debug_bin*
+
+node_modules

@@ -12,14 +12,14 @@ var ___dummy__Stage models.StageStruct
 var ___dummy__Time time.Time
 
 // init might be handy if one want to have the data embedded in the binary
-// but it has to properly reference the Injection gateway in the main package
+// but it has to properly reference the _ gateway in the main package
 // func init() {
 // 	_ = __Dummy_time_variable
-// 	InjectionGateway["stage"] = stageInjection
+// 	InjectionGateway["stage"] = _
 // }
 
-// stageInjection will stage objects of database "stage"
-func stageInjection(stage *models.StageStruct) {
+// _ will stage objects of database "stage"
+func _(stage *models.StageStruct) {
 
 	// Declaration of instances to stage
 
