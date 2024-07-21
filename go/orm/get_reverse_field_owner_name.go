@@ -15,118 +15,26 @@ func GetReverseFieldOwnerName[T models.Gongstruct](
 	switch inst := any(instance).(type) {
 	// insertion point
 	case *models.Bar:
-		tmp := GetInstanceDBFromInstance[models.Bar, BarDB](
-			stage, backRepo, inst,
-		)
-		_ = tmp
 		switch reverseField.GongstructName {
 		// insertion point
-		case "Bar":
-			switch reverseField.Fieldname {
-			}
-		case "Key":
-			switch reverseField.Fieldname {
-			}
-		case "Pie":
-			switch reverseField.Fieldname {
-			}
-		case "Scatter":
-			switch reverseField.Fieldname {
-			}
-		case "Serie":
-			switch reverseField.Fieldname {
-			}
-		case "Value":
-			switch reverseField.Fieldname {
-			}
 		}
 
 	case *models.Key:
-		tmp := GetInstanceDBFromInstance[models.Key, KeyDB](
-			stage, backRepo, inst,
-		)
-		_ = tmp
 		switch reverseField.GongstructName {
 		// insertion point
-		case "Bar":
-			switch reverseField.Fieldname {
-			}
-		case "Key":
-			switch reverseField.Fieldname {
-			}
-		case "Pie":
-			switch reverseField.Fieldname {
-			}
-		case "Scatter":
-			switch reverseField.Fieldname {
-			}
-		case "Serie":
-			switch reverseField.Fieldname {
-			}
-		case "Value":
-			switch reverseField.Fieldname {
-			}
 		}
 
 	case *models.Pie:
-		tmp := GetInstanceDBFromInstance[models.Pie, PieDB](
-			stage, backRepo, inst,
-		)
-		_ = tmp
 		switch reverseField.GongstructName {
 		// insertion point
-		case "Bar":
-			switch reverseField.Fieldname {
-			}
-		case "Key":
-			switch reverseField.Fieldname {
-			}
-		case "Pie":
-			switch reverseField.Fieldname {
-			}
-		case "Scatter":
-			switch reverseField.Fieldname {
-			}
-		case "Serie":
-			switch reverseField.Fieldname {
-			}
-		case "Value":
-			switch reverseField.Fieldname {
-			}
 		}
 
 	case *models.Scatter:
-		tmp := GetInstanceDBFromInstance[models.Scatter, ScatterDB](
-			stage, backRepo, inst,
-		)
-		_ = tmp
 		switch reverseField.GongstructName {
 		// insertion point
-		case "Bar":
-			switch reverseField.Fieldname {
-			}
-		case "Key":
-			switch reverseField.Fieldname {
-			}
-		case "Pie":
-			switch reverseField.Fieldname {
-			}
-		case "Scatter":
-			switch reverseField.Fieldname {
-			}
-		case "Serie":
-			switch reverseField.Fieldname {
-			}
-		case "Value":
-			switch reverseField.Fieldname {
-			}
 		}
 
 	case *models.Serie:
-		tmp := GetInstanceDBFromInstance[models.Serie, SerieDB](
-			stage, backRepo, inst,
-		)
-		_ = tmp
 		switch reverseField.GongstructName {
 		// insertion point
 		case "Bar":
@@ -135,9 +43,6 @@ func GetReverseFieldOwnerName[T models.Gongstruct](
 				if _bar, ok := stage.Bar_Set_reverseMap[inst]; ok {
 					res = _bar.Name
 				}
-			}
-		case "Key":
-			switch reverseField.Fieldname {
 			}
 		case "Pie":
 			switch reverseField.Fieldname {
@@ -153,42 +58,17 @@ func GetReverseFieldOwnerName[T models.Gongstruct](
 					res = _scatter.Name
 				}
 			}
-		case "Serie":
-			switch reverseField.Fieldname {
-			}
-		case "Value":
-			switch reverseField.Fieldname {
-			}
 		}
 
 	case *models.Value:
-		tmp := GetInstanceDBFromInstance[models.Value, ValueDB](
-			stage, backRepo, inst,
-		)
-		_ = tmp
 		switch reverseField.GongstructName {
 		// insertion point
-		case "Bar":
-			switch reverseField.Fieldname {
-			}
-		case "Key":
-			switch reverseField.Fieldname {
-			}
-		case "Pie":
-			switch reverseField.Fieldname {
-			}
-		case "Scatter":
-			switch reverseField.Fieldname {
-			}
 		case "Serie":
 			switch reverseField.Fieldname {
 			case "Values":
 				if _serie, ok := stage.Serie_Values_reverseMap[inst]; ok {
 					res = _serie.Name
 				}
-			}
-		case "Value":
-			switch reverseField.Fieldname {
 			}
 		}
 
@@ -208,127 +88,32 @@ func GetReverseFieldOwner[T models.Gongstruct](
 	switch inst := any(instance).(type) {
 	// insertion point
 	case *models.Bar:
-		tmp := GetInstanceDBFromInstance[models.Bar, BarDB](
-			stage, backRepo, inst,
-		)
-		_ = tmp
 		switch reverseField.GongstructName {
 		// insertion point
-		case "Bar":
-			switch reverseField.Fieldname {
-			}
-		case "Key":
-			switch reverseField.Fieldname {
-			}
-		case "Pie":
-			switch reverseField.Fieldname {
-			}
-		case "Scatter":
-			switch reverseField.Fieldname {
-			}
-		case "Serie":
-			switch reverseField.Fieldname {
-			}
-		case "Value":
-			switch reverseField.Fieldname {
-			}
 		}
 
 	case *models.Key:
-		tmp := GetInstanceDBFromInstance[models.Key, KeyDB](
-			stage, backRepo, inst,
-		)
-		_ = tmp
 		switch reverseField.GongstructName {
 		// insertion point
-		case "Bar":
-			switch reverseField.Fieldname {
-			}
-		case "Key":
-			switch reverseField.Fieldname {
-			}
-		case "Pie":
-			switch reverseField.Fieldname {
-			}
-		case "Scatter":
-			switch reverseField.Fieldname {
-			}
-		case "Serie":
-			switch reverseField.Fieldname {
-			}
-		case "Value":
-			switch reverseField.Fieldname {
-			}
 		}
 
 	case *models.Pie:
-		tmp := GetInstanceDBFromInstance[models.Pie, PieDB](
-			stage, backRepo, inst,
-		)
-		_ = tmp
 		switch reverseField.GongstructName {
 		// insertion point
-		case "Bar":
-			switch reverseField.Fieldname {
-			}
-		case "Key":
-			switch reverseField.Fieldname {
-			}
-		case "Pie":
-			switch reverseField.Fieldname {
-			}
-		case "Scatter":
-			switch reverseField.Fieldname {
-			}
-		case "Serie":
-			switch reverseField.Fieldname {
-			}
-		case "Value":
-			switch reverseField.Fieldname {
-			}
 		}
 
 	case *models.Scatter:
-		tmp := GetInstanceDBFromInstance[models.Scatter, ScatterDB](
-			stage, backRepo, inst,
-		)
-		_ = tmp
 		switch reverseField.GongstructName {
 		// insertion point
-		case "Bar":
-			switch reverseField.Fieldname {
-			}
-		case "Key":
-			switch reverseField.Fieldname {
-			}
-		case "Pie":
-			switch reverseField.Fieldname {
-			}
-		case "Scatter":
-			switch reverseField.Fieldname {
-			}
-		case "Serie":
-			switch reverseField.Fieldname {
-			}
-		case "Value":
-			switch reverseField.Fieldname {
-			}
 		}
 
 	case *models.Serie:
-		tmp := GetInstanceDBFromInstance[models.Serie, SerieDB](
-			stage, backRepo, inst,
-		)
-		_ = tmp
 		switch reverseField.GongstructName {
 		// insertion point
 		case "Bar":
 			switch reverseField.Fieldname {
 			case "Set":
 				res = stage.Bar_Set_reverseMap[inst]
-			}
-		case "Key":
-			switch reverseField.Fieldname {
 			}
 		case "Pie":
 			switch reverseField.Fieldname {
@@ -340,40 +125,15 @@ func GetReverseFieldOwner[T models.Gongstruct](
 			case "Set":
 				res = stage.Scatter_Set_reverseMap[inst]
 			}
-		case "Serie":
-			switch reverseField.Fieldname {
-			}
-		case "Value":
-			switch reverseField.Fieldname {
-			}
 		}
 
 	case *models.Value:
-		tmp := GetInstanceDBFromInstance[models.Value, ValueDB](
-			stage, backRepo, inst,
-		)
-		_ = tmp
 		switch reverseField.GongstructName {
 		// insertion point
-		case "Bar":
-			switch reverseField.Fieldname {
-			}
-		case "Key":
-			switch reverseField.Fieldname {
-			}
-		case "Pie":
-			switch reverseField.Fieldname {
-			}
-		case "Scatter":
-			switch reverseField.Fieldname {
-			}
 		case "Serie":
 			switch reverseField.Fieldname {
 			case "Values":
 				res = stage.Serie_Values_reverseMap[inst]
-			}
-		case "Value":
-			switch reverseField.Fieldname {
 			}
 		}
 
