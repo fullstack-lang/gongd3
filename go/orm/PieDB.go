@@ -395,12 +395,12 @@ func (backRepoPie *BackRepoPieStruct) CheckoutPhaseTwoInstance(backRepo *BackRep
 func (pieDB *PieDB) DecodePointers(backRepo *BackRepoStruct, pie *models.Pie) {
 
 	// insertion point for checkout of pointer encoding
-	// X field, hello here
+	// X field
 	pie.X = nil
 	if pieDB.XID.Int64 != 0 {
 		pie.X = backRepo.BackRepoKey.Map_KeyDBID_KeyPtr[uint(pieDB.XID.Int64)]
 	}
-	// Y field, hello here
+	// Y field
 	pie.Y = nil
 	if pieDB.YID.Int64 != 0 {
 		pie.Y = backRepo.BackRepoKey.Map_KeyDBID_KeyPtr[uint(pieDB.YID.Int64)]

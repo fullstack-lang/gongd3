@@ -459,12 +459,12 @@ func (backRepoBar *BackRepoBarStruct) CheckoutPhaseTwoInstance(backRepo *BackRep
 func (barDB *BarDB) DecodePointers(backRepo *BackRepoStruct, bar *models.Bar) {
 
 	// insertion point for checkout of pointer encoding
-	// X field, hello here
+	// X field
 	bar.X = nil
 	if barDB.XID.Int64 != 0 {
 		bar.X = backRepo.BackRepoKey.Map_KeyDBID_KeyPtr[uint(barDB.XID.Int64)]
 	}
-	// Y field, hello here
+	// Y field
 	bar.Y = nil
 	if barDB.YID.Int64 != 0 {
 		bar.Y = backRepo.BackRepoKey.Map_KeyDBID_KeyPtr[uint(barDB.YID.Int64)]
