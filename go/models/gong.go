@@ -64,7 +64,6 @@ type StageStruct struct {
 	Keys_mapString map[string]*Key
 
 	// insertion point for slice of pointers maps
-
 	OnAfterKeyCreateCallback OnAfterCreateInterface[Key]
 	OnAfterKeyUpdateCallback OnAfterUpdateInterface[Key]
 	OnAfterKeyDeleteCallback OnAfterDeleteInterface[Key]
@@ -107,7 +106,6 @@ type StageStruct struct {
 	Values_mapString map[string]*Value
 
 	// insertion point for slice of pointers maps
-
 	OnAfterValueCreateCallback OnAfterCreateInterface[Value]
 	OnAfterValueUpdateCallback OnAfterUpdateInterface[Value]
 	OnAfterValueDeleteCallback OnAfterDeleteInterface[Value]
@@ -698,8 +696,7 @@ func (stage *StageStruct) Unstage() { // insertion point for array nil
 // - navigation between staged instances by going backward association links between gongstruct
 // - full refactoring of Gongstruct identifiers / fields
 type Gongstruct interface {
-	// insertion point for generic types
-	Bar | Key | Pie | Scatter | Serie | Value
+
 }
 
 type GongtructBasicField interface {
@@ -711,11 +708,10 @@ type GongtructBasicField interface {
 // - navigation between staged instances by going backward association links between gongstruct
 // - full refactoring of Gongstruct identifiers / fields
 type PointerToGongstruct interface {
-	// insertion point for generic types
-	*Bar | *Key | *Pie | *Scatter | *Serie | *Value
 	GetName() string
 	CommitVoid(*StageStruct)
 	UnstageVoid(stage *StageStruct)
+	comparable
 }
 
 func CompareGongstructByName[T PointerToGongstruct](a, b T) int {
@@ -739,27 +735,11 @@ func GetGongstrucsSorted[T PointerToGongstruct](stage *StageStruct) (sortedSlice
 }
 
 type GongstructSet interface {
-	map[any]any |
-		// insertion point for generic types
-		map[*Bar]any |
-		map[*Key]any |
-		map[*Pie]any |
-		map[*Scatter]any |
-		map[*Serie]any |
-		map[*Value]any |
-		map[*any]any // because go does not support an extra "|" at the end of type specifications
+	map[any]any
 }
 
 type GongstructMapString interface {
-	map[any]any |
-		// insertion point for generic types
-		map[string]*Bar |
-		map[string]*Key |
-		map[string]*Pie |
-		map[string]*Scatter |
-		map[string]*Serie |
-		map[string]*Value |
-		map[*any]any // because go does not support an extra "|" at the end of type specifications
+	map[any]any
 }
 
 // GongGetSet returns the set staged GongstructType instances
