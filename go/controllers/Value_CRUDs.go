@@ -70,12 +70,12 @@ func (controller *Controller) GetValues(c *gin.Context) {
 	}
 	db := backRepo.BackRepoValue.GetDB()
 
-	query := db.Find(&valueDBs)
-	if query.Error != nil {
+	_, err := db.Find(&valueDBs)
+	if err != nil {
 		var returnError GenericError
 		returnError.Body.Code = http.StatusBadRequest
-		returnError.Body.Message = query.Error.Error()
-		log.Println(query.Error.Error())
+		returnError.Body.Message = err.Error()
+		log.Println(err.Error())
 		c.JSON(http.StatusBadRequest, returnError.Body)
 		return
 	}
@@ -151,12 +151,12 @@ func (controller *Controller) PostValue(c *gin.Context) {
 	valueDB.ValuePointersEncoding = input.ValuePointersEncoding
 	valueDB.CopyBasicFieldsFromValue_WOP(&input.Value_WOP)
 
-	query := db.Create(&valueDB)
-	if query.Error != nil {
+	_, err = db.Create(&valueDB)
+	if err != nil {
 		var returnError GenericError
 		returnError.Body.Code = http.StatusBadRequest
-		returnError.Body.Message = query.Error.Error()
-		log.Println(query.Error.Error())
+		returnError.Body.Message = err.Error()
+		log.Println(err.Error())
 		c.JSON(http.StatusBadRequest, returnError.Body)
 		return
 	}
@@ -205,7 +205,7 @@ func (controller *Controller) GetValue(c *gin.Context) {
 
 	// Get valueDB in DB
 	var valueDB orm.ValueDB
-	if err := db.First(&valueDB, c.Param("id")).Error; err != nil {
+	if _, err := db.First(&valueDB, c.Param("id")); err != nil {
 		var returnError GenericError
 		returnError.Body.Code = http.StatusBadRequest
 		returnError.Body.Message = err.Error()
@@ -264,13 +264,13 @@ func (controller *Controller) UpdateValue(c *gin.Context) {
 	var valueDB orm.ValueDB
 
 	// fetch the value
-	query := db.First(&valueDB, c.Param("id"))
+	_, err := db.First(&valueDB, c.Param("id"))
 
-	if query.Error != nil {
+	if err != nil {
 		var returnError GenericError
 		returnError.Body.Code = http.StatusBadRequest
-		returnError.Body.Message = query.Error.Error()
-		log.Println(query.Error.Error())
+		returnError.Body.Message = err.Error()
+		log.Println(err.Error())
 		c.JSON(http.StatusBadRequest, returnError.Body)
 		return
 	}
@@ -279,12 +279,13 @@ func (controller *Controller) UpdateValue(c *gin.Context) {
 	valueDB.CopyBasicFieldsFromValue_WOP(&input.Value_WOP)
 	valueDB.ValuePointersEncoding = input.ValuePointersEncoding
 
-	query = db.Model(&valueDB).Updates(valueDB)
-	if query.Error != nil {
+	db, _ = db.Model(&valueDB)
+	_, err = db.Updates(valueDB)
+	if err != nil {
 		var returnError GenericError
 		returnError.Body.Code = http.StatusBadRequest
-		returnError.Body.Message = query.Error.Error()
-		log.Println(query.Error.Error())
+		returnError.Body.Message = err.Error()
+		log.Println(err.Error())
 		c.JSON(http.StatusBadRequest, returnError.Body)
 		return
 	}
@@ -343,7 +344,7 @@ func (controller *Controller) DeleteValue(c *gin.Context) {
 
 	// Get model if exist
 	var valueDB orm.ValueDB
-	if err := db.First(&valueDB, c.Param("id")).Error; err != nil {
+	if _, err := db.First(&valueDB, c.Param("id")); err != nil {
 		var returnError GenericError
 		returnError.Body.Code = http.StatusBadRequest
 		returnError.Body.Message = err.Error()
@@ -353,7 +354,8 @@ func (controller *Controller) DeleteValue(c *gin.Context) {
 	}
 
 	// with gorm.Model field, default delete is a soft delete. Unscoped() force delete
-	db.Unscoped().Delete(&valueDB)
+	db.Unscoped()
+	db.Delete(&valueDB)
 
 	// get an instance (not staged) from DB instance, and call callback function
 	valueDeleted := new(models.Value)

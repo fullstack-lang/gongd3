@@ -70,12 +70,12 @@ func (controller *Controller) GetBars(c *gin.Context) {
 	}
 	db := backRepo.BackRepoBar.GetDB()
 
-	query := db.Find(&barDBs)
-	if query.Error != nil {
+	_, err := db.Find(&barDBs)
+	if err != nil {
 		var returnError GenericError
 		returnError.Body.Code = http.StatusBadRequest
-		returnError.Body.Message = query.Error.Error()
-		log.Println(query.Error.Error())
+		returnError.Body.Message = err.Error()
+		log.Println(err.Error())
 		c.JSON(http.StatusBadRequest, returnError.Body)
 		return
 	}
@@ -151,12 +151,12 @@ func (controller *Controller) PostBar(c *gin.Context) {
 	barDB.BarPointersEncoding = input.BarPointersEncoding
 	barDB.CopyBasicFieldsFromBar_WOP(&input.Bar_WOP)
 
-	query := db.Create(&barDB)
-	if query.Error != nil {
+	_, err = db.Create(&barDB)
+	if err != nil {
 		var returnError GenericError
 		returnError.Body.Code = http.StatusBadRequest
-		returnError.Body.Message = query.Error.Error()
-		log.Println(query.Error.Error())
+		returnError.Body.Message = err.Error()
+		log.Println(err.Error())
 		c.JSON(http.StatusBadRequest, returnError.Body)
 		return
 	}
@@ -205,7 +205,7 @@ func (controller *Controller) GetBar(c *gin.Context) {
 
 	// Get barDB in DB
 	var barDB orm.BarDB
-	if err := db.First(&barDB, c.Param("id")).Error; err != nil {
+	if _, err := db.First(&barDB, c.Param("id")); err != nil {
 		var returnError GenericError
 		returnError.Body.Code = http.StatusBadRequest
 		returnError.Body.Message = err.Error()
@@ -264,13 +264,13 @@ func (controller *Controller) UpdateBar(c *gin.Context) {
 	var barDB orm.BarDB
 
 	// fetch the bar
-	query := db.First(&barDB, c.Param("id"))
+	_, err := db.First(&barDB, c.Param("id"))
 
-	if query.Error != nil {
+	if err != nil {
 		var returnError GenericError
 		returnError.Body.Code = http.StatusBadRequest
-		returnError.Body.Message = query.Error.Error()
-		log.Println(query.Error.Error())
+		returnError.Body.Message = err.Error()
+		log.Println(err.Error())
 		c.JSON(http.StatusBadRequest, returnError.Body)
 		return
 	}
@@ -279,12 +279,13 @@ func (controller *Controller) UpdateBar(c *gin.Context) {
 	barDB.CopyBasicFieldsFromBar_WOP(&input.Bar_WOP)
 	barDB.BarPointersEncoding = input.BarPointersEncoding
 
-	query = db.Model(&barDB).Updates(barDB)
-	if query.Error != nil {
+	db, _ = db.Model(&barDB)
+	_, err = db.Updates(barDB)
+	if err != nil {
 		var returnError GenericError
 		returnError.Body.Code = http.StatusBadRequest
-		returnError.Body.Message = query.Error.Error()
-		log.Println(query.Error.Error())
+		returnError.Body.Message = err.Error()
+		log.Println(err.Error())
 		c.JSON(http.StatusBadRequest, returnError.Body)
 		return
 	}
@@ -343,7 +344,7 @@ func (controller *Controller) DeleteBar(c *gin.Context) {
 
 	// Get model if exist
 	var barDB orm.BarDB
-	if err := db.First(&barDB, c.Param("id")).Error; err != nil {
+	if _, err := db.First(&barDB, c.Param("id")); err != nil {
 		var returnError GenericError
 		returnError.Body.Code = http.StatusBadRequest
 		returnError.Body.Message = err.Error()
@@ -353,7 +354,8 @@ func (controller *Controller) DeleteBar(c *gin.Context) {
 	}
 
 	// with gorm.Model field, default delete is a soft delete. Unscoped() force delete
-	db.Unscoped().Delete(&barDB)
+	db.Unscoped()
+	db.Delete(&barDB)
 
 	// get an instance (not staged) from DB instance, and call callback function
 	barDeleted := new(models.Bar)

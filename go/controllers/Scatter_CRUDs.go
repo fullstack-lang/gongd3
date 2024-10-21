@@ -70,12 +70,12 @@ func (controller *Controller) GetScatters(c *gin.Context) {
 	}
 	db := backRepo.BackRepoScatter.GetDB()
 
-	query := db.Find(&scatterDBs)
-	if query.Error != nil {
+	_, err := db.Find(&scatterDBs)
+	if err != nil {
 		var returnError GenericError
 		returnError.Body.Code = http.StatusBadRequest
-		returnError.Body.Message = query.Error.Error()
-		log.Println(query.Error.Error())
+		returnError.Body.Message = err.Error()
+		log.Println(err.Error())
 		c.JSON(http.StatusBadRequest, returnError.Body)
 		return
 	}
@@ -151,12 +151,12 @@ func (controller *Controller) PostScatter(c *gin.Context) {
 	scatterDB.ScatterPointersEncoding = input.ScatterPointersEncoding
 	scatterDB.CopyBasicFieldsFromScatter_WOP(&input.Scatter_WOP)
 
-	query := db.Create(&scatterDB)
-	if query.Error != nil {
+	_, err = db.Create(&scatterDB)
+	if err != nil {
 		var returnError GenericError
 		returnError.Body.Code = http.StatusBadRequest
-		returnError.Body.Message = query.Error.Error()
-		log.Println(query.Error.Error())
+		returnError.Body.Message = err.Error()
+		log.Println(err.Error())
 		c.JSON(http.StatusBadRequest, returnError.Body)
 		return
 	}
@@ -205,7 +205,7 @@ func (controller *Controller) GetScatter(c *gin.Context) {
 
 	// Get scatterDB in DB
 	var scatterDB orm.ScatterDB
-	if err := db.First(&scatterDB, c.Param("id")).Error; err != nil {
+	if _, err := db.First(&scatterDB, c.Param("id")); err != nil {
 		var returnError GenericError
 		returnError.Body.Code = http.StatusBadRequest
 		returnError.Body.Message = err.Error()
@@ -264,13 +264,13 @@ func (controller *Controller) UpdateScatter(c *gin.Context) {
 	var scatterDB orm.ScatterDB
 
 	// fetch the scatter
-	query := db.First(&scatterDB, c.Param("id"))
+	_, err := db.First(&scatterDB, c.Param("id"))
 
-	if query.Error != nil {
+	if err != nil {
 		var returnError GenericError
 		returnError.Body.Code = http.StatusBadRequest
-		returnError.Body.Message = query.Error.Error()
-		log.Println(query.Error.Error())
+		returnError.Body.Message = err.Error()
+		log.Println(err.Error())
 		c.JSON(http.StatusBadRequest, returnError.Body)
 		return
 	}
@@ -279,12 +279,13 @@ func (controller *Controller) UpdateScatter(c *gin.Context) {
 	scatterDB.CopyBasicFieldsFromScatter_WOP(&input.Scatter_WOP)
 	scatterDB.ScatterPointersEncoding = input.ScatterPointersEncoding
 
-	query = db.Model(&scatterDB).Updates(scatterDB)
-	if query.Error != nil {
+	db, _ = db.Model(&scatterDB)
+	_, err = db.Updates(scatterDB)
+	if err != nil {
 		var returnError GenericError
 		returnError.Body.Code = http.StatusBadRequest
-		returnError.Body.Message = query.Error.Error()
-		log.Println(query.Error.Error())
+		returnError.Body.Message = err.Error()
+		log.Println(err.Error())
 		c.JSON(http.StatusBadRequest, returnError.Body)
 		return
 	}
@@ -343,7 +344,7 @@ func (controller *Controller) DeleteScatter(c *gin.Context) {
 
 	// Get model if exist
 	var scatterDB orm.ScatterDB
-	if err := db.First(&scatterDB, c.Param("id")).Error; err != nil {
+	if _, err := db.First(&scatterDB, c.Param("id")); err != nil {
 		var returnError GenericError
 		returnError.Body.Code = http.StatusBadRequest
 		returnError.Body.Message = err.Error()
@@ -353,7 +354,8 @@ func (controller *Controller) DeleteScatter(c *gin.Context) {
 	}
 
 	// with gorm.Model field, default delete is a soft delete. Unscoped() force delete
-	db.Unscoped().Delete(&scatterDB)
+	db.Unscoped()
+	db.Delete(&scatterDB)
 
 	// get an instance (not staged) from DB instance, and call callback function
 	scatterDeleted := new(models.Scatter)

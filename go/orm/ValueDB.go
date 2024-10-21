@@ -17,6 +17,7 @@ import (
 
 	"github.com/tealeg/xlsx/v3"
 
+	"github.com/fullstack-lang/gongd3/go/db"
 	"github.com/fullstack-lang/gongd3/go/models"
 )
 
@@ -61,7 +62,7 @@ type ValueDB struct {
 
 	// Declation for basic field valueDB.Name
 	Name_Data sql.NullString
-	
+
 	// encoding of pointers
 	// for GORM serialization, it is necessary to embed to Pointer Encoding declaration
 	ValuePointersEncoding
@@ -104,7 +105,7 @@ type BackRepoValueStruct struct {
 	// stores Value according to their gorm ID
 	Map_ValueDBID_ValuePtr map[uint]*models.Value
 
-	db *gorm.DB
+	db db.DBInterface
 
 	stage *models.StageStruct
 }
@@ -114,7 +115,7 @@ func (backRepoValue *BackRepoValueStruct) GetStage() (stage *models.StageStruct)
 	return
 }
 
-func (backRepoValue *BackRepoValueStruct) GetDB() *gorm.DB {
+func (backRepoValue *BackRepoValueStruct) GetDB() db.DBInterface {
 	return backRepoValue.db
 }
 
@@ -151,9 +152,10 @@ func (backRepoValue *BackRepoValueStruct) CommitDeleteInstance(id uint) (Error e
 
 	// value is not staged anymore, remove valueDB
 	valueDB := backRepoValue.Map_ValueDBID_ValueDB[id]
-	query := backRepoValue.db.Unscoped().Delete(&valueDB)
-	if query.Error != nil {
-		log.Fatal(query.Error)
+	db, _ := backRepoValue.db.Unscoped()
+	_, err := db.Delete(&valueDB)
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	// update stores
@@ -177,9 +179,9 @@ func (backRepoValue *BackRepoValueStruct) CommitPhaseOneInstance(value *models.V
 	var valueDB ValueDB
 	valueDB.CopyBasicFieldsFromValue(value)
 
-	query := backRepoValue.db.Create(&valueDB)
-	if query.Error != nil {
-		log.Fatal(query.Error)
+	_, err := backRepoValue.db.Create(&valueDB)
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	// update stores
@@ -211,9 +213,9 @@ func (backRepoValue *BackRepoValueStruct) CommitPhaseTwoInstance(backRepo *BackR
 		valueDB.CopyBasicFieldsFromValue(value)
 
 		// insertion point for translating pointers encodings into actual pointers
-		query := backRepoValue.db.Save(&valueDB)
-		if query.Error != nil {
-			log.Fatalln(query.Error)
+		_, err := backRepoValue.db.Save(&valueDB)
+		if err != nil {
+			log.Fatal(err)
 		}
 
 	} else {
@@ -232,9 +234,9 @@ func (backRepoValue *BackRepoValueStruct) CommitPhaseTwoInstance(backRepo *BackR
 func (backRepoValue *BackRepoValueStruct) CheckoutPhaseOne() (Error error) {
 
 	valueDBArray := make([]ValueDB, 0)
-	query := backRepoValue.db.Find(&valueDBArray)
-	if query.Error != nil {
-		return query.Error
+	_, err := backRepoValue.db.Find(&valueDBArray)
+	if err != nil {
+		return err
 	}
 
 	// list of instances to be removed
@@ -345,7 +347,7 @@ func (backRepo *BackRepoStruct) CheckoutValue(value *models.Value) {
 			var valueDB ValueDB
 			valueDB.ID = id
 
-			if err := backRepo.BackRepoValue.db.First(&valueDB, id).Error; err != nil {
+			if _, err := backRepo.BackRepoValue.db.First(&valueDB, id); err != nil {
 				log.Fatalln("CheckoutValue : Problem with getting object with id:", id)
 			}
 			backRepo.BackRepoValue.CheckoutPhaseOneInstance(&valueDB)
@@ -492,9 +494,9 @@ func (backRepoValue *BackRepoValueStruct) rowVisitorValue(row *xlsx.Row) error {
 
 		valueDB_ID_atBackupTime := valueDB.ID
 		valueDB.ID = 0
-		query := backRepoValue.db.Create(valueDB)
-		if query.Error != nil {
-			log.Fatal(query.Error)
+		_, err := backRepoValue.db.Create(valueDB)
+		if err != nil {
+			log.Fatal(err)
 		}
 		backRepoValue.Map_ValueDBID_ValueDB[valueDB.ID] = valueDB
 		BackRepoValueid_atBckpTime_newID[valueDB_ID_atBackupTime] = valueDB.ID
@@ -529,9 +531,9 @@ func (backRepoValue *BackRepoValueStruct) RestorePhaseOne(dirPath string) {
 
 		valueDB_ID_atBackupTime := valueDB.ID
 		valueDB.ID = 0
-		query := backRepoValue.db.Create(valueDB)
-		if query.Error != nil {
-			log.Fatal(query.Error)
+		_, err := backRepoValue.db.Create(valueDB)
+		if err != nil {
+			log.Fatal(err)
 		}
 		backRepoValue.Map_ValueDBID_ValueDB[valueDB.ID] = valueDB
 		BackRepoValueid_atBckpTime_newID[valueDB_ID_atBackupTime] = valueDB.ID
@@ -553,9 +555,10 @@ func (backRepoValue *BackRepoValueStruct) RestorePhaseTwo() {
 
 		// insertion point for reindexing pointers encoding
 		// update databse with new index encoding
-		query := backRepoValue.db.Model(valueDB).Updates(*valueDB)
-		if query.Error != nil {
-			log.Fatal(query.Error)
+		db, _ := backRepoValue.db.Model(valueDB)
+		_, err := db.Updates(*valueDB)
+		if err != nil {
+			log.Fatal(err)
 		}
 	}
 

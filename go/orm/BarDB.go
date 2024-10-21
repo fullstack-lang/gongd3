@@ -17,6 +17,7 @@ import (
 
 	"github.com/tealeg/xlsx/v3"
 
+	"github.com/fullstack-lang/gongd3/go/db"
 	"github.com/fullstack-lang/gongd3/go/models"
 )
 
@@ -115,7 +116,7 @@ type BarDB struct {
 
 	// Declation for basic field barDB.Margin
 	Margin_Data sql.NullFloat64
-	
+
 	// encoding of pointers
 	// for GORM serialization, it is necessary to embed to Pointer Encoding declaration
 	BarPointersEncoding
@@ -197,7 +198,7 @@ type BackRepoBarStruct struct {
 	// stores Bar according to their gorm ID
 	Map_BarDBID_BarPtr map[uint]*models.Bar
 
-	db *gorm.DB
+	db db.DBInterface
 
 	stage *models.StageStruct
 }
@@ -207,7 +208,7 @@ func (backRepoBar *BackRepoBarStruct) GetStage() (stage *models.StageStruct) {
 	return
 }
 
-func (backRepoBar *BackRepoBarStruct) GetDB() *gorm.DB {
+func (backRepoBar *BackRepoBarStruct) GetDB() db.DBInterface {
 	return backRepoBar.db
 }
 
@@ -244,9 +245,10 @@ func (backRepoBar *BackRepoBarStruct) CommitDeleteInstance(id uint) (Error error
 
 	// bar is not staged anymore, remove barDB
 	barDB := backRepoBar.Map_BarDBID_BarDB[id]
-	query := backRepoBar.db.Unscoped().Delete(&barDB)
-	if query.Error != nil {
-		log.Fatal(query.Error)
+	db, _ := backRepoBar.db.Unscoped()
+	_, err := db.Delete(&barDB)
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	// update stores
@@ -270,9 +272,9 @@ func (backRepoBar *BackRepoBarStruct) CommitPhaseOneInstance(bar *models.Bar) (E
 	var barDB BarDB
 	barDB.CopyBasicFieldsFromBar(bar)
 
-	query := backRepoBar.db.Create(&barDB)
-	if query.Error != nil {
-		log.Fatal(query.Error)
+	_, err := backRepoBar.db.Create(&barDB)
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	// update stores
@@ -346,9 +348,9 @@ func (backRepoBar *BackRepoBarStruct) CommitPhaseTwoInstance(backRepo *BackRepoS
 				append(barDB.BarPointersEncoding.Set, int(serieAssocEnd_DB.ID))
 		}
 
-		query := backRepoBar.db.Save(&barDB)
-		if query.Error != nil {
-			log.Fatalln(query.Error)
+		_, err := backRepoBar.db.Save(&barDB)
+		if err != nil {
+			log.Fatal(err)
 		}
 
 	} else {
@@ -367,9 +369,9 @@ func (backRepoBar *BackRepoBarStruct) CommitPhaseTwoInstance(backRepo *BackRepoS
 func (backRepoBar *BackRepoBarStruct) CheckoutPhaseOne() (Error error) {
 
 	barDBArray := make([]BarDB, 0)
-	query := backRepoBar.db.Find(&barDBArray)
-	if query.Error != nil {
-		return query.Error
+	_, err := backRepoBar.db.Find(&barDBArray)
+	if err != nil {
+		return err
 	}
 
 	// list of instances to be removed
@@ -499,7 +501,7 @@ func (backRepo *BackRepoStruct) CheckoutBar(bar *models.Bar) {
 			var barDB BarDB
 			barDB.ID = id
 
-			if err := backRepo.BackRepoBar.db.First(&barDB, id).Error; err != nil {
+			if _, err := backRepo.BackRepoBar.db.First(&barDB, id); err != nil {
 				log.Fatalln("CheckoutBar : Problem with getting object with id:", id)
 			}
 			backRepo.BackRepoBar.CheckoutPhaseOneInstance(&barDB)
@@ -802,9 +804,9 @@ func (backRepoBar *BackRepoBarStruct) rowVisitorBar(row *xlsx.Row) error {
 
 		barDB_ID_atBackupTime := barDB.ID
 		barDB.ID = 0
-		query := backRepoBar.db.Create(barDB)
-		if query.Error != nil {
-			log.Fatal(query.Error)
+		_, err := backRepoBar.db.Create(barDB)
+		if err != nil {
+			log.Fatal(err)
 		}
 		backRepoBar.Map_BarDBID_BarDB[barDB.ID] = barDB
 		BackRepoBarid_atBckpTime_newID[barDB_ID_atBackupTime] = barDB.ID
@@ -839,9 +841,9 @@ func (backRepoBar *BackRepoBarStruct) RestorePhaseOne(dirPath string) {
 
 		barDB_ID_atBackupTime := barDB.ID
 		barDB.ID = 0
-		query := backRepoBar.db.Create(barDB)
-		if query.Error != nil {
-			log.Fatal(query.Error)
+		_, err := backRepoBar.db.Create(barDB)
+		if err != nil {
+			log.Fatal(err)
 		}
 		backRepoBar.Map_BarDBID_BarDB[barDB.ID] = barDB
 		BackRepoBarid_atBckpTime_newID[barDB_ID_atBackupTime] = barDB.ID
@@ -875,9 +877,10 @@ func (backRepoBar *BackRepoBarStruct) RestorePhaseTwo() {
 		}
 
 		// update databse with new index encoding
-		query := backRepoBar.db.Model(barDB).Updates(*barDB)
-		if query.Error != nil {
-			log.Fatal(query.Error)
+		db, _ := backRepoBar.db.Model(barDB)
+		_, err := db.Updates(*barDB)
+		if err != nil {
+			log.Fatal(err)
 		}
 	}
 

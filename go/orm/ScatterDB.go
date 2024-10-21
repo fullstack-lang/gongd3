@@ -17,6 +17,7 @@ import (
 
 	"github.com/tealeg/xlsx/v3"
 
+	"github.com/fullstack-lang/gongd3/go/db"
 	"github.com/fullstack-lang/gongd3/go/models"
 )
 
@@ -85,7 +86,7 @@ type ScatterDB struct {
 
 	// Declation for basic field scatterDB.Margin
 	Margin_Data sql.NullFloat64
-	
+
 	// encoding of pointers
 	// for GORM serialization, it is necessary to embed to Pointer Encoding declaration
 	ScatterPointersEncoding
@@ -137,7 +138,7 @@ type BackRepoScatterStruct struct {
 	// stores Scatter according to their gorm ID
 	Map_ScatterDBID_ScatterPtr map[uint]*models.Scatter
 
-	db *gorm.DB
+	db db.DBInterface
 
 	stage *models.StageStruct
 }
@@ -147,7 +148,7 @@ func (backRepoScatter *BackRepoScatterStruct) GetStage() (stage *models.StageStr
 	return
 }
 
-func (backRepoScatter *BackRepoScatterStruct) GetDB() *gorm.DB {
+func (backRepoScatter *BackRepoScatterStruct) GetDB() db.DBInterface {
 	return backRepoScatter.db
 }
 
@@ -184,9 +185,10 @@ func (backRepoScatter *BackRepoScatterStruct) CommitDeleteInstance(id uint) (Err
 
 	// scatter is not staged anymore, remove scatterDB
 	scatterDB := backRepoScatter.Map_ScatterDBID_ScatterDB[id]
-	query := backRepoScatter.db.Unscoped().Delete(&scatterDB)
-	if query.Error != nil {
-		log.Fatal(query.Error)
+	db, _ := backRepoScatter.db.Unscoped()
+	_, err := db.Delete(&scatterDB)
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	// update stores
@@ -210,9 +212,9 @@ func (backRepoScatter *BackRepoScatterStruct) CommitPhaseOneInstance(scatter *mo
 	var scatterDB ScatterDB
 	scatterDB.CopyBasicFieldsFromScatter(scatter)
 
-	query := backRepoScatter.db.Create(&scatterDB)
-	if query.Error != nil {
-		log.Fatal(query.Error)
+	_, err := backRepoScatter.db.Create(&scatterDB)
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	// update stores
@@ -298,9 +300,9 @@ func (backRepoScatter *BackRepoScatterStruct) CommitPhaseTwoInstance(backRepo *B
 				append(scatterDB.ScatterPointersEncoding.Set, int(serieAssocEnd_DB.ID))
 		}
 
-		query := backRepoScatter.db.Save(&scatterDB)
-		if query.Error != nil {
-			log.Fatalln(query.Error)
+		_, err := backRepoScatter.db.Save(&scatterDB)
+		if err != nil {
+			log.Fatal(err)
 		}
 
 	} else {
@@ -319,9 +321,9 @@ func (backRepoScatter *BackRepoScatterStruct) CommitPhaseTwoInstance(backRepo *B
 func (backRepoScatter *BackRepoScatterStruct) CheckoutPhaseOne() (Error error) {
 
 	scatterDBArray := make([]ScatterDB, 0)
-	query := backRepoScatter.db.Find(&scatterDBArray)
-	if query.Error != nil {
-		return query.Error
+	_, err := backRepoScatter.db.Find(&scatterDBArray)
+	if err != nil {
+		return err
 	}
 
 	// list of instances to be removed
@@ -456,7 +458,7 @@ func (backRepo *BackRepoStruct) CheckoutScatter(scatter *models.Scatter) {
 			var scatterDB ScatterDB
 			scatterDB.ID = id
 
-			if err := backRepo.BackRepoScatter.db.First(&scatterDB, id).Error; err != nil {
+			if _, err := backRepo.BackRepoScatter.db.First(&scatterDB, id); err != nil {
 				log.Fatalln("CheckoutScatter : Problem with getting object with id:", id)
 			}
 			backRepo.BackRepoScatter.CheckoutPhaseOneInstance(&scatterDB)
@@ -639,9 +641,9 @@ func (backRepoScatter *BackRepoScatterStruct) rowVisitorScatter(row *xlsx.Row) e
 
 		scatterDB_ID_atBackupTime := scatterDB.ID
 		scatterDB.ID = 0
-		query := backRepoScatter.db.Create(scatterDB)
-		if query.Error != nil {
-			log.Fatal(query.Error)
+		_, err := backRepoScatter.db.Create(scatterDB)
+		if err != nil {
+			log.Fatal(err)
 		}
 		backRepoScatter.Map_ScatterDBID_ScatterDB[scatterDB.ID] = scatterDB
 		BackRepoScatterid_atBckpTime_newID[scatterDB_ID_atBackupTime] = scatterDB.ID
@@ -676,9 +678,9 @@ func (backRepoScatter *BackRepoScatterStruct) RestorePhaseOne(dirPath string) {
 
 		scatterDB_ID_atBackupTime := scatterDB.ID
 		scatterDB.ID = 0
-		query := backRepoScatter.db.Create(scatterDB)
-		if query.Error != nil {
-			log.Fatal(query.Error)
+		_, err := backRepoScatter.db.Create(scatterDB)
+		if err != nil {
+			log.Fatal(err)
 		}
 		backRepoScatter.Map_ScatterDBID_ScatterDB[scatterDB.ID] = scatterDB
 		BackRepoScatterid_atBckpTime_newID[scatterDB_ID_atBackupTime] = scatterDB.ID
@@ -718,9 +720,10 @@ func (backRepoScatter *BackRepoScatterStruct) RestorePhaseTwo() {
 		}
 
 		// update databse with new index encoding
-		query := backRepoScatter.db.Model(scatterDB).Updates(*scatterDB)
-		if query.Error != nil {
-			log.Fatal(query.Error)
+		db, _ := backRepoScatter.db.Model(scatterDB)
+		_, err := db.Updates(*scatterDB)
+		if err != nil {
+			log.Fatal(err)
 		}
 	}
 

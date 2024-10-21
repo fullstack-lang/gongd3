@@ -17,6 +17,7 @@ import (
 
 	"github.com/tealeg/xlsx/v3"
 
+	"github.com/fullstack-lang/gongd3/go/db"
 	"github.com/fullstack-lang/gongd3/go/models"
 )
 
@@ -68,7 +69,7 @@ type SerieDB struct {
 
 	// Declation for basic field serieDB.Name
 	Name_Data sql.NullString
-	
+
 	// encoding of pointers
 	// for GORM serialization, it is necessary to embed to Pointer Encoding declaration
 	SeriePointersEncoding
@@ -111,7 +112,7 @@ type BackRepoSerieStruct struct {
 	// stores Serie according to their gorm ID
 	Map_SerieDBID_SeriePtr map[uint]*models.Serie
 
-	db *gorm.DB
+	db db.DBInterface
 
 	stage *models.StageStruct
 }
@@ -121,7 +122,7 @@ func (backRepoSerie *BackRepoSerieStruct) GetStage() (stage *models.StageStruct)
 	return
 }
 
-func (backRepoSerie *BackRepoSerieStruct) GetDB() *gorm.DB {
+func (backRepoSerie *BackRepoSerieStruct) GetDB() db.DBInterface {
 	return backRepoSerie.db
 }
 
@@ -158,9 +159,10 @@ func (backRepoSerie *BackRepoSerieStruct) CommitDeleteInstance(id uint) (Error e
 
 	// serie is not staged anymore, remove serieDB
 	serieDB := backRepoSerie.Map_SerieDBID_SerieDB[id]
-	query := backRepoSerie.db.Unscoped().Delete(&serieDB)
-	if query.Error != nil {
-		log.Fatal(query.Error)
+	db, _ := backRepoSerie.db.Unscoped()
+	_, err := db.Delete(&serieDB)
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	// update stores
@@ -184,9 +186,9 @@ func (backRepoSerie *BackRepoSerieStruct) CommitPhaseOneInstance(serie *models.S
 	var serieDB SerieDB
 	serieDB.CopyBasicFieldsFromSerie(serie)
 
-	query := backRepoSerie.db.Create(&serieDB)
-	if query.Error != nil {
-		log.Fatal(query.Error)
+	_, err := backRepoSerie.db.Create(&serieDB)
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	// update stores
@@ -248,9 +250,9 @@ func (backRepoSerie *BackRepoSerieStruct) CommitPhaseTwoInstance(backRepo *BackR
 				append(serieDB.SeriePointersEncoding.Values, int(valueAssocEnd_DB.ID))
 		}
 
-		query := backRepoSerie.db.Save(&serieDB)
-		if query.Error != nil {
-			log.Fatalln(query.Error)
+		_, err := backRepoSerie.db.Save(&serieDB)
+		if err != nil {
+			log.Fatal(err)
 		}
 
 	} else {
@@ -269,9 +271,9 @@ func (backRepoSerie *BackRepoSerieStruct) CommitPhaseTwoInstance(backRepo *BackR
 func (backRepoSerie *BackRepoSerieStruct) CheckoutPhaseOne() (Error error) {
 
 	serieDBArray := make([]SerieDB, 0)
-	query := backRepoSerie.db.Find(&serieDBArray)
-	if query.Error != nil {
-		return query.Error
+	_, err := backRepoSerie.db.Find(&serieDBArray)
+	if err != nil {
+		return err
 	}
 
 	// list of instances to be removed
@@ -396,7 +398,7 @@ func (backRepo *BackRepoStruct) CheckoutSerie(serie *models.Serie) {
 			var serieDB SerieDB
 			serieDB.ID = id
 
-			if err := backRepo.BackRepoSerie.db.First(&serieDB, id).Error; err != nil {
+			if _, err := backRepo.BackRepoSerie.db.First(&serieDB, id); err != nil {
 				log.Fatalln("CheckoutSerie : Problem with getting object with id:", id)
 			}
 			backRepo.BackRepoSerie.CheckoutPhaseOneInstance(&serieDB)
@@ -543,9 +545,9 @@ func (backRepoSerie *BackRepoSerieStruct) rowVisitorSerie(row *xlsx.Row) error {
 
 		serieDB_ID_atBackupTime := serieDB.ID
 		serieDB.ID = 0
-		query := backRepoSerie.db.Create(serieDB)
-		if query.Error != nil {
-			log.Fatal(query.Error)
+		_, err := backRepoSerie.db.Create(serieDB)
+		if err != nil {
+			log.Fatal(err)
 		}
 		backRepoSerie.Map_SerieDBID_SerieDB[serieDB.ID] = serieDB
 		BackRepoSerieid_atBckpTime_newID[serieDB_ID_atBackupTime] = serieDB.ID
@@ -580,9 +582,9 @@ func (backRepoSerie *BackRepoSerieStruct) RestorePhaseOne(dirPath string) {
 
 		serieDB_ID_atBackupTime := serieDB.ID
 		serieDB.ID = 0
-		query := backRepoSerie.db.Create(serieDB)
-		if query.Error != nil {
-			log.Fatal(query.Error)
+		_, err := backRepoSerie.db.Create(serieDB)
+		if err != nil {
+			log.Fatal(err)
 		}
 		backRepoSerie.Map_SerieDBID_SerieDB[serieDB.ID] = serieDB
 		BackRepoSerieid_atBckpTime_newID[serieDB_ID_atBackupTime] = serieDB.ID
@@ -610,9 +612,10 @@ func (backRepoSerie *BackRepoSerieStruct) RestorePhaseTwo() {
 		}
 
 		// update databse with new index encoding
-		query := backRepoSerie.db.Model(serieDB).Updates(*serieDB)
-		if query.Error != nil {
-			log.Fatal(query.Error)
+		db, _ := backRepoSerie.db.Model(serieDB)
+		_, err := db.Updates(*serieDB)
+		if err != nil {
+			log.Fatal(err)
 		}
 	}
 

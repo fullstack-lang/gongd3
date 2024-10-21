@@ -70,12 +70,12 @@ func (controller *Controller) GetSeries(c *gin.Context) {
 	}
 	db := backRepo.BackRepoSerie.GetDB()
 
-	query := db.Find(&serieDBs)
-	if query.Error != nil {
+	_, err := db.Find(&serieDBs)
+	if err != nil {
 		var returnError GenericError
 		returnError.Body.Code = http.StatusBadRequest
-		returnError.Body.Message = query.Error.Error()
-		log.Println(query.Error.Error())
+		returnError.Body.Message = err.Error()
+		log.Println(err.Error())
 		c.JSON(http.StatusBadRequest, returnError.Body)
 		return
 	}
@@ -151,12 +151,12 @@ func (controller *Controller) PostSerie(c *gin.Context) {
 	serieDB.SeriePointersEncoding = input.SeriePointersEncoding
 	serieDB.CopyBasicFieldsFromSerie_WOP(&input.Serie_WOP)
 
-	query := db.Create(&serieDB)
-	if query.Error != nil {
+	_, err = db.Create(&serieDB)
+	if err != nil {
 		var returnError GenericError
 		returnError.Body.Code = http.StatusBadRequest
-		returnError.Body.Message = query.Error.Error()
-		log.Println(query.Error.Error())
+		returnError.Body.Message = err.Error()
+		log.Println(err.Error())
 		c.JSON(http.StatusBadRequest, returnError.Body)
 		return
 	}
@@ -205,7 +205,7 @@ func (controller *Controller) GetSerie(c *gin.Context) {
 
 	// Get serieDB in DB
 	var serieDB orm.SerieDB
-	if err := db.First(&serieDB, c.Param("id")).Error; err != nil {
+	if _, err := db.First(&serieDB, c.Param("id")); err != nil {
 		var returnError GenericError
 		returnError.Body.Code = http.StatusBadRequest
 		returnError.Body.Message = err.Error()
@@ -264,13 +264,13 @@ func (controller *Controller) UpdateSerie(c *gin.Context) {
 	var serieDB orm.SerieDB
 
 	// fetch the serie
-	query := db.First(&serieDB, c.Param("id"))
+	_, err := db.First(&serieDB, c.Param("id"))
 
-	if query.Error != nil {
+	if err != nil {
 		var returnError GenericError
 		returnError.Body.Code = http.StatusBadRequest
-		returnError.Body.Message = query.Error.Error()
-		log.Println(query.Error.Error())
+		returnError.Body.Message = err.Error()
+		log.Println(err.Error())
 		c.JSON(http.StatusBadRequest, returnError.Body)
 		return
 	}
@@ -279,12 +279,13 @@ func (controller *Controller) UpdateSerie(c *gin.Context) {
 	serieDB.CopyBasicFieldsFromSerie_WOP(&input.Serie_WOP)
 	serieDB.SeriePointersEncoding = input.SeriePointersEncoding
 
-	query = db.Model(&serieDB).Updates(serieDB)
-	if query.Error != nil {
+	db, _ = db.Model(&serieDB)
+	_, err = db.Updates(serieDB)
+	if err != nil {
 		var returnError GenericError
 		returnError.Body.Code = http.StatusBadRequest
-		returnError.Body.Message = query.Error.Error()
-		log.Println(query.Error.Error())
+		returnError.Body.Message = err.Error()
+		log.Println(err.Error())
 		c.JSON(http.StatusBadRequest, returnError.Body)
 		return
 	}
@@ -343,7 +344,7 @@ func (controller *Controller) DeleteSerie(c *gin.Context) {
 
 	// Get model if exist
 	var serieDB orm.SerieDB
-	if err := db.First(&serieDB, c.Param("id")).Error; err != nil {
+	if _, err := db.First(&serieDB, c.Param("id")); err != nil {
 		var returnError GenericError
 		returnError.Body.Code = http.StatusBadRequest
 		returnError.Body.Message = err.Error()
@@ -353,7 +354,8 @@ func (controller *Controller) DeleteSerie(c *gin.Context) {
 	}
 
 	// with gorm.Model field, default delete is a soft delete. Unscoped() force delete
-	db.Unscoped().Delete(&serieDB)
+	db.Unscoped()
+	db.Delete(&serieDB)
 
 	// get an instance (not staged) from DB instance, and call callback function
 	serieDeleted := new(models.Serie)

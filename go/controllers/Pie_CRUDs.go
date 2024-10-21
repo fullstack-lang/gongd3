@@ -70,12 +70,12 @@ func (controller *Controller) GetPies(c *gin.Context) {
 	}
 	db := backRepo.BackRepoPie.GetDB()
 
-	query := db.Find(&pieDBs)
-	if query.Error != nil {
+	_, err := db.Find(&pieDBs)
+	if err != nil {
 		var returnError GenericError
 		returnError.Body.Code = http.StatusBadRequest
-		returnError.Body.Message = query.Error.Error()
-		log.Println(query.Error.Error())
+		returnError.Body.Message = err.Error()
+		log.Println(err.Error())
 		c.JSON(http.StatusBadRequest, returnError.Body)
 		return
 	}
@@ -151,12 +151,12 @@ func (controller *Controller) PostPie(c *gin.Context) {
 	pieDB.PiePointersEncoding = input.PiePointersEncoding
 	pieDB.CopyBasicFieldsFromPie_WOP(&input.Pie_WOP)
 
-	query := db.Create(&pieDB)
-	if query.Error != nil {
+	_, err = db.Create(&pieDB)
+	if err != nil {
 		var returnError GenericError
 		returnError.Body.Code = http.StatusBadRequest
-		returnError.Body.Message = query.Error.Error()
-		log.Println(query.Error.Error())
+		returnError.Body.Message = err.Error()
+		log.Println(err.Error())
 		c.JSON(http.StatusBadRequest, returnError.Body)
 		return
 	}
@@ -205,7 +205,7 @@ func (controller *Controller) GetPie(c *gin.Context) {
 
 	// Get pieDB in DB
 	var pieDB orm.PieDB
-	if err := db.First(&pieDB, c.Param("id")).Error; err != nil {
+	if _, err := db.First(&pieDB, c.Param("id")); err != nil {
 		var returnError GenericError
 		returnError.Body.Code = http.StatusBadRequest
 		returnError.Body.Message = err.Error()
@@ -264,13 +264,13 @@ func (controller *Controller) UpdatePie(c *gin.Context) {
 	var pieDB orm.PieDB
 
 	// fetch the pie
-	query := db.First(&pieDB, c.Param("id"))
+	_, err := db.First(&pieDB, c.Param("id"))
 
-	if query.Error != nil {
+	if err != nil {
 		var returnError GenericError
 		returnError.Body.Code = http.StatusBadRequest
-		returnError.Body.Message = query.Error.Error()
-		log.Println(query.Error.Error())
+		returnError.Body.Message = err.Error()
+		log.Println(err.Error())
 		c.JSON(http.StatusBadRequest, returnError.Body)
 		return
 	}
@@ -279,12 +279,13 @@ func (controller *Controller) UpdatePie(c *gin.Context) {
 	pieDB.CopyBasicFieldsFromPie_WOP(&input.Pie_WOP)
 	pieDB.PiePointersEncoding = input.PiePointersEncoding
 
-	query = db.Model(&pieDB).Updates(pieDB)
-	if query.Error != nil {
+	db, _ = db.Model(&pieDB)
+	_, err = db.Updates(pieDB)
+	if err != nil {
 		var returnError GenericError
 		returnError.Body.Code = http.StatusBadRequest
-		returnError.Body.Message = query.Error.Error()
-		log.Println(query.Error.Error())
+		returnError.Body.Message = err.Error()
+		log.Println(err.Error())
 		c.JSON(http.StatusBadRequest, returnError.Body)
 		return
 	}
@@ -343,7 +344,7 @@ func (controller *Controller) DeletePie(c *gin.Context) {
 
 	// Get model if exist
 	var pieDB orm.PieDB
-	if err := db.First(&pieDB, c.Param("id")).Error; err != nil {
+	if _, err := db.First(&pieDB, c.Param("id")); err != nil {
 		var returnError GenericError
 		returnError.Body.Code = http.StatusBadRequest
 		returnError.Body.Message = err.Error()
@@ -353,7 +354,8 @@ func (controller *Controller) DeletePie(c *gin.Context) {
 	}
 
 	// with gorm.Model field, default delete is a soft delete. Unscoped() force delete
-	db.Unscoped().Delete(&pieDB)
+	db.Unscoped()
+	db.Delete(&pieDB)
 
 	// get an instance (not staged) from DB instance, and call callback function
 	pieDeleted := new(models.Pie)

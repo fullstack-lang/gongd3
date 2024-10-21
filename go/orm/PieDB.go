@@ -17,6 +17,7 @@ import (
 
 	"github.com/tealeg/xlsx/v3"
 
+	"github.com/fullstack-lang/gongd3/go/db"
 	"github.com/fullstack-lang/gongd3/go/models"
 )
 
@@ -81,7 +82,7 @@ type PieDB struct {
 
 	// Declation for basic field pieDB.Margin
 	Margin_Data sql.NullFloat64
-	
+
 	// encoding of pointers
 	// for GORM serialization, it is necessary to embed to Pointer Encoding declaration
 	PiePointersEncoding
@@ -133,7 +134,7 @@ type BackRepoPieStruct struct {
 	// stores Pie according to their gorm ID
 	Map_PieDBID_PiePtr map[uint]*models.Pie
 
-	db *gorm.DB
+	db db.DBInterface
 
 	stage *models.StageStruct
 }
@@ -143,7 +144,7 @@ func (backRepoPie *BackRepoPieStruct) GetStage() (stage *models.StageStruct) {
 	return
 }
 
-func (backRepoPie *BackRepoPieStruct) GetDB() *gorm.DB {
+func (backRepoPie *BackRepoPieStruct) GetDB() db.DBInterface {
 	return backRepoPie.db
 }
 
@@ -180,9 +181,10 @@ func (backRepoPie *BackRepoPieStruct) CommitDeleteInstance(id uint) (Error error
 
 	// pie is not staged anymore, remove pieDB
 	pieDB := backRepoPie.Map_PieDBID_PieDB[id]
-	query := backRepoPie.db.Unscoped().Delete(&pieDB)
-	if query.Error != nil {
-		log.Fatal(query.Error)
+	db, _ := backRepoPie.db.Unscoped()
+	_, err := db.Delete(&pieDB)
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	// update stores
@@ -206,9 +208,9 @@ func (backRepoPie *BackRepoPieStruct) CommitPhaseOneInstance(pie *models.Pie) (E
 	var pieDB PieDB
 	pieDB.CopyBasicFieldsFromPie(pie)
 
-	query := backRepoPie.db.Create(&pieDB)
-	if query.Error != nil {
-		log.Fatal(query.Error)
+	_, err := backRepoPie.db.Create(&pieDB)
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	// update stores
@@ -282,9 +284,9 @@ func (backRepoPie *BackRepoPieStruct) CommitPhaseTwoInstance(backRepo *BackRepoS
 				append(pieDB.PiePointersEncoding.Set, int(serieAssocEnd_DB.ID))
 		}
 
-		query := backRepoPie.db.Save(&pieDB)
-		if query.Error != nil {
-			log.Fatalln(query.Error)
+		_, err := backRepoPie.db.Save(&pieDB)
+		if err != nil {
+			log.Fatal(err)
 		}
 
 	} else {
@@ -303,9 +305,9 @@ func (backRepoPie *BackRepoPieStruct) CommitPhaseTwoInstance(backRepo *BackRepoS
 func (backRepoPie *BackRepoPieStruct) CheckoutPhaseOne() (Error error) {
 
 	pieDBArray := make([]PieDB, 0)
-	query := backRepoPie.db.Find(&pieDBArray)
-	if query.Error != nil {
-		return query.Error
+	_, err := backRepoPie.db.Find(&pieDBArray)
+	if err != nil {
+		return err
 	}
 
 	// list of instances to be removed
@@ -435,7 +437,7 @@ func (backRepo *BackRepoStruct) CheckoutPie(pie *models.Pie) {
 			var pieDB PieDB
 			pieDB.ID = id
 
-			if err := backRepo.BackRepoPie.db.First(&pieDB, id).Error; err != nil {
+			if _, err := backRepo.BackRepoPie.db.First(&pieDB, id); err != nil {
 				log.Fatalln("CheckoutPie : Problem with getting object with id:", id)
 			}
 			backRepo.BackRepoPie.CheckoutPhaseOneInstance(&pieDB)
@@ -618,9 +620,9 @@ func (backRepoPie *BackRepoPieStruct) rowVisitorPie(row *xlsx.Row) error {
 
 		pieDB_ID_atBackupTime := pieDB.ID
 		pieDB.ID = 0
-		query := backRepoPie.db.Create(pieDB)
-		if query.Error != nil {
-			log.Fatal(query.Error)
+		_, err := backRepoPie.db.Create(pieDB)
+		if err != nil {
+			log.Fatal(err)
 		}
 		backRepoPie.Map_PieDBID_PieDB[pieDB.ID] = pieDB
 		BackRepoPieid_atBckpTime_newID[pieDB_ID_atBackupTime] = pieDB.ID
@@ -655,9 +657,9 @@ func (backRepoPie *BackRepoPieStruct) RestorePhaseOne(dirPath string) {
 
 		pieDB_ID_atBackupTime := pieDB.ID
 		pieDB.ID = 0
-		query := backRepoPie.db.Create(pieDB)
-		if query.Error != nil {
-			log.Fatal(query.Error)
+		_, err := backRepoPie.db.Create(pieDB)
+		if err != nil {
+			log.Fatal(err)
 		}
 		backRepoPie.Map_PieDBID_PieDB[pieDB.ID] = pieDB
 		BackRepoPieid_atBckpTime_newID[pieDB_ID_atBackupTime] = pieDB.ID
@@ -691,9 +693,10 @@ func (backRepoPie *BackRepoPieStruct) RestorePhaseTwo() {
 		}
 
 		// update databse with new index encoding
-		query := backRepoPie.db.Model(pieDB).Updates(*pieDB)
-		if query.Error != nil {
-			log.Fatal(query.Error)
+		db, _ := backRepoPie.db.Model(pieDB)
+		_, err := db.Updates(*pieDB)
+		if err != nil {
+			log.Fatal(err)
 		}
 	}
 

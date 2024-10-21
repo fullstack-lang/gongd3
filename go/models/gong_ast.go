@@ -493,27 +493,39 @@ func UnmarshallGongstructStaging(stage *StageStruct, cmap *ast.CommentMap, assig
 									switch gongstructName {
 									// insertion point for identifiers
 									case "Bar":
-										instanceBar := (&Bar{Name: instanceName}).Stage(stage)
+										instanceBar := new(Bar)
+										instanceBar.Name = instanceName
+										instanceBar.Stage(stage)
 										instance = any(instanceBar)
 										__gong__map_Bar[identifier] = instanceBar
 									case "Key":
-										instanceKey := (&Key{Name: instanceName}).Stage(stage)
+										instanceKey := new(Key)
+										instanceKey.Name = instanceName
+										instanceKey.Stage(stage)
 										instance = any(instanceKey)
 										__gong__map_Key[identifier] = instanceKey
 									case "Pie":
-										instancePie := (&Pie{Name: instanceName}).Stage(stage)
+										instancePie := new(Pie)
+										instancePie.Name = instanceName
+										instancePie.Stage(stage)
 										instance = any(instancePie)
 										__gong__map_Pie[identifier] = instancePie
 									case "Scatter":
-										instanceScatter := (&Scatter{Name: instanceName}).Stage(stage)
+										instanceScatter := new(Scatter)
+										instanceScatter.Name = instanceName
+										instanceScatter.Stage(stage)
 										instance = any(instanceScatter)
 										__gong__map_Scatter[identifier] = instanceScatter
 									case "Serie":
-										instanceSerie := (&Serie{Name: instanceName}).Stage(stage)
+										instanceSerie := new(Serie)
+										instanceSerie.Name = instanceName
+										instanceSerie.Stage(stage)
 										instance = any(instanceSerie)
 										__gong__map_Serie[identifier] = instanceSerie
 									case "Value":
-										instanceValue := (&Value{Name: instanceName}).Stage(stage)
+										instanceValue := new(Value)
+										instanceValue.Name = instanceName
+										instanceValue.Stage(stage)
 										instance = any(instanceValue)
 										__gong__map_Value[identifier] = instanceValue
 									}
