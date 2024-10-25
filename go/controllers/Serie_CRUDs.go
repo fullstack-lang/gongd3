@@ -280,7 +280,7 @@ func (controller *Controller) UpdateSerie(c *gin.Context) {
 	serieDB.SeriePointersEncoding = input.SeriePointersEncoding
 
 	db, _ = db.Model(&serieDB)
-	_, err = db.Updates(serieDB)
+	_, err = db.Updates(&serieDB)
 	if err != nil {
 		var returnError GenericError
 		returnError.Body.Code = http.StatusBadRequest

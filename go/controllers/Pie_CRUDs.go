@@ -280,7 +280,7 @@ func (controller *Controller) UpdatePie(c *gin.Context) {
 	pieDB.PiePointersEncoding = input.PiePointersEncoding
 
 	db, _ = db.Model(&pieDB)
-	_, err = db.Updates(pieDB)
+	_, err = db.Updates(&pieDB)
 	if err != nil {
 		var returnError GenericError
 		returnError.Body.Code = http.StatusBadRequest

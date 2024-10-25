@@ -280,7 +280,7 @@ func (controller *Controller) UpdateBar(c *gin.Context) {
 	barDB.BarPointersEncoding = input.BarPointersEncoding
 
 	db, _ = db.Model(&barDB)
-	_, err = db.Updates(barDB)
+	_, err = db.Updates(&barDB)
 	if err != nil {
 		var returnError GenericError
 		returnError.Body.Code = http.StatusBadRequest

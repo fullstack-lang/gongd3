@@ -280,7 +280,7 @@ func (controller *Controller) UpdateValue(c *gin.Context) {
 	valueDB.ValuePointersEncoding = input.ValuePointersEncoding
 
 	db, _ = db.Model(&valueDB)
-	_, err = db.Updates(valueDB)
+	_, err = db.Updates(&valueDB)
 	if err != nil {
 		var returnError GenericError
 		returnError.Body.Code = http.StatusBadRequest

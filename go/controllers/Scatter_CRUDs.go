@@ -280,7 +280,7 @@ func (controller *Controller) UpdateScatter(c *gin.Context) {
 	scatterDB.ScatterPointersEncoding = input.ScatterPointersEncoding
 
 	db, _ = db.Model(&scatterDB)
-	_, err = db.Updates(scatterDB)
+	_, err = db.Updates(&scatterDB)
 	if err != nil {
 		var returnError GenericError
 		returnError.Body.Code = http.StatusBadRequest

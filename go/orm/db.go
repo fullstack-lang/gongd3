@@ -67,7 +67,7 @@ func NewDBLite() *DBLite {
 // Create inserts a new record into the database
 func (db *DBLite) Create(instanceDB any) (db.DBInterface, error) {
 	if instanceDB == nil {
-		return nil, errors.New("instanceDB cannot be nil")
+		return nil, errors.New("github.com/fullstack-lang/gongd3/go, instanceDB cannot be nil")
 	}
 
 	db.mu.Lock()
@@ -100,7 +100,7 @@ func (db *DBLite) Create(instanceDB any) (db.DBInterface, error) {
 		v.ID = db.nextIDValueDB
 		db.valueDBs[v.ID] = v
 	default:
-		return nil, errors.New("unsupported type in Create")
+		return nil, errors.New("github.com/fullstack-lang/gongd3/go, unsupported type in Create")
 	}
 	return db, nil
 }
@@ -119,7 +119,7 @@ func (db *DBLite) Model(instanceDB any) (db.DBInterface, error) {
 // Delete removes a record from the database
 func (db *DBLite) Delete(instanceDB any) (db.DBInterface, error) {
 	if instanceDB == nil {
-		return nil, errors.New("instanceDB cannot be nil")
+		return nil, errors.New("github.com/fullstack-lang/gongd3/go, instanceDB cannot be nil")
 	}
 
 	db.mu.Lock()
@@ -140,7 +140,7 @@ func (db *DBLite) Delete(instanceDB any) (db.DBInterface, error) {
 	case *ValueDB:
 		delete(db.valueDBs, v.ID)
 	default:
-		return nil, errors.New("unsupported type in Delete")
+		return nil, errors.New("github.com/fullstack-lang/gongd3/go, unsupported type in Delete")
 	}
 	return db, nil
 }
@@ -149,7 +149,7 @@ func (db *DBLite) Delete(instanceDB any) (db.DBInterface, error) {
 func (db *DBLite) Save(instanceDB any) (db.DBInterface, error) {
 
 	if instanceDB == nil {
-		return nil, errors.New("instanceDB cannot be nil")
+		return nil, errors.New("github.com/fullstack-lang/gongd3/go, instanceDB cannot be nil")
 	}
 
 	db.mu.Lock()
@@ -176,14 +176,14 @@ func (db *DBLite) Save(instanceDB any) (db.DBInterface, error) {
 		db.valueDBs[v.ID] = v
 		return db, nil
 	default:
-		return nil, errors.New("Save: unsupported type")
+		return nil, errors.New("github.com/fullstack-lang/gongd3/go, Save: unsupported type")
 	}
 }
 
 // Updates modifies an existing record in the database
 func (db *DBLite) Updates(instanceDB any) (db.DBInterface, error) {
 	if instanceDB == nil {
-		return nil, errors.New("instanceDB cannot be nil")
+		return nil, errors.New("github.com/fullstack-lang/gongd3/go, instanceDB cannot be nil")
 	}
 
 	db.mu.Lock()
@@ -195,40 +195,40 @@ func (db *DBLite) Updates(instanceDB any) (db.DBInterface, error) {
 		if existing, ok := db.barDBs[v.ID]; ok {
 			*existing = *v
 		} else {
-			return nil, errors.New("record not found")
+			return nil, errors.New("github.com/fullstack-lang/gongd3/go, record not found")
 		}
 	case *KeyDB:
 		if existing, ok := db.keyDBs[v.ID]; ok {
 			*existing = *v
 		} else {
-			return nil, errors.New("record not found")
+			return nil, errors.New("github.com/fullstack-lang/gongd3/go, record not found")
 		}
 	case *PieDB:
 		if existing, ok := db.pieDBs[v.ID]; ok {
 			*existing = *v
 		} else {
-			return nil, errors.New("record not found")
+			return nil, errors.New("github.com/fullstack-lang/gongd3/go, record not found")
 		}
 	case *ScatterDB:
 		if existing, ok := db.scatterDBs[v.ID]; ok {
 			*existing = *v
 		} else {
-			return nil, errors.New("record not found")
+			return nil, errors.New("github.com/fullstack-lang/gongd3/go, record not found")
 		}
 	case *SerieDB:
 		if existing, ok := db.serieDBs[v.ID]; ok {
 			*existing = *v
 		} else {
-			return nil, errors.New("record not found")
+			return nil, errors.New("github.com/fullstack-lang/gongd3/go, record not found")
 		}
 	case *ValueDB:
 		if existing, ok := db.valueDBs[v.ID]; ok {
 			*existing = *v
 		} else {
-			return nil, errors.New("record not found")
+			return nil, errors.New("github.com/fullstack-lang/gongd3/go, record not found")
 		}
 	default:
-		return nil, errors.New("unsupported type in Updates")
+		return nil, errors.New("github.com/fullstack-lang/gongd3/go, unsupported type in Updates")
 	}
 	return db, nil
 }
@@ -278,25 +278,25 @@ func (db *DBLite) Find(instanceDBs any) (db.DBInterface, error) {
         }
         return db, nil
     default:
-        return nil, errors.New("Find: unsupported type")
+        return nil, errors.New("github.com/fullstack-lang/gongd3/go, Find: unsupported type")
     }
 }
 
 // First retrieves the first record of a type from the database
 func (db *DBLite) First(instanceDB any, conds ...any) (db.DBInterface, error) {
 	if len(conds) != 1 {
-		return nil, errors.New("Do not process when conds is not a single parameter")
+		return nil, errors.New("github.com/fullstack-lang/gongd3/go, Do not process when conds is not a single parameter")
 	}
 
 	str, ok := conds[0].(string)
 
 	if !ok {
-		return nil, errors.New("conds[0] is not a string")
+		return nil, errors.New("github.com/fullstack-lang/gongd3/go, conds[0] is not a string")
 	}
 
 	i, err := strconv.ParseUint(str, 10, 32) // Base 10, 32-bit unsigned int
 	if err != nil {
-		return nil, errors.New("conds[0] is not a string number")
+		return nil, errors.New("github.com/fullstack-lang/gongd3/go, conds[0] is not a string number")
 	}
 
 	db.mu.RLock()
@@ -353,7 +353,7 @@ func (db *DBLite) First(instanceDB any, conds ...any) (db.DBInterface, error) {
 			return nil, errors.New(fmt.Sprintf("Unkown entry %d", i))
 		}
 	default:
-		return nil, errors.New("Unkown type")
+		return nil, errors.New("github.com/fullstack-lang/gongd3/go, Unkown type")
 	}
 	
 	return db, nil
