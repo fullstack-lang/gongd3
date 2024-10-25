@@ -182,7 +182,7 @@ func (backRepoPie *BackRepoPieStruct) CommitDeleteInstance(id uint) (Error error
 	// pie is not staged anymore, remove pieDB
 	pieDB := backRepoPie.Map_PieDBID_PieDB[id]
 	db, _ := backRepoPie.db.Unscoped()
-	_, err := db.Delete(&pieDB)
+	_, err := db.Delete(pieDB)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -284,7 +284,7 @@ func (backRepoPie *BackRepoPieStruct) CommitPhaseTwoInstance(backRepo *BackRepoS
 				append(pieDB.PiePointersEncoding.Set, int(serieAssocEnd_DB.ID))
 		}
 
-		_, err := backRepoPie.db.Save(&pieDB)
+		_, err := backRepoPie.db.Save(pieDB)
 		if err != nil {
 			log.Fatal(err)
 		}

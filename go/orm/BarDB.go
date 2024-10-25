@@ -246,7 +246,7 @@ func (backRepoBar *BackRepoBarStruct) CommitDeleteInstance(id uint) (Error error
 	// bar is not staged anymore, remove barDB
 	barDB := backRepoBar.Map_BarDBID_BarDB[id]
 	db, _ := backRepoBar.db.Unscoped()
-	_, err := db.Delete(&barDB)
+	_, err := db.Delete(barDB)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -348,7 +348,7 @@ func (backRepoBar *BackRepoBarStruct) CommitPhaseTwoInstance(backRepo *BackRepoS
 				append(barDB.BarPointersEncoding.Set, int(serieAssocEnd_DB.ID))
 		}
 
-		_, err := backRepoBar.db.Save(&barDB)
+		_, err := backRepoBar.db.Save(barDB)
 		if err != nil {
 			log.Fatal(err)
 		}

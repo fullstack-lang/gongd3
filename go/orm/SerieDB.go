@@ -160,7 +160,7 @@ func (backRepoSerie *BackRepoSerieStruct) CommitDeleteInstance(id uint) (Error e
 	// serie is not staged anymore, remove serieDB
 	serieDB := backRepoSerie.Map_SerieDBID_SerieDB[id]
 	db, _ := backRepoSerie.db.Unscoped()
-	_, err := db.Delete(&serieDB)
+	_, err := db.Delete(serieDB)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -250,7 +250,7 @@ func (backRepoSerie *BackRepoSerieStruct) CommitPhaseTwoInstance(backRepo *BackR
 				append(serieDB.SeriePointersEncoding.Values, int(valueAssocEnd_DB.ID))
 		}
 
-		_, err := backRepoSerie.db.Save(&serieDB)
+		_, err := backRepoSerie.db.Save(serieDB)
 		if err != nil {
 			log.Fatal(err)
 		}

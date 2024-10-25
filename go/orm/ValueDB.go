@@ -153,7 +153,7 @@ func (backRepoValue *BackRepoValueStruct) CommitDeleteInstance(id uint) (Error e
 	// value is not staged anymore, remove valueDB
 	valueDB := backRepoValue.Map_ValueDBID_ValueDB[id]
 	db, _ := backRepoValue.db.Unscoped()
-	_, err := db.Delete(&valueDB)
+	_, err := db.Delete(valueDB)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -213,7 +213,7 @@ func (backRepoValue *BackRepoValueStruct) CommitPhaseTwoInstance(backRepo *BackR
 		valueDB.CopyBasicFieldsFromValue(value)
 
 		// insertion point for translating pointers encodings into actual pointers
-		_, err := backRepoValue.db.Save(&valueDB)
+		_, err := backRepoValue.db.Save(valueDB)
 		if err != nil {
 			log.Fatal(err)
 		}

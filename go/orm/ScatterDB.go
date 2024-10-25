@@ -186,7 +186,7 @@ func (backRepoScatter *BackRepoScatterStruct) CommitDeleteInstance(id uint) (Err
 	// scatter is not staged anymore, remove scatterDB
 	scatterDB := backRepoScatter.Map_ScatterDBID_ScatterDB[id]
 	db, _ := backRepoScatter.db.Unscoped()
-	_, err := db.Delete(&scatterDB)
+	_, err := db.Delete(scatterDB)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -300,7 +300,7 @@ func (backRepoScatter *BackRepoScatterStruct) CommitPhaseTwoInstance(backRepo *B
 				append(scatterDB.ScatterPointersEncoding.Set, int(serieAssocEnd_DB.ID))
 		}
 
-		_, err := backRepoScatter.db.Save(&scatterDB)
+		_, err := backRepoScatter.db.Save(scatterDB)
 		if err != nil {
 			log.Fatal(err)
 		}

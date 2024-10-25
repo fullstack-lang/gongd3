@@ -153,7 +153,7 @@ func (backRepoKey *BackRepoKeyStruct) CommitDeleteInstance(id uint) (Error error
 	// key is not staged anymore, remove keyDB
 	keyDB := backRepoKey.Map_KeyDBID_KeyDB[id]
 	db, _ := backRepoKey.db.Unscoped()
-	_, err := db.Delete(&keyDB)
+	_, err := db.Delete(keyDB)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -213,7 +213,7 @@ func (backRepoKey *BackRepoKeyStruct) CommitPhaseTwoInstance(backRepo *BackRepoS
 		keyDB.CopyBasicFieldsFromKey(key)
 
 		// insertion point for translating pointers encodings into actual pointers
-		_, err := backRepoKey.db.Save(&keyDB)
+		_, err := backRepoKey.db.Save(keyDB)
 		if err != nil {
 			log.Fatal(err)
 		}

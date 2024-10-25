@@ -10,8 +10,12 @@ import (
 	"path/filepath"
 	"sync"
 
+	"github.com/fullstack-lang/gongd3/go/db"
 	"github.com/fullstack-lang/gongd3/go/models"
+
+	/* THIS IS REMOVED BY GONG COMPILER IF TARGET IS gorm
 	"github.com/fullstack-lang/gongd3/go/orm/dbgorm"
+	THIS IS REMOVED BY GONG COMPILER IF TARGET IS gorm */
 
 	"github.com/tealeg/xlsx/v3"
 )
@@ -44,7 +48,12 @@ type BackRepoStruct struct {
 
 func NewBackRepo(stage *models.StageStruct, filename string) (backRepo *BackRepoStruct) {
 
-	dbWrapper := dbgorm.NewDBWrapper(filename, "github_com_fullstack_lang_gongd3_go",
+	var db db.DBInterface
+
+	db = NewDBLite()
+
+	/* THIS IS REMOVED BY GONG COMPILER IF TARGET IS gorm
+	db = dbgorm.NewDBWrapper(filename, "github_com_fullstack_lang_gongd3_go",
 		&BarDB{},
 		&KeyDB{},
 		&PieDB{},
@@ -52,6 +61,7 @@ func NewBackRepo(stage *models.StageStruct, filename string) (backRepo *BackRepo
 		&SerieDB{},
 		&ValueDB{},
 	)
+	THIS IS REMOVED BY GONG COMPILER IF TARGET IS gorm */
 
 	backRepo = new(BackRepoStruct)
 
@@ -61,7 +71,7 @@ func NewBackRepo(stage *models.StageStruct, filename string) (backRepo *BackRepo
 		Map_BarDBID_BarDB:  make(map[uint]*BarDB, 0),
 		Map_BarPtr_BarDBID: make(map[*models.Bar]uint, 0),
 
-		db:    dbWrapper,
+		db:    db,
 		stage: stage,
 	}
 	backRepo.BackRepoKey = BackRepoKeyStruct{
@@ -69,7 +79,7 @@ func NewBackRepo(stage *models.StageStruct, filename string) (backRepo *BackRepo
 		Map_KeyDBID_KeyDB:  make(map[uint]*KeyDB, 0),
 		Map_KeyPtr_KeyDBID: make(map[*models.Key]uint, 0),
 
-		db:    dbWrapper,
+		db:    db,
 		stage: stage,
 	}
 	backRepo.BackRepoPie = BackRepoPieStruct{
@@ -77,7 +87,7 @@ func NewBackRepo(stage *models.StageStruct, filename string) (backRepo *BackRepo
 		Map_PieDBID_PieDB:  make(map[uint]*PieDB, 0),
 		Map_PiePtr_PieDBID: make(map[*models.Pie]uint, 0),
 
-		db:    dbWrapper,
+		db:    db,
 		stage: stage,
 	}
 	backRepo.BackRepoScatter = BackRepoScatterStruct{
@@ -85,7 +95,7 @@ func NewBackRepo(stage *models.StageStruct, filename string) (backRepo *BackRepo
 		Map_ScatterDBID_ScatterDB:  make(map[uint]*ScatterDB, 0),
 		Map_ScatterPtr_ScatterDBID: make(map[*models.Scatter]uint, 0),
 
-		db:    dbWrapper,
+		db:    db,
 		stage: stage,
 	}
 	backRepo.BackRepoSerie = BackRepoSerieStruct{
@@ -93,7 +103,7 @@ func NewBackRepo(stage *models.StageStruct, filename string) (backRepo *BackRepo
 		Map_SerieDBID_SerieDB:  make(map[uint]*SerieDB, 0),
 		Map_SeriePtr_SerieDBID: make(map[*models.Serie]uint, 0),
 
-		db:    dbWrapper,
+		db:    db,
 		stage: stage,
 	}
 	backRepo.BackRepoValue = BackRepoValueStruct{
@@ -101,7 +111,7 @@ func NewBackRepo(stage *models.StageStruct, filename string) (backRepo *BackRepo
 		Map_ValueDBID_ValueDB:  make(map[uint]*ValueDB, 0),
 		Map_ValuePtr_ValueDBID: make(map[*models.Value]uint, 0),
 
-		db:    dbWrapper,
+		db:    db,
 		stage: stage,
 	}
 
